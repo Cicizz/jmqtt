@@ -1,0 +1,49 @@
+storage/
+bin/
+run/
+test_out/
+tmp/
+doc/
+.directory
+.loadpath
+.metadata
+*.pydevproject
+*.bak
+*.swp
+*.tmp
+*~.nib
+local.properties
+
+
+
+# Maven #
+#########
+log/
+target/
+
+# Eclipse #
+###########
+.project
+.classpath
+.settings/
+.externalToolBuilders/
+*.launch
+.recommenders/
+
+# Intellij #
+############
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Compiled source #
+###################
+*.class
+*.com
+*.dll
+*.exe
+*.o
+*.so
+
+
