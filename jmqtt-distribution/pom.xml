@@ -10,27 +10,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.jmqtt</groupId>
-    <artifactId>jmqtt-remoting</artifactId>
+    <artifactId>jmqtt-distribution</artifactId>
     <version>1.0-SNAPSHOT</version>
-
-    <name>jmqtt-remoting</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
-
-    <dependencies>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jmqtt</groupId>
-            <artifactId>jmqtt-common</artifactId>
-        </dependency>
-    </dependencies>
 
 </project>
