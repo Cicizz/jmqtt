@@ -12,9 +12,11 @@ import io.netty.handler.codec.mqtt.MqttDecoder;
 import io.netty.handler.codec.mqtt.MqttEncoder;
 import io.netty.handler.codec.mqtt.MqttMessage;
 import io.netty.handler.timeout.IdleStateHandler;
+import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.config.NettyConfig;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
+import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.remoting.RemotingServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,10 +98,14 @@ public class NettyRemotingServer implements RemotingServer {
 
     class NettyMqttHandler extends SimpleChannelInboundHandler<MqttMessage> {
 
-
         @Override
         protected void channelRead0(ChannelHandlerContext channelHandlerContext, MqttMessage mqttMessage) throws Exception {
+            if(mqttMessage != null && mqttMessage.decoderResult().isSuccess()){
+                Message message = MessageUtil.getMessage(mqttMessage);
 
+            }else{
+                channelHandlerContext.close();
+            }
         }
 
     }
