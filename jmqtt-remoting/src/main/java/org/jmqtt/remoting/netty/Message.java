@@ -1,23 +1,23 @@
-package org.jmqtt.common.bean;
+package org.jmqtt.remoting.netty;
+
+import org.jmqtt.common.bean.ClientSession;
+
+import java.util.Map;
 
 /**
  * inner message transfer from MqttMessage
  */
 public class Message {
 
-
     private int msgId;
 
-    private boolean retain;
+    private Map<String,Object> headers;
+
+    private ClientSession clientSession;
 
     private Type type;
 
     private Object payload;
-
-    private boolean dup;
-
-    private int qos;
-
 
     public int getMsgId() {
         return msgId;
@@ -27,12 +27,12 @@ public class Message {
         this.msgId = msgId;
     }
 
-    public boolean isRetain() {
-        return retain;
+    public Map<String, Object> getHeaders() {
+        return headers;
     }
 
-    public void setRetain(boolean retain) {
-        this.retain = retain;
+    public void setHeaders(Map<String, Object> headers) {
+        this.headers = headers;
     }
 
     public Type getType() {
@@ -51,20 +51,12 @@ public class Message {
         this.payload = payload;
     }
 
-    public boolean isDup() {
-        return dup;
+    public ClientSession getClientSession() {
+        return clientSession;
     }
 
-    public void setDup(boolean dup) {
-        this.dup = dup;
-    }
-
-    public int getQos() {
-        return qos;
-    }
-
-    public void setQos(int qos) {
-        this.qos = qos;
+    public void setClientSession(ClientSession clientSession) {
+        this.clientSession = clientSession;
     }
 
     /**
