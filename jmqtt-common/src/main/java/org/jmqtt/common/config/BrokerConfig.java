@@ -6,6 +6,8 @@ public class BrokerConfig {
 
     private String version = "1.0.0";
 
+    private boolean anonymousEnable = true;
+
 
     public String getJmqttHome() {
         return jmqttHome;
@@ -21,5 +23,13 @@ public class BrokerConfig {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public boolean isAnonymousEnable() {
+        return anonymousEnable;
+    }
+
+    public void setAnonymousEnable(boolean anonymousEnable) {
+        this.anonymousEnable = anonymousEnable;
     }
 }

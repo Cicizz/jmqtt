@@ -12,14 +12,21 @@ import io.netty.handler.codec.mqtt.MqttDecoder;
 import io.netty.handler.codec.mqtt.MqttEncoder;
 import io.netty.handler.codec.mqtt.MqttMessage;
 import io.netty.handler.timeout.IdleStateHandler;
-import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.config.NettyConfig;
+import org.jmqtt.common.helper.Pair;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
-import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.remoting.RemotingServer;
+import org.jmqtt.remoting.processor.RequestProcessor;
+import org.jmqtt.remoting.util.MessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
+
 
 public class NettyRemotingServer implements RemotingServer {
 
@@ -28,9 +35,11 @@ public class NettyRemotingServer implements RemotingServer {
     private EventLoopGroup selectorGroup;
     private EventLoopGroup ioGroup;
     private Class<? extends ServerChannel> clazz;
+    private Map<Message.Type, Pair<RequestProcessor, ExecutorService>> processorTable;
 
     public NettyRemotingServer(NettyConfig nettyConfig) {
         this.nettyConfig = nettyConfig;
+        this.processorTable = new HashMap();
 
         if(!nettyConfig.isUseEpoll()){
             selectorGroup = new NioEventLoopGroup(nettyConfig.getIoThreadNum(),
@@ -45,8 +54,6 @@ public class NettyRemotingServer implements RemotingServer {
                     new ThreadFactoryImpl("IOEventGroup"));
             clazz = EpollServerSocketChannel.class;
         }
-
-
     }
 
 
@@ -96,15 +103,29 @@ public class NettyRemotingServer implements RemotingServer {
         }
     }
 
+    public void registerProcessor(Message.Type mqttType,RequestProcessor processor,ExecutorService executorService){
+        this.processorTable.put(mqttType,new Pair<>(processor,executorService));
+    }
+
     class NettyMqttHandler extends SimpleChannelInboundHandler<MqttMessage> {
 
         @Override
-        protected void channelRead0(ChannelHandlerContext channelHandlerContext, MqttMessage mqttMessage) throws Exception {
+        protected void channelRead0(ChannelHandlerContext ctx, MqttMessage mqttMessage) throws Exception {
             if(mqttMessage != null && mqttMessage.decoderResult().isSuccess()){
                 Message message = MessageUtil.getMessage(mqttMessage);
-
+                Runnable runnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        processorTable.get(message.getType()).getObject1().processRequest(ctx,message);
+                    }
+                };
+                try{
+                    processorTable.get(message.getType()).getObject2().submit(runnable);
+                }catch (RejectedExecutionException ex){
+                    log.warn("Reject mqtt request,cause={}",ex.getMessage());
+                }
             }else{
-                channelHandlerContext.close();
+                ctx.close();
             }
         }
 
