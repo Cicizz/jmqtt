@@ -11,14 +11,19 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.mqtt.MqttDecoder;
 import io.netty.handler.codec.mqtt.MqttEncoder;
 import io.netty.handler.codec.mqtt.MqttMessage;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
+import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.config.NettyConfig;
 import org.jmqtt.common.helper.Pair;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.RemotingServer;
-import org.jmqtt.remoting.processor.RequestProcessor;
+import org.jmqtt.remoting.session.WillMessageManager;
 import org.jmqtt.remoting.util.MessageUtil;
+import org.jmqtt.remoting.util.NettyUtil;
+import org.jmqtt.remoting.util.RemotingHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,13 +139,30 @@ public class NettyRemotingServer implements RemotingServer {
     class NettyConnectManager extends ChannelDuplexHandler {
 
         @Override
+        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+            final String remoteAddr = RemotingHelper.getRemoteAddr(ctx.channel());
+            log.info("[channelInactive] -> addr = {}",remoteAddr);
+            String clientId = NettyUtil.getClientId(ctx.channel());
+            WillMessageManager.getInstance().pubWillMessage(clientId);
+        }
+
+        @Override
         public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-            super.userEventTriggered(ctx, evt);
+            if(evt instanceof IdleStateHandler){
+                IdleStateEvent event = (IdleStateEvent) evt;
+                if(event.state().equals(IdleState.ALL_IDLE)){
+                    final String remoteAddr = RemotingHelper.getRemoteAddr(ctx.channel());
+                    log.warn("[HEART_BEAT] -> IDLE exception, addr = {}",remoteAddr);
+                    RemotingHelper.closeChannel(ctx.channel());
+                }
+            }
         }
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-            super.exceptionCaught(ctx, cause);
+            log.warn("Channel caught Exception remotingAddr = {}", RemotingHelper.getRemoteAddr(ctx.channel()));
+            log.warn("Channel caught Exception,cause = {}", cause);
+            RemotingHelper.closeChannel(ctx.channel());
         }
     }
 }

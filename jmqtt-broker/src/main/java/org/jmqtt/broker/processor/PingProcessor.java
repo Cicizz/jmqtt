@@ -1,7 +1,8 @@
-package org.jmqtt.remoting.processor;
+package org.jmqtt.broker.processor;
 
 import io.netty.channel.ChannelHandlerContext;
-import org.jmqtt.remoting.netty.Message;
+import org.jmqtt.common.bean.Message;
+import org.jmqtt.remoting.netty.RequestProcessor;
 
 public class PingProcessor implements RequestProcessor {
 

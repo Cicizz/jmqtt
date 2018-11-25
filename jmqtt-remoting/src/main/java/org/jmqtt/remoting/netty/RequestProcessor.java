@@ -1,7 +1,7 @@
-package org.jmqtt.remoting.processor;
+package org.jmqtt.remoting.netty;
 
 import io.netty.channel.ChannelHandlerContext;
-import org.jmqtt.remoting.netty.Message;
+import org.jmqtt.common.bean.Message;
 
 public interface RequestProcessor {
 

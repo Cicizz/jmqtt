@@ -1,4 +1,4 @@
-package org.jmqtt.broker.session;
+package org.jmqtt.remoting.session;
 
 import org.jmqtt.common.bean.ClientSession;
 
@@ -13,12 +13,16 @@ public class ConnectManager {
 
     private ConnectManager(){};
 
-    private ConnectManager getInstance(){
+    public static  ConnectManager getInstance(){
         return INSTANCE;
     }
 
     public ClientSession putClient(String clientId,ClientSession clientSession){
         return this.clientCache.put(clientId,clientSession);
+    }
+
+    public boolean containClient(String clientId){
+        return this.clientCache.containsKey(clientId);
     }
 
     public ClientSession removeClient(String clientId){

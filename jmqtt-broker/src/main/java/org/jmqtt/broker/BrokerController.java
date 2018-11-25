@@ -4,12 +4,12 @@ import org.jmqtt.common.config.BrokerConfig;
 import org.jmqtt.common.config.NettyConfig;
 import org.jmqtt.common.helper.RejectHandler;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
-import org.jmqtt.remoting.netty.Message;
+import org.jmqtt.common.bean.Message;
 import org.jmqtt.remoting.netty.NettyRemotingServer;
-import org.jmqtt.remoting.processor.ConnectProcessor;
-import org.jmqtt.remoting.processor.DisconnectProcessor;
-import org.jmqtt.remoting.processor.PingProcessor;
-import org.jmqtt.remoting.processor.RequestProcessor;
+import org.jmqtt.broker.processor.ConnectProcessor;
+import org.jmqtt.broker.processor.DisconnectProcessor;
+import org.jmqtt.broker.processor.PingProcessor;
+import org.jmqtt.remoting.netty.RequestProcessor;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
