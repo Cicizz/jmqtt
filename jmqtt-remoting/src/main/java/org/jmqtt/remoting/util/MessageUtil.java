@@ -1,7 +1,7 @@
 package org.jmqtt.remoting.util;
 
 import io.netty.handler.codec.mqtt.*;
-import org.jmqtt.remoting.netty.Message;
+import org.jmqtt.common.bean.Message;
 
 /**
  * transfer message from Message and MqttMessage

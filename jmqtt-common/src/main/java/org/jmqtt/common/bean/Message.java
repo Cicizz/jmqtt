@@ -1,7 +1,6 @@
-package org.jmqtt.remoting.netty;
+package org.jmqtt.common.bean;
 
-import org.jmqtt.common.bean.ClientSession;
-
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -18,6 +17,25 @@ public class Message {
     private Type type;
 
     private Object payload;
+
+    public Message(){};
+
+    public Message(Type type,Map<String,Object> headers,Object payload){
+        this.type = type;
+        this.headers = headers;
+        this.payload = payload;
+    }
+
+    public Object putHeader(String key,Object value){
+        if(headers == null){
+            headers = new HashMap<>();
+        }
+        return headers.put(key,value);
+    };
+
+    public Object removeHeader(String key){
+        return headers.remove(key);
+    }
 
     public int getMsgId() {
         return msgId;
@@ -76,7 +94,8 @@ public class Message {
         UNSUBACK(11),
         PINGREQ(12),
         PINGRESP(13),
-        DISCONNECT(14);
+        DISCONNECT(14),
+        WILL(15);
 
         private int value;
 
@@ -100,5 +119,16 @@ public class Message {
             }
             throw new IllegalArgumentException("unknown message type: " + type);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "msgId=" + msgId +
+                ", headers=" + headers +
+                ", clientSession=" + clientSession +
+                ", type=" + type +
+                ", payload=" + payload +
+                '}';
     }
 }
