@@ -15,6 +15,7 @@ import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.remoting.netty.RequestProcessor;
 import org.jmqtt.remoting.util.MessageUtil;
+import org.jmqtt.remoting.util.NettyUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,6 +80,7 @@ public class ConnectProcessor implements RequestProcessor {
                 int heartbeatSec = connectMessage.variableHeader().keepAliveTimeSeconds();
                 keepAlive(clientSession,heartbeatSec);
                 returnCode = MqttConnectReturnCode.CONNECTION_ACCEPTED;
+                NettyUtil.setClientId(ctx.channel(),clientId);
                 ConnectManager.getInstance().putClient(clientId,clientSession);
             }
             MqttConnAckMessage ackMessage = MessageUtil.getConnectAckMessage(returnCode,sessionPresent);

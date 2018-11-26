@@ -17,8 +17,6 @@ import java.util.Properties;
 
 public class BrokerStartup {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER);
-
     public static void main(String[] args) {
         try {
             start(args);
@@ -53,9 +51,6 @@ public class BrokerStartup {
         lc.reset();
         configurator.doConfigure(jmqttHome + "/conf/logback_broker.xml");
 
-        MixAll.printProperties(log,brokerConfig);
-        MixAll.printProperties(log,nettyConfig);
-
         BrokerController brokerController = new BrokerController(brokerConfig,nettyConfig);
         brokerController.start();
 
@@ -71,11 +66,11 @@ public class BrokerStartup {
 
     private static Options buildOptions(){
         Options options = new Options();
-        Option opt = new Option("h","jmqttHome,eg: /wls/xxx");
+        Option opt = new Option("h",true,"jmqttHome,eg: /wls/xxx");
         opt.setRequired(true);
         options.addOption(opt);
 
-        opt = new Option("c","jmqtt.properties path,eg: /wls/xxx/xxx.properties");
+        opt = new Option("c",true,"jmqtt.properties path,eg: /wls/xxx/xxx.properties");
         opt.setRequired(true);
         options.addOption(opt);
 

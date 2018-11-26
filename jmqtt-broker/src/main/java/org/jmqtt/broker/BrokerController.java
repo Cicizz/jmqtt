@@ -2,14 +2,18 @@ package org.jmqtt.broker;
 
 import org.jmqtt.common.config.BrokerConfig;
 import org.jmqtt.common.config.NettyConfig;
+import org.jmqtt.common.helper.MixAll;
 import org.jmqtt.common.helper.RejectHandler;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.bean.Message;
+import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.netty.NettyRemotingServer;
 import org.jmqtt.broker.processor.ConnectProcessor;
 import org.jmqtt.broker.processor.DisconnectProcessor;
 import org.jmqtt.broker.processor.PingProcessor;
 import org.jmqtt.remoting.netty.RequestProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -17,6 +21,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class BrokerController {
+
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER);
+
     private BrokerConfig brokerConfig;
     private NettyConfig nettyConfig;
     private ExecutorService connectExecutor;
@@ -74,6 +81,10 @@ public class BrokerController {
 
 
     public void start(){
+
+        MixAll.printProperties(log,brokerConfig);
+        MixAll.printProperties(log,nettyConfig);
+
         {//init and register processor
             RequestProcessor connectProcessor = new ConnectProcessor(brokerConfig);
             RequestProcessor disconnectProcessor = new DisconnectProcessor();
@@ -85,7 +96,7 @@ public class BrokerController {
         }
 
         this.remotingServer.start();
-
+        log.info("JMqtt Server start success and version = {}",brokerConfig.getVersion());
     }
 
 
