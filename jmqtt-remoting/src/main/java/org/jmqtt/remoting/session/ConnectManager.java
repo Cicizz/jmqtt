@@ -17,6 +17,10 @@ public class ConnectManager {
         return INSTANCE;
     }
 
+    public ClientSession getClient(String clientId){
+        return this.clientCache.get(clientId);
+    }
+
     public ClientSession putClient(String clientId,ClientSession clientSession){
         return this.clientCache.put(clientId,clientSession);
     }

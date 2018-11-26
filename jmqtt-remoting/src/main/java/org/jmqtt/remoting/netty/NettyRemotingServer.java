@@ -65,12 +65,11 @@ public class NettyRemotingServer implements RemotingServer {
     @Override
     public void start() {
         ServerBootstrap bootstrap = new ServerBootstrap();
-        bootstrap.group(selectorGroup)
-                .group(ioGroup)
+        bootstrap.group(selectorGroup,ioGroup)
                 .channel(clazz)
                 .option(ChannelOption.SO_BACKLOG, nettyConfig.getTcpBackLog())
-                .option(ChannelOption.TCP_NODELAY, nettyConfig.isTcpNoDelay())
-                .option(ChannelOption.SO_SNDBUF, nettyConfig.getTcpSndBuf())
+                .childOption(ChannelOption.TCP_NODELAY, nettyConfig.isTcpNoDelay())
+                .childOption(ChannelOption.SO_SNDBUF, nettyConfig.getTcpSndBuf())
                 .option(ChannelOption.SO_RCVBUF, nettyConfig.getTcpRcvBuf())
                 .option(ChannelOption.SO_REUSEADDR, nettyConfig.isTcpReuseAddr())
                 .childOption(ChannelOption.SO_KEEPALIVE, nettyConfig.isTcpKeepAlive())
@@ -91,7 +90,6 @@ public class NettyRemotingServer implements RemotingServer {
 
         try {
             ChannelFuture future = bootstrap.bind(nettyConfig.getTcpPort()).sync();
-            future.channel().closeFuture().sync();
         }catch (InterruptedException ex){
             log.error("Start tcp server failure.cause={}",ex);
         }
