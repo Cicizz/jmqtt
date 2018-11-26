@@ -1,6 +1,6 @@
 package org.jmqtt.remoting;
 
-public interface RemotingService {
+public interface RemotingServer {
 
     /**
      * remoting start
