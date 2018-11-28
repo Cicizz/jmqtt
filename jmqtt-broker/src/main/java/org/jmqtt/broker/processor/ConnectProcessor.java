@@ -4,6 +4,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttConnAckMessage;
 import io.netty.handler.codec.mqtt.MqttConnectMessage;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
+import io.netty.handler.codec.mqtt.MqttMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.session.WillMessageManager;
@@ -36,8 +37,8 @@ public class ConnectProcessor implements RequestProcessor {
     }
 
     @Override
-    public void processRequest(ChannelHandlerContext ctx, Message message) {
-        MqttConnectMessage connectMessage = (MqttConnectMessage) message.getPayload();
+    public void processRequest(ChannelHandlerContext ctx, MqttMessage mqttMessage) {
+        MqttConnectMessage connectMessage = (MqttConnectMessage)mqttMessage;
         MqttConnectReturnCode returnCode = null;
         int mqttVersion = connectMessage.variableHeader().version();
         String clientId = connectMessage.payload().clientIdentifier();
@@ -68,7 +69,6 @@ public class ConnectProcessor implements RequestProcessor {
                     }
                 }
                 clientSession.setCtx(ctx);
-                message.setClientSession(clientSession);
                 boolean willFlag = connectMessage.variableHeader().isWillFlag();
                 if(willFlag){
                     boolean willRetain = connectMessage.variableHeader().isWillRetain();
@@ -85,6 +85,7 @@ public class ConnectProcessor implements RequestProcessor {
             }
             MqttConnAckMessage ackMessage = MessageUtil.getConnectAckMessage(returnCode,sessionPresent);
             ctx.writeAndFlush(ackMessage);
+            log.info("[CONNECT] -> {} connect to this mqtt server",clientId);
         }catch(Exception ex){
             log.error("[CONNECT] -> Service Unavailable: cause={}",ex);
             returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE;

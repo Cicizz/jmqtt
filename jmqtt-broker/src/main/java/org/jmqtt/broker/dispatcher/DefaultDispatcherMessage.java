@@ -42,13 +42,17 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                int waitTime = 100;
                 while(!stoped){
                     try {
                         List<Message> messageList = new ArrayList(32);
                         for(int i = 0; i < 32; i++){
-                            Message message = messageQueue.poll(100, TimeUnit.MILLISECONDS);
+                            Message message = messageQueue.poll(waitTime, TimeUnit.MILLISECONDS);
                             if(Objects.nonNull(message)){
                                 messageList.add(message);
+                                waitTime = 100;
+                            }else{
+                                waitTime = 3000;
                             }
                         }
                         if(messageList.size() > 0){
@@ -64,11 +68,12 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
     }
 
     @Override
-    public void appendMessage(Message message) {
+    public boolean appendMessage(Message message) {
         boolean isNotFull = messageQueue.offer(message);
         if(!isNotFull){
             log.warn("[PubMessage] -> the buffer queue is full");
         }
+        return isNotFull;
     }
 
 

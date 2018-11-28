@@ -8,6 +8,16 @@ public class BrokerConfig {
 
     private boolean anonymousEnable = true;
 
+    private int pollThreadNum = Runtime.getRuntime().availableProcessors() * 2;
+
+
+    public int getPollThreadNum() {
+        return pollThreadNum;
+    }
+
+    public void setPollThreadNum(int pollThreadNum) {
+        this.pollThreadNum = pollThreadNum;
+    }
 
     public String getJmqttHome() {
         return jmqttHome;

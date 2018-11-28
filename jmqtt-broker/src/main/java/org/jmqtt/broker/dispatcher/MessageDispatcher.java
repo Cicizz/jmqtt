@@ -8,6 +8,6 @@ public interface MessageDispatcher {
 
     void shutdown();
 
-    void appendMessage(Message message);
+    boolean appendMessage(Message message);
 
 }

@@ -11,6 +11,8 @@ public class ClientSession {
     private boolean cleanSession;
     private ChannelHandlerContext ctx;
 
+
+
     public ClientSession(){}
 
     public ClientSession(String clientId, boolean cleanSession){
