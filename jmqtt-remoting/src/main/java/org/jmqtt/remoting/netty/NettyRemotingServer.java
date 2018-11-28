@@ -11,6 +11,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.mqtt.MqttDecoder;
 import io.netty.handler.codec.mqtt.MqttEncoder;
 import io.netty.handler.codec.mqtt.MqttMessage;
+import io.netty.handler.codec.mqtt.MqttMessageType;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -21,7 +22,6 @@ import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.RemotingServer;
 import org.jmqtt.remoting.session.WillMessageManager;
-import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.remoting.util.NettyUtil;
 import org.jmqtt.remoting.util.RemotingHelper;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ public class NettyRemotingServer implements RemotingServer {
     private EventLoopGroup selectorGroup;
     private EventLoopGroup ioGroup;
     private Class<? extends ServerChannel> clazz;
-    private Map<Message.Type, Pair<RequestProcessor, ExecutorService>> processorTable;
+    private Map<MqttMessageType, Pair<RequestProcessor, ExecutorService>> processorTable;
 
     public NettyRemotingServer(NettyConfig nettyConfig) {
         this.nettyConfig = nettyConfig;
@@ -106,24 +106,25 @@ public class NettyRemotingServer implements RemotingServer {
         }
     }
 
-    public void registerProcessor(Message.Type mqttType,RequestProcessor processor,ExecutorService executorService){
+    public void registerProcessor(MqttMessageType mqttType,RequestProcessor processor,ExecutorService executorService){
         this.processorTable.put(mqttType,new Pair<>(processor,executorService));
     }
 
-    class NettyMqttHandler extends SimpleChannelInboundHandler<MqttMessage> {
+    class NettyMqttHandler extends ChannelInboundHandlerAdapter {
 
         @Override
-        protected void channelRead0(ChannelHandlerContext ctx, MqttMessage mqttMessage) throws Exception {
+        public void channelRead(ChannelHandlerContext ctx, Object obj) throws Exception {
+            MqttMessage mqttMessage = (MqttMessage) obj;
             if(mqttMessage != null && mqttMessage.decoderResult().isSuccess()){
-                Message message = MessageUtil.getMessage(mqttMessage);
+                MqttMessageType messageType = mqttMessage.fixedHeader().messageType();
                 Runnable runnable = new Runnable() {
                     @Override
                     public void run() {
-                        processorTable.get(message.getType()).getObject1().processRequest(ctx,message);
+                        processorTable.get(messageType).getObject1().processRequest(ctx,mqttMessage);
                     }
                 };
                 try{
-                    processorTable.get(message.getType()).getObject2().submit(runnable);
+                    processorTable.get(messageType).getObject2().submit(runnable);
                 }catch (RejectedExecutionException ex){
                     log.warn("Reject mqtt request,cause={}",ex.getMessage());
                 }

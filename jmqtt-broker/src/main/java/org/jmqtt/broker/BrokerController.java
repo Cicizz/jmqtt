@@ -1,5 +1,11 @@
 package org.jmqtt.broker;
 
+import io.netty.handler.codec.mqtt.MqttMessageType;
+import org.jmqtt.broker.dispatcher.DefaultDispatcherMessage;
+import org.jmqtt.broker.dispatcher.DefaultFlowMessage;
+import org.jmqtt.broker.dispatcher.FlowMessage;
+import org.jmqtt.broker.dispatcher.MessageDispatcher;
+import org.jmqtt.broker.processor.PublishProcessor;
 import org.jmqtt.common.config.BrokerConfig;
 import org.jmqtt.common.config.NettyConfig;
 import org.jmqtt.common.helper.MixAll;
@@ -15,6 +21,7 @@ import org.jmqtt.remoting.netty.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -35,6 +42,8 @@ public class BrokerController {
     private LinkedBlockingQueue subQueue;
     private LinkedBlockingQueue pingQueue;
     private NettyRemotingServer remotingServer;
+    private MessageDispatcher messageDispatcher;
+    private FlowMessage flowMessage;
 
 
     public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig){
@@ -46,6 +55,9 @@ public class BrokerController {
         this.pubQueue = new LinkedBlockingQueue(100000);
         this.subQueue = new LinkedBlockingQueue(100000);
         this.pingQueue = new LinkedBlockingQueue(10000);
+
+        this.messageDispatcher = new DefaultDispatcherMessage(brokerConfig.getPollThreadNum());
+        this.flowMessage = new DefaultFlowMessage();
 
         int coreThreadNum = Runtime.getRuntime().availableProcessors();
         this.connectExecutor = new ThreadPoolExecutor(coreThreadNum*2,
@@ -89,10 +101,12 @@ public class BrokerController {
             RequestProcessor connectProcessor = new ConnectProcessor(brokerConfig);
             RequestProcessor disconnectProcessor = new DisconnectProcessor();
             RequestProcessor pingProcessor = new PingProcessor();
+            RequestProcessor publishProcessor = new PublishProcessor(messageDispatcher,flowMessage);
 
-            this.remotingServer.registerProcessor(Message.Type.CONNECT,connectProcessor,connectExecutor);
-            this.remotingServer.registerProcessor(Message.Type.DISCONNECT,disconnectProcessor,connectExecutor);
-            this.remotingServer.registerProcessor(Message.Type.PINGREQ,pingProcessor,pingExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.CONNECT,connectProcessor,connectExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.DISCONNECT,disconnectProcessor,connectExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.PINGREQ,pingProcessor,pingExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.PUBLISH,publishProcessor,pubExecutor);
         }
 
         this.remotingServer.start();
