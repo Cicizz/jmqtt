@@ -14,13 +14,19 @@ public class DefaultFlowMessage implements FlowMessage {
     @Override
     public void initClientFlowCache(String clientId){
         Map<Integer,Message> recMsgCache = recCache.get(clientId);
-        if(Objects.nonNull(recMsgCache)){
+        if(Objects.isNull(recMsgCache)){
             recCache.put(clientId,new ConcurrentHashMap<Integer,Message>());
         }
         Map<Integer,Message> sendMsgCache = sendCache.get(clientId);
-        if(Objects.nonNull(recMsgCache)){
+        if(Objects.isNull(recMsgCache)){
             sendCache.put(clientId,new ConcurrentHashMap<Integer,Message>());
         }
+    }
+
+    @Override
+    public void clearClientFlowCache(String clientId) {
+        this.recCache.remove(clientId);
+        this.sendCache.remove(clientId);
     }
 
     @Override
@@ -32,12 +38,13 @@ public class DefaultFlowMessage implements FlowMessage {
 
     @Override
     public boolean cacheRecMsg(String clientId, Message message) {
-        return this.recCache.get(clientId).put(message.getMsgId(),message) != null;
+        this.recCache.get(clientId).put(message.getMsgId(),message);
+        return true;
     }
 
     @Override
-    public boolean releaseRecMsg(String clientId, int msgId) {
-        return this.recCache.get(clientId).remove(msgId) != null;
+    public Message releaseRecMsg(String clientId, int msgId) {
+        return this.recCache.get(clientId).remove(msgId);
     }
 
     @Override

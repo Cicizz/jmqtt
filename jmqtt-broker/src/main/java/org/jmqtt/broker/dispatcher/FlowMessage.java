@@ -9,11 +9,13 @@ public interface FlowMessage {
 
     void initClientFlowCache(String clientId);
 
+    void clearClientFlowCache(String clientId);
+
     Message getRecMsg(String clientId,int msgId);
 
     boolean cacheRecMsg(String clientId,Message message);
 
-    boolean releaseRecMsg(String clientId,int msgId);
+    Message releaseRecMsg(String clientId,int msgId);
 
     boolean cacheSendMsg(String clientId,Message message);
 

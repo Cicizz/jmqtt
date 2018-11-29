@@ -6,6 +6,7 @@ import io.netty.handler.codec.mqtt.MqttConnectMessage;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.netty.handler.codec.mqtt.MqttMessage;
 import org.apache.commons.lang3.StringUtils;
+import org.jmqtt.broker.dispatcher.FlowMessage;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.session.WillMessageManager;
 import org.jmqtt.common.bean.ClientSession;
@@ -31,9 +32,11 @@ public class ConnectProcessor implements RequestProcessor {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
 
     private BrokerConfig brokerConfig;
+    private FlowMessage flowMessage;
 
-    public ConnectProcessor(BrokerConfig brokerConfig){
+    public ConnectProcessor(BrokerConfig brokerConfig,FlowMessage flowMessage){
         this.brokerConfig = brokerConfig;
+        this.flowMessage = flowMessage;
     }
 
     @Override
@@ -82,6 +85,7 @@ public class ConnectProcessor implements RequestProcessor {
                 returnCode = MqttConnectReturnCode.CONNECTION_ACCEPTED;
                 NettyUtil.setClientId(ctx.channel(),clientId);
                 ConnectManager.getInstance().putClient(clientId,clientSession);
+                this.flowMessage.initClientFlowCache(clientId);
             }
             MqttConnAckMessage ackMessage = MessageUtil.getConnectAckMessage(returnCode,sessionPresent);
             ctx.writeAndFlush(ackMessage);

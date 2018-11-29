@@ -2,15 +2,17 @@ package org.jmqtt.common.bean;
 
 import io.netty.channel.ChannelHandlerContext;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ClientSession {
 
     private String clientId;
-    private List<Subscription> subscriptions;
+    private List<Subscription> subscriptions = new ArrayList<>();
     private boolean cleanSession;
     private ChannelHandlerContext ctx;
-
 
 
     public ClientSession(){}
@@ -21,6 +23,14 @@ public class ClientSession {
     }
     public String getClientId() {
         return clientId;
+    }
+
+    public void subscribe(Subscription subscription){
+        this.subscriptions.add(subscription);
+    }
+
+    public void unSubscribe(String topic){
+        this.subscriptions.remove(new Subscription(topic));
     }
 
     public void setClientId(String clientId) {
@@ -49,5 +59,18 @@ public class ClientSession {
 
     public void setCtx(ChannelHandlerContext ctx) {
         this.ctx = ctx;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ClientSession that = (ClientSession) o;
+        return Objects.equals(clientId, that.clientId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(clientId);
     }
 }
