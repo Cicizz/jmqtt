@@ -5,6 +5,11 @@ public class Topic {
     private String topicName;
     private int qos;
 
+    public Topic(String topicName, int qos) {
+        this.topicName = topicName;
+        this.qos = qos;
+    }
+
     public String getTopicName() {
         return topicName;
     }

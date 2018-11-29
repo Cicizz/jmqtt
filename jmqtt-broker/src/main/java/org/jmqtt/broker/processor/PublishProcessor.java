@@ -21,14 +21,13 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PublishProcessor implements RequestProcessor {
+public class PublishProcessor extends AbstractMessageProcessor implements RequestProcessor {
     private Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
 
-    private MessageDispatcher messageDispatcher;
     private FlowMessage flowMessage;
 
     public PublishProcessor(MessageDispatcher messageDispatcher,FlowMessage flowMessage){
-        this.messageDispatcher = messageDispatcher;
+        super(messageDispatcher);
         this.flowMessage = flowMessage;
     }
 
@@ -57,6 +56,7 @@ public class PublishProcessor implements RequestProcessor {
                 processQos1(ctx,innerMsg);
                 break;
             case EXACTLY_ONCE:
+                processQos2(ctx,innerMsg);
                 break;
             default:
                 log.warn("[PubMessage] -> Wrong mqtt message,clientId={}", clientId);
@@ -64,7 +64,13 @@ public class PublishProcessor implements RequestProcessor {
     }
 
     private void processQos2(ChannelHandlerContext ctx,Message innerMsg){
-
+        log.debug("[PubMessage] -> Process qos2 message,clientId={}",innerMsg.getClientSession().getClientId());
+        boolean flag = flowMessage.cacheRecMsg(innerMsg.getClientSession().getClientId(),innerMsg);
+        if(!flag){
+            log.warn("[PubMessage] -> cache qos2 pub message failure,clientId={}",innerMsg.getClientSession().getClientId());
+        }
+        MqttMessage pubRecMessage = MessageUtil.getPubRecMessage(innerMsg.getMsgId());
+        ctx.writeAndFlush(pubRecMessage);
     }
 
     private void processQos1(ChannelHandlerContext ctx,Message innerMsg){
@@ -74,12 +80,4 @@ public class PublishProcessor implements RequestProcessor {
         ctx.writeAndFlush(pubAckMessage);
     }
 
-    private void  processMessage(Message message){
-        this.messageDispatcher.appendMessage(message);
-        boolean retain = (boolean) message.getHeader(MessageHeader.RETAIN);
-        if(retain){
-            //TODO  处理retain消息
-
-        }
-    }
 }

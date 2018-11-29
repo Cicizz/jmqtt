@@ -5,23 +5,18 @@ import org.jmqtt.broker.dispatcher.DefaultDispatcherMessage;
 import org.jmqtt.broker.dispatcher.DefaultFlowMessage;
 import org.jmqtt.broker.dispatcher.FlowMessage;
 import org.jmqtt.broker.dispatcher.MessageDispatcher;
-import org.jmqtt.broker.processor.PublishProcessor;
+import org.jmqtt.broker.processor.*;
 import org.jmqtt.common.config.BrokerConfig;
 import org.jmqtt.common.config.NettyConfig;
 import org.jmqtt.common.helper.MixAll;
 import org.jmqtt.common.helper.RejectHandler;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
-import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.netty.NettyRemotingServer;
-import org.jmqtt.broker.processor.ConnectProcessor;
-import org.jmqtt.broker.processor.DisconnectProcessor;
-import org.jmqtt.broker.processor.PingProcessor;
 import org.jmqtt.remoting.netty.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -98,15 +93,17 @@ public class BrokerController {
         MixAll.printProperties(log,nettyConfig);
 
         {//init and register processor
-            RequestProcessor connectProcessor = new ConnectProcessor(brokerConfig);
+            RequestProcessor connectProcessor = new ConnectProcessor(brokerConfig,flowMessage);
             RequestProcessor disconnectProcessor = new DisconnectProcessor();
             RequestProcessor pingProcessor = new PingProcessor();
             RequestProcessor publishProcessor = new PublishProcessor(messageDispatcher,flowMessage);
+            RequestProcessor pubRelProcessor = new PubRelProcessor(messageDispatcher,flowMessage);
 
             this.remotingServer.registerProcessor(MqttMessageType.CONNECT,connectProcessor,connectExecutor);
             this.remotingServer.registerProcessor(MqttMessageType.DISCONNECT,disconnectProcessor,connectExecutor);
             this.remotingServer.registerProcessor(MqttMessageType.PINGREQ,pingProcessor,pingExecutor);
             this.remotingServer.registerProcessor(MqttMessageType.PUBLISH,publishProcessor,pubExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.PUBREL,pubRelProcessor,pubExecutor);
         }
 
         this.remotingServer.start();
