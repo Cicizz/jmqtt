@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientSession {
 
@@ -13,6 +14,8 @@ public class ClientSession {
     private List<Subscription> subscriptions = new ArrayList<>();
     private boolean cleanSession;
     private ChannelHandlerContext ctx;
+
+    private AtomicInteger messageIdCounter = new AtomicInteger(1);
 
 
     public ClientSession(){}
@@ -59,6 +62,16 @@ public class ClientSession {
 
     public void setCtx(ChannelHandlerContext ctx) {
         this.ctx = ctx;
+    }
+
+    public int generateMessageId(){
+        int messageId = messageIdCounter.getAndIncrement();
+        messageId = Math.abs( messageId % 0xFFFF);
+        if(messageId == 0){
+            return generateMessageId();
+        }
+        return messageId;
+
     }
 
     @Override

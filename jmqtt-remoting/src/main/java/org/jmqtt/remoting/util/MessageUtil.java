@@ -1,7 +1,9 @@
 package org.jmqtt.remoting.util;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.mqtt.*;
 import org.jmqtt.common.bean.Message;
+import org.jmqtt.common.bean.MessageHeader;
 
 import java.util.List;
 
@@ -21,6 +23,19 @@ public class MessageUtil {
     public static int getMessageId(MqttMessage mqttMessage){
         MqttMessageIdVariableHeader idVariableHeader = (MqttMessageIdVariableHeader) mqttMessage.variableHeader();
         return idVariableHeader.messageId();
+    }
+
+    public static int getMinQos(int qos1,int qos2){
+        if(qos1 < qos2){
+            return qos1;
+        }
+        return qos2;
+    }
+
+    public static MqttPublishMessage getPubMessage(Message message,boolean dup,int qos,int messageId){
+        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH,dup,MqttQoS.valueOf(qos),false,0);
+        MqttPublishVariableHeader publishVariableHeader = new MqttPublishVariableHeader((String) message.getHeader(MessageHeader.TOPIC),messageId);
+        return new MqttPublishMessage(fixedHeader,publishVariableHeader,(ByteBuf)message.getPayload());
     }
 
     public static MqttMessage getSubAckMessage(int messageId, List<Integer> qos){

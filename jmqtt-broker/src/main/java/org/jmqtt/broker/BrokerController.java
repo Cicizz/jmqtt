@@ -6,6 +6,8 @@ import org.jmqtt.broker.dispatcher.DefaultFlowMessage;
 import org.jmqtt.broker.dispatcher.FlowMessage;
 import org.jmqtt.broker.dispatcher.MessageDispatcher;
 import org.jmqtt.broker.processor.*;
+import org.jmqtt.broker.subscribe.DefaultSubscriptionTreeMatcher;
+import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.jmqtt.common.config.BrokerConfig;
 import org.jmqtt.common.config.NettyConfig;
 import org.jmqtt.common.helper.MixAll;
@@ -39,6 +41,7 @@ public class BrokerController {
     private NettyRemotingServer remotingServer;
     private MessageDispatcher messageDispatcher;
     private FlowMessage flowMessage;
+    private SubscriptionMatcher subscriptionMatcher;
 
 
     public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig){
@@ -53,6 +56,7 @@ public class BrokerController {
 
         this.messageDispatcher = new DefaultDispatcherMessage(brokerConfig.getPollThreadNum());
         this.flowMessage = new DefaultFlowMessage();
+        this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
 
         int coreThreadNum = Runtime.getRuntime().availableProcessors();
         this.connectExecutor = new ThreadPoolExecutor(coreThreadNum*2,
@@ -98,12 +102,14 @@ public class BrokerController {
             RequestProcessor pingProcessor = new PingProcessor();
             RequestProcessor publishProcessor = new PublishProcessor(messageDispatcher,flowMessage);
             RequestProcessor pubRelProcessor = new PubRelProcessor(messageDispatcher,flowMessage);
+            RequestProcessor subscribeProcessor = new SubscribeProcessor(subscriptionMatcher);
 
             this.remotingServer.registerProcessor(MqttMessageType.CONNECT,connectProcessor,connectExecutor);
             this.remotingServer.registerProcessor(MqttMessageType.DISCONNECT,disconnectProcessor,connectExecutor);
             this.remotingServer.registerProcessor(MqttMessageType.PINGREQ,pingProcessor,pingExecutor);
             this.remotingServer.registerProcessor(MqttMessageType.PUBLISH,publishProcessor,pubExecutor);
             this.remotingServer.registerProcessor(MqttMessageType.PUBREL,pubRelProcessor,pubExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.SUBSCRIBE,subscribeProcessor,subExecutor);
         }
 
         this.remotingServer.start();
