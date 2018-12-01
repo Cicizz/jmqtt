@@ -1,10 +1,12 @@
 package org.jmqtt.broker.subscribe;
 
-import java.util.List;
+import org.jmqtt.common.bean.Subscription;
+
+import java.util.Set;
 
 public interface SubscriptionMatcher {
 
-    boolean subscribe(String topic,String clientId);
+    boolean subscribe(String topic, Subscription subscription);
 
-    List<String> match(String topic);
+    Set<Subscription> match(String topic);
 }

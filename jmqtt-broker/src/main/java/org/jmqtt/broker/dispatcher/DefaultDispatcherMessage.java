@@ -1,16 +1,24 @@
 package org.jmqtt.broker.dispatcher;
 
 
+import io.netty.handler.codec.mqtt.MqttPublishMessage;
+import org.jmqtt.broker.subscribe.SubscriptionMatcher;
+import org.jmqtt.common.bean.ClientSession;
 import org.jmqtt.common.bean.Message;
+import org.jmqtt.common.bean.MessageHeader;
+import org.jmqtt.common.bean.Subscription;
 import org.jmqtt.common.helper.RejectHandler;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
+import org.jmqtt.remoting.session.ConnectManager;
+import org.jmqtt.remoting.util.MessageUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -24,9 +32,13 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
     private static final BlockingQueue<Message> messageQueue = new LinkedBlockingQueue<>(100000);
     private ThreadPoolExecutor pollThread;
     private int pollThreadNum;
+    private SubscriptionMatcher subscriptionMatcher;
+    private FlowMessage flowMessage;
 
-    public DefaultDispatcherMessage(int pollThreadNum){
+    public DefaultDispatcherMessage(int pollThreadNum,SubscriptionMatcher subscriptionMatcher,FlowMessage flowMessage){
         this.pollThreadNum = pollThreadNum;
+        this.subscriptionMatcher = subscriptionMatcher;
+        this.flowMessage = flowMessage;
     }
 
     @Override
@@ -92,8 +104,26 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
 
         @Override
         public void run() {
-            //TODO 分发消息给订阅者
-
+            if(Objects.nonNull(messages)){
+                for(Message message : messages){
+                    Set<Subscription> subscriptions = subscriptionMatcher.match((String)message.getHeader(MessageHeader.TOPIC));
+                    for(Subscription subscription : subscriptions){
+                        String clientId = subscription.getClientId();
+                        ClientSession clientSession = ConnectManager.getInstance().getClient(subscription.getClientId());
+                        if(Objects.nonNull(clientSession)){
+                            int qos = MessageUtil.getMinQos((int)message.getHeader(MessageHeader.QOS),subscription.getQos());
+                            if(qos > 0){
+                                flowMessage.cacheSendMsg(clientId,message);
+                            }
+                            MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message,false,qos,1);
+                            clientSession.getCtx().writeAndFlush(publishMessage);
+                        }else{
+                            //TODO 离线消息处理
+                        }
+                    }
+                }
+            }
         }
+
     }
 }
