@@ -39,6 +39,7 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
         this.pollThreadNum = pollThreadNum;
         this.subscriptionMatcher = subscriptionMatcher;
         this.flowMessage = flowMessage;
+        this.start();
     }
 
     @Override
@@ -65,6 +66,7 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
                                 waitTime = 100;
                             }else{
                                 waitTime = 3000;
+                                break;
                             }
                         }
                         if(messageList.size() > 0){
@@ -92,6 +94,7 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
     @Override
     public void shutdown(){
         this.stoped = true;
+        this.pollThread.shutdown();
     };
 
     class AsyncDispatcher implements Runnable{
@@ -112,10 +115,13 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
                         ClientSession clientSession = ConnectManager.getInstance().getClient(subscription.getClientId());
                         if(Objects.nonNull(clientSession)){
                             int qos = MessageUtil.getMinQos((int)message.getHeader(MessageHeader.QOS),subscription.getQos());
+                            int messageId = clientSession.generateMessageId();
+                            message.putHeader(MessageHeader.QOS,qos);
+                            message.setMsgId(messageId);
                             if(qos > 0){
                                 flowMessage.cacheSendMsg(clientId,message);
                             }
-                            MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message,false,qos,1);
+                            MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message,false,qos,messageId);
                             clientSession.getCtx().writeAndFlush(publishMessage);
                         }else{
                             //TODO 离线消息处理

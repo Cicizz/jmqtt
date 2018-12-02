@@ -1,5 +1,7 @@
 package org.jmqtt.broker.dispatcher;
 
+import org.jmqtt.broker.subscribe.DefaultSubscriptionTreeMatcher;
+import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.jmqtt.common.bean.Message;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,7 +14,9 @@ public class MessageDispatcherTest {
 
     @Before
     public void init(){
-        dispatcher = new DefaultDispatcherMessage(10);
+        SubscriptionMatcher subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
+        FlowMessage flowMessage = new DefaultFlowMessage();
+        dispatcher = new DefaultDispatcherMessage(10,subscriptionMatcher,flowMessage);
         dispatcher.start();
     }
 

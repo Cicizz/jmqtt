@@ -54,10 +54,11 @@ public class BrokerController {
         this.subQueue = new LinkedBlockingQueue(100000);
         this.pingQueue = new LinkedBlockingQueue(10000);
 
-        this.messageDispatcher = new DefaultDispatcherMessage(brokerConfig.getPollThreadNum());
-        this.flowMessage = new DefaultFlowMessage();
-        this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
-
+        {//pluggable
+            this.flowMessage = new DefaultFlowMessage();
+            this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
+            this.messageDispatcher = new DefaultDispatcherMessage(brokerConfig.getPollThreadNum(), subscriptionMatcher, flowMessage);
+        }
         int coreThreadNum = Runtime.getRuntime().availableProcessors();
         this.connectExecutor = new ThreadPoolExecutor(coreThreadNum*2,
                 coreThreadNum*2,
@@ -103,6 +104,9 @@ public class BrokerController {
             RequestProcessor publishProcessor = new PublishProcessor(messageDispatcher,flowMessage);
             RequestProcessor pubRelProcessor = new PubRelProcessor(messageDispatcher,flowMessage);
             RequestProcessor subscribeProcessor = new SubscribeProcessor(subscriptionMatcher);
+            RequestProcessor unSubscribeProcessor = new UnSubscribeProcessor(subscriptionMatcher);
+            RequestProcessor pubRecProcessor = new PubRecProcessor(flowMessage);
+            RequestProcessor pubCompProcessor = new PubCompProcessor(flowMessage);
 
             this.remotingServer.registerProcessor(MqttMessageType.CONNECT,connectProcessor,connectExecutor);
             this.remotingServer.registerProcessor(MqttMessageType.DISCONNECT,disconnectProcessor,connectExecutor);
@@ -110,14 +114,21 @@ public class BrokerController {
             this.remotingServer.registerProcessor(MqttMessageType.PUBLISH,publishProcessor,pubExecutor);
             this.remotingServer.registerProcessor(MqttMessageType.PUBREL,pubRelProcessor,pubExecutor);
             this.remotingServer.registerProcessor(MqttMessageType.SUBSCRIBE,subscribeProcessor,subExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.UNSUBSCRIBE,unSubscribeProcessor,subExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.PUBREC,pubRecProcessor,subExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.PUBCOMP,pubCompProcessor,subExecutor);
         }
 
         this.remotingServer.start();
         log.info("JMqtt Server start success and version = {}",brokerConfig.getVersion());
     }
 
-
     public void shutdown(){
-
+        this.remotingServer.shutdown();
+        this.connectExecutor.shutdown();
+        this.pubExecutor.shutdown();
+        this.subExecutor.shutdown();
+        this.pingExecutor.shutdown();
+        this.messageDispatcher.shutdown();
     }
 }

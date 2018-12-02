@@ -46,11 +46,12 @@ public class Subscription {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Subscription that = (Subscription) o;
-        return Objects.equals(topic, that.topic);
+        return Objects.equals(clientId, that.clientId) &&
+                Objects.equals(topic, that.topic);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(topic);
+        return Objects.hash(clientId, topic);
     }
 }

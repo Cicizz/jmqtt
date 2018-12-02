@@ -44,7 +44,7 @@ public class SubscribeProcessor implements RequestProcessor {
         for(Topic topic : validTopicList){
             Subscription subscription = new Subscription(clientSession.getClientId(),topic.getTopicName(),topic.getQos());
             clientSession.subscribe(subscription);
-            this.subscriptionMatcher.subscribe(topic.getTopicName(),clientSession.getClientId());
+            this.subscriptionMatcher.subscribe(topic.getTopicName(),subscription);
             topicQosList.add(topic.getQos());
         }
         return topicQosList;
