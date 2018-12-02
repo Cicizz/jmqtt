@@ -4,7 +4,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttConnAckMessage;
 import io.netty.handler.codec.mqtt.MqttConnectMessage;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
+import io.netty.handler.codec.mqtt.MqttMessage;
 import org.apache.commons.lang3.StringUtils;
+import org.jmqtt.broker.dispatcher.FlowMessage;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.session.WillMessageManager;
 import org.jmqtt.common.bean.ClientSession;
@@ -30,14 +32,16 @@ public class ConnectProcessor implements RequestProcessor {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
 
     private BrokerConfig brokerConfig;
+    private FlowMessage flowMessage;
 
-    public ConnectProcessor(BrokerConfig brokerConfig){
+    public ConnectProcessor(BrokerConfig brokerConfig,FlowMessage flowMessage){
         this.brokerConfig = brokerConfig;
+        this.flowMessage = flowMessage;
     }
 
     @Override
-    public void processRequest(ChannelHandlerContext ctx, Message message) {
-        MqttConnectMessage connectMessage = (MqttConnectMessage) message.getPayload();
+    public void processRequest(ChannelHandlerContext ctx, MqttMessage mqttMessage) {
+        MqttConnectMessage connectMessage = (MqttConnectMessage)mqttMessage;
         MqttConnectReturnCode returnCode = null;
         int mqttVersion = connectMessage.variableHeader().version();
         String clientId = connectMessage.payload().clientIdentifier();
@@ -68,7 +72,6 @@ public class ConnectProcessor implements RequestProcessor {
                     }
                 }
                 clientSession.setCtx(ctx);
-                message.setClientSession(clientSession);
                 boolean willFlag = connectMessage.variableHeader().isWillFlag();
                 if(willFlag){
                     boolean willRetain = connectMessage.variableHeader().isWillRetain();
@@ -82,9 +85,11 @@ public class ConnectProcessor implements RequestProcessor {
                 returnCode = MqttConnectReturnCode.CONNECTION_ACCEPTED;
                 NettyUtil.setClientId(ctx.channel(),clientId);
                 ConnectManager.getInstance().putClient(clientId,clientSession);
+                this.flowMessage.initClientFlowCache(clientId);
             }
             MqttConnAckMessage ackMessage = MessageUtil.getConnectAckMessage(returnCode,sessionPresent);
             ctx.writeAndFlush(ackMessage);
+            log.info("[CONNECT] -> {} connect to this mqtt server",clientId);
         }catch(Exception ex){
             log.error("[CONNECT] -> Service Unavailable: cause={}",ex);
             returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE;
