@@ -27,7 +27,9 @@
     </licenses>
 
     <developers>
-        <developer>zhanze</developer>
+        <developer>
+            <name>Cicizz</name>
+        </developer>
     </developers>
 
     <properties>
@@ -54,7 +56,11 @@
                 <artifactId>jmqtt-store</artifactId>
                 <version>${version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.jmqtt</groupId>
+                <artifactId>jmqtt-broker</artifactId>
+                <version>${version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

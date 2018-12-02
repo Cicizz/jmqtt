@@ -2,6 +2,7 @@ package org.jmqtt.common.bean;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * inner message transfer from MqttMessage
@@ -33,8 +34,13 @@ public class Message {
         return headers.put(key,value);
     };
 
+
     public Object removeHeader(String key){
         return headers.remove(key);
+    }
+
+    public Object getHeader(String key){
+        return headers.get(key);
     }
 
     public int getMsgId() {
