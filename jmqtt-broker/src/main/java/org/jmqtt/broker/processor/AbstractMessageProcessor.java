@@ -17,7 +17,6 @@ public abstract class AbstractMessageProcessor {
         boolean retain = (boolean) message.getHeader(MessageHeader.RETAIN);
         if(retain){
             //TODO  处理retain消息
-
         }
     }
 

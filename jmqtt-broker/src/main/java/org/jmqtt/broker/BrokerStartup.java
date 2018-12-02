@@ -22,6 +22,7 @@ public class BrokerStartup {
             start(args);
         } catch (Exception e) {
             System.out.println("Jmqtt start failure,cause = " + e);
+            e.printStackTrace();
             System.exit(-1);
         }
     }
@@ -31,19 +32,22 @@ public class BrokerStartup {
         Options options = buildOptions();
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = parser.parse(options,args);
-        if(commandLine == null){
-            throw new BrokerException("mqttHome or jmqttConfigPath cannot be none");
-        }
-        String jmqttHome = commandLine.getOptionValue("h");
-        String jmqttConfigPath = commandLine.getOptionValue("c");
-        if(StringUtils.isAnyEmpty(jmqttHome,jmqttConfigPath)){
-            throw new BrokerException("mqttHome or jmqttConfigPath cannot be none");
-        }
+        String jmqttHome = null;
+        String jmqttConfigPath = null;
         BrokerConfig brokerConfig = new BrokerConfig();
         NettyConfig nettyConfig = new NettyConfig();
-        initConfig(jmqttConfigPath,brokerConfig,nettyConfig);
+        if(commandLine != null){
+            jmqttHome = commandLine.getOptionValue("h");
+            jmqttConfigPath = commandLine.getOptionValue("c");
+        }
+        if(StringUtils.isNotEmpty(jmqttConfigPath)){
+            initConfig(jmqttConfigPath,brokerConfig,nettyConfig);
+        }
         if(StringUtils.isEmpty(jmqttHome)){
             jmqttHome = brokerConfig.getJmqttHome();
+        }
+        if(StringUtils.isEmpty(jmqttHome)){
+            throw new Exception("please set JMQTT_HOME.");
         }
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         JoranConfigurator configurator = new JoranConfigurator();
@@ -67,11 +71,11 @@ public class BrokerStartup {
     private static Options buildOptions(){
         Options options = new Options();
         Option opt = new Option("h",true,"jmqttHome,eg: /wls/xxx");
-        opt.setRequired(true);
+        opt.setRequired(false);
         options.addOption(opt);
 
         opt = new Option("c",true,"jmqtt.properties path,eg: /wls/xxx/xxx.properties");
-        opt.setRequired(true);
+        opt.setRequired(false);
         options.addOption(opt);
 
         return options;

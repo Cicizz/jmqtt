@@ -33,7 +33,8 @@ public class ClientSession {
     }
 
     public void unSubscribe(String topic){
-        this.subscriptions.remove(new Subscription(topic));
+        Subscription subscription = new Subscription(clientId,topic,1);
+        this.subscriptions.remove(subscription);
     }
 
     public void setClientId(String clientId) {
@@ -71,8 +72,8 @@ public class ClientSession {
             return generateMessageId();
         }
         return messageId;
-
     }
+
 
     @Override
     public boolean equals(Object o) {

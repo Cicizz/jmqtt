@@ -20,6 +20,12 @@ public class MessageUtil {
         return message;
     }
 
+    public static MqttUnsubAckMessage getUnSubAckMessage(int messageId){
+        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.UNSUBACK,false,MqttQoS.AT_MOST_ONCE,false,0);
+        MqttMessageIdVariableHeader idVariableHeader = MqttMessageIdVariableHeader.from(messageId);
+        return new MqttUnsubAckMessage(fixedHeader,idVariableHeader);
+    }
+
     public static int getMessageId(MqttMessage mqttMessage){
         MqttMessageIdVariableHeader idVariableHeader = (MqttMessageIdVariableHeader) mqttMessage.variableHeader();
         return idVariableHeader.messageId();
@@ -30,6 +36,12 @@ public class MessageUtil {
             return qos1;
         }
         return qos2;
+    }
+
+    public static MqttMessage getPubRelMessage(int messageId){
+        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBREL,false,MqttQoS.AT_MOST_ONCE,false,0);
+        MqttMessageIdVariableHeader idVariableHeader = MqttMessageIdVariableHeader.from(messageId);
+        return new MqttMessage(fixedHeader,idVariableHeader);
     }
 
     public static MqttPublishMessage getPubMessage(Message message,boolean dup,int qos,int messageId){

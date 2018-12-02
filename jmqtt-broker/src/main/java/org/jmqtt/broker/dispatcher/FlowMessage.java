@@ -21,4 +21,6 @@ public interface FlowMessage {
 
     boolean releaseSendMsg(String clientId,int msgId);
 
+    boolean containSendMsg(String clientId,int msgId);
+
 }

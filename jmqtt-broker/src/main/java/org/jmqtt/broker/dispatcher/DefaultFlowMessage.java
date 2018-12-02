@@ -34,7 +34,6 @@ public class DefaultFlowMessage implements FlowMessage {
         return recCache.get(clientId).get(msgId);
     }
 
-    ;
 
     @Override
     public boolean cacheRecMsg(String clientId, Message message) {
@@ -49,11 +48,18 @@ public class DefaultFlowMessage implements FlowMessage {
 
     @Override
     public boolean cacheSendMsg(String clientId, Message message) {
-        return false;
+        this.sendCache.get(clientId).put(message.getMsgId(),message);
+        return true;
     }
 
     @Override
     public boolean releaseSendMsg(String clientId, int msgId) {
-        return false;
+        this.sendCache.get(clientId).remove(msgId);
+        return true;
+    }
+
+    @Override
+    public boolean containSendMsg(String clientId, int msgId) {
+        return this.sendCache.get(clientId).contains(msgId);
     }
 }
