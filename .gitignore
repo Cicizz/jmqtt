@@ -16,7 +16,6 @@ local.properties
 
 # Maven #
 #########
-log/
 target/
 
 # Eclipse #
