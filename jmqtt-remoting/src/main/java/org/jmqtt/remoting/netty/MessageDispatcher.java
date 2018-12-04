@@ -1,4 +1,4 @@
-package org.jmqtt.broker.dispatcher;
+package org.jmqtt.remoting.netty;
 
 import org.jmqtt.common.bean.Message;
 

@@ -2,8 +2,8 @@ package org.jmqtt.broker.processor;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttMessage;
-import org.jmqtt.broker.dispatcher.FlowMessage;
-import org.jmqtt.broker.dispatcher.MessageDispatcher;
+import org.jmqtt.store.FlowMessageStore;
+import org.jmqtt.remoting.netty.MessageDispatcher;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.netty.RequestProcessor;
@@ -20,11 +20,11 @@ public class PubRelProcessor extends AbstractMessageProcessor implements Request
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
 
-    private FlowMessage flowMessage;
+    private FlowMessageStore flowMessageStore;
 
-    public PubRelProcessor(MessageDispatcher messageDispatcher, FlowMessage flowMessage) {
+    public PubRelProcessor(MessageDispatcher messageDispatcher, FlowMessageStore flowMessageStore) {
         super(messageDispatcher);
-        this.flowMessage = flowMessage;
+        this.flowMessageStore = flowMessageStore;
     }
 
     @Override
@@ -32,7 +32,7 @@ public class PubRelProcessor extends AbstractMessageProcessor implements Request
         String clientId = NettyUtil.getClientId(ctx.channel());
         int messageId = MessageUtil.getMessageId(mqttMessage);
         if(ConnectManager.getInstance().containClient(clientId)){
-            Message message = flowMessage.releaseRecMsg(clientId,messageId);
+            Message message = flowMessageStore.releaseRecMsg(clientId,messageId);
             if(Objects.nonNull(message)){
                 super.processMessage(message);
             }else{

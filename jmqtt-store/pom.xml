@@ -15,5 +15,11 @@
 
     <name>jmqtt-store</name>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.jmqtt</groupId>
+            <artifactId>jmqtt-common</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>

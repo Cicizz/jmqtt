@@ -6,18 +6,18 @@ import io.netty.handler.codec.mqtt.MqttConnectMessage;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.netty.handler.codec.mqtt.MqttMessage;
 import org.apache.commons.lang3.StringUtils;
-import org.jmqtt.broker.dispatcher.FlowMessage;
-import org.jmqtt.remoting.session.ConnectManager;
-import org.jmqtt.remoting.session.WillMessageManager;
 import org.jmqtt.common.bean.ClientSession;
+import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.bean.MessageHeader;
 import org.jmqtt.common.bean.Subscription;
 import org.jmqtt.common.config.BrokerConfig;
 import org.jmqtt.common.log.LoggerName;
-import org.jmqtt.common.bean.Message;
 import org.jmqtt.remoting.netty.RequestProcessor;
+import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.remoting.util.NettyUtil;
+import org.jmqtt.store.FlowMessageStore;
+import org.jmqtt.store.WillMessageStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,11 +32,13 @@ public class ConnectProcessor implements RequestProcessor {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
 
     private BrokerConfig brokerConfig;
-    private FlowMessage flowMessage;
+    private FlowMessageStore flowMessageStore;
+    private WillMessageStore willMessageStore;
 
-    public ConnectProcessor(BrokerConfig brokerConfig,FlowMessage flowMessage){
+    public ConnectProcessor(BrokerConfig brokerConfig, FlowMessageStore flowMessageStore,WillMessageStore willMessageStore){
         this.brokerConfig = brokerConfig;
-        this.flowMessage = flowMessage;
+        this.flowMessageStore = flowMessageStore;
+        this.willMessageStore = willMessageStore;
     }
 
     @Override
@@ -85,7 +87,7 @@ public class ConnectProcessor implements RequestProcessor {
                 returnCode = MqttConnectReturnCode.CONNECTION_ACCEPTED;
                 NettyUtil.setClientId(ctx.channel(),clientId);
                 ConnectManager.getInstance().putClient(clientId,clientSession);
-                this.flowMessage.initClientFlowCache(clientId);
+                this.flowMessageStore.initClientFlowCache(clientId);
             }
             MqttConnAckMessage ackMessage = MessageUtil.getConnectAckMessage(returnCode,sessionPresent);
             ctx.writeAndFlush(ackMessage);
@@ -110,8 +112,8 @@ public class ConnectProcessor implements RequestProcessor {
         headers.put(MessageHeader.WILL,true);
         Message message = new Message(Message.Type.WILL,headers,willPayload);
         message.setClientSession(clientSession);
-        Message rs =  WillMessageManager.getInstance().storeWill(clientSession.getClientId(),message);
-        log.info("[WillMessage] : {} store will message:{}",clientSession.getClientId(),rs);
+        willMessageStore.storeWillMessage(clientSession.getClientId(),message);
+        log.info("[WillMessageStore] : {} store will message:{}",clientSession.getClientId(),message);
     }
 
     private ClientSession createNewClientSession(String clientId){

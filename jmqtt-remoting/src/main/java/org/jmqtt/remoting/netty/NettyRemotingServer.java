@@ -21,9 +21,9 @@ import org.jmqtt.common.helper.Pair;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.RemotingServer;
-import org.jmqtt.remoting.session.WillMessageManager;
 import org.jmqtt.remoting.util.NettyUtil;
 import org.jmqtt.remoting.util.RemotingHelper;
+import org.jmqtt.store.WillMessageStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,10 +41,14 @@ public class NettyRemotingServer implements RemotingServer {
     private EventLoopGroup ioGroup;
     private Class<? extends ServerChannel> clazz;
     private Map<MqttMessageType, Pair<RequestProcessor, ExecutorService>> processorTable;
+    private MessageDispatcher messageDispatcher;
+    private WillMessageStore willMessageStore;
 
-    public NettyRemotingServer(NettyConfig nettyConfig) {
+    public NettyRemotingServer(NettyConfig nettyConfig,MessageDispatcher messageDispatcher,WillMessageStore willMessageStore) {
         this.nettyConfig = nettyConfig;
         this.processorTable = new HashMap();
+        this.messageDispatcher = messageDispatcher;
+        this.willMessageStore = willMessageStore;
 
         if(!nettyConfig.isUseEpoll()){
             selectorGroup = new NioEventLoopGroup(nettyConfig.getIoThreadNum(),
@@ -142,7 +146,10 @@ public class NettyRemotingServer implements RemotingServer {
             final String remoteAddr = RemotingHelper.getRemoteAddr(ctx.channel());
             log.info("[channelInactive] -> addr = {}",remoteAddr);
             String clientId = NettyUtil.getClientId(ctx.channel());
-            WillMessageManager.getInstance().pubWillMessage(clientId);
+            if(willMessageStore.hasWillMessage(clientId)){
+                Message willMessage = willMessageStore.getWillMessage(clientId);
+                messageDispatcher.appendMessage(willMessage);
+            }
         }
 
         @Override
