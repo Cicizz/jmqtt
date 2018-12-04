@@ -10,8 +10,10 @@ import org.jmqtt.common.bean.Subscription;
 import org.jmqtt.common.helper.RejectHandler;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
+import org.jmqtt.remoting.netty.MessageDispatcher;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.util.MessageUtil;
+import org.jmqtt.store.FlowMessageStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,12 +35,12 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
     private ThreadPoolExecutor pollThread;
     private int pollThreadNum;
     private SubscriptionMatcher subscriptionMatcher;
-    private FlowMessage flowMessage;
+    private FlowMessageStore flowMessageStore;
 
-    public DefaultDispatcherMessage(int pollThreadNum,SubscriptionMatcher subscriptionMatcher,FlowMessage flowMessage){
+    public DefaultDispatcherMessage(int pollThreadNum, SubscriptionMatcher subscriptionMatcher, FlowMessageStore flowMessageStore){
         this.pollThreadNum = pollThreadNum;
         this.subscriptionMatcher = subscriptionMatcher;
-        this.flowMessage = flowMessage;
+        this.flowMessageStore = flowMessageStore;
         this.start();
     }
 
@@ -119,7 +121,7 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
                             message.putHeader(MessageHeader.QOS,qos);
                             message.setMsgId(messageId);
                             if(qos > 0){
-                                flowMessage.cacheSendMsg(clientId,message);
+                                flowMessageStore.cacheSendMsg(clientId,message);
                             }
                             MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message,false,qos,messageId);
                             clientSession.getCtx().writeAndFlush(publishMessage);

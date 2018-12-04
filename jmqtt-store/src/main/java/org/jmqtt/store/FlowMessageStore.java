@@ -1,12 +1,15 @@
-package org.jmqtt.broker.dispatcher;
+package org.jmqtt.store;
 
 import org.jmqtt.common.bean.Message;
 
 /**
  * 存储与释放过程消息
  */
-public interface FlowMessage {
+public interface FlowMessageStore {
 
+    /**
+     * 初始化每个客户端的过程消息存储介质（qos1,qos2）
+     */
     void initClientFlowCache(String clientId);
 
     void clearClientFlowCache(String clientId);

@@ -1,12 +1,13 @@
-package org.jmqtt.broker.dispatcher;
+package org.jmqtt.store.memory;
 
 import org.jmqtt.common.bean.Message;
+import org.jmqtt.store.FlowMessageStore;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class DefaultFlowMessage implements FlowMessage {
+public class DefaultFlowMessageStore implements FlowMessageStore {
 
     private Map<String, ConcurrentHashMap<Integer,Message>> recCache = new ConcurrentHashMap<>();
     private Map<String, ConcurrentHashMap<Integer,Message>> sendCache = new ConcurrentHashMap<>();
