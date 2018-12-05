@@ -15,6 +15,7 @@ import org.jmqtt.remoting.netty.RequestProcessor;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.remoting.util.NettyUtil;
+import org.jmqtt.store.RetainMessageStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,8 +27,8 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
 
     private FlowMessageStore flowMessageStore;
 
-    public PublishProcessor(MessageDispatcher messageDispatcher, FlowMessageStore flowMessageStore){
-        super(messageDispatcher);
+    public PublishProcessor(MessageDispatcher messageDispatcher, FlowMessageStore flowMessageStore, RetainMessageStore retainMessageStore){
+        super(messageDispatcher,retainMessageStore);
         this.flowMessageStore = flowMessageStore;
     }
 

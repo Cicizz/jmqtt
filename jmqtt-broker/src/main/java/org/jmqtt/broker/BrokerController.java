@@ -2,6 +2,7 @@ package org.jmqtt.broker;
 
 import io.netty.handler.codec.mqtt.MqttMessageType;
 import org.jmqtt.broker.dispatcher.DefaultDispatcherMessage;
+import org.jmqtt.store.RetainMessageStore;
 import org.jmqtt.store.WillMessageStore;
 import org.jmqtt.store.memory.DefaultFlowMessageStore;
 import org.jmqtt.store.FlowMessageStore;
@@ -17,6 +18,7 @@ import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.netty.NettyRemotingServer;
 import org.jmqtt.remoting.netty.RequestProcessor;
+import org.jmqtt.store.memory.DefaultRetainMessageStore;
 import org.jmqtt.store.memory.DefaultWillMessageStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +47,7 @@ public class BrokerController {
     private FlowMessageStore flowMessageStore;
     private SubscriptionMatcher subscriptionMatcher;
     private WillMessageStore willMessageStore;
+    private RetainMessageStore retainMessageStore;
 
 
     public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig){
@@ -56,11 +59,13 @@ public class BrokerController {
         this.subQueue = new LinkedBlockingQueue(100000);
         this.pingQueue = new LinkedBlockingQueue(10000);
 
-        {//pluggable
+        {//store pluggable
             this.flowMessageStore = new DefaultFlowMessageStore();
             this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
             this.willMessageStore = new DefaultWillMessageStore();
+            this.retainMessageStore = new DefaultRetainMessageStore();
             this.messageDispatcher = new DefaultDispatcherMessage(brokerConfig.getPollThreadNum(), subscriptionMatcher, flowMessageStore);
+
         }
 
         this.remotingServer = new NettyRemotingServer(nettyConfig,messageDispatcher,willMessageStore);
@@ -107,9 +112,9 @@ public class BrokerController {
             RequestProcessor connectProcessor = new ConnectProcessor(brokerConfig, flowMessageStore,willMessageStore);
             RequestProcessor disconnectProcessor = new DisconnectProcessor(willMessageStore);
             RequestProcessor pingProcessor = new PingProcessor();
-            RequestProcessor publishProcessor = new PublishProcessor(messageDispatcher, flowMessageStore);
-            RequestProcessor pubRelProcessor = new PubRelProcessor(messageDispatcher, flowMessageStore);
-            RequestProcessor subscribeProcessor = new SubscribeProcessor(subscriptionMatcher);
+            RequestProcessor publishProcessor = new PublishProcessor(messageDispatcher, flowMessageStore,retainMessageStore);
+            RequestProcessor pubRelProcessor = new PubRelProcessor(messageDispatcher, flowMessageStore,retainMessageStore);
+            RequestProcessor subscribeProcessor = new SubscribeProcessor(subscriptionMatcher,retainMessageStore,flowMessageStore);
             RequestProcessor unSubscribeProcessor = new UnSubscribeProcessor(subscriptionMatcher);
             RequestProcessor pubRecProcessor = new PubRecProcessor(flowMessageStore);
             RequestProcessor pubCompProcessor = new PubCompProcessor(flowMessageStore);
