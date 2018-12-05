@@ -92,7 +92,6 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
         return isNotFull;
     }
 
-
     @Override
     public void shutdown(){
         this.stoped = true;

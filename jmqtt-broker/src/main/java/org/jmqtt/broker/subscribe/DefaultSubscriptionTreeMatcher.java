@@ -1,15 +1,17 @@
 package org.jmqtt.broker.subscribe;
 
 import org.jmqtt.common.bean.Subscription;
+import org.jmqtt.common.log.LoggerName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
+
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
 
     private TreeNode root = new TreeNode(new Token("root"));
     private Token EMPTY = new Token("");
@@ -19,10 +21,26 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
     public DefaultSubscriptionTreeMatcher(){};
 
     @Override
-    public boolean subscribe(String topic, Subscription subscription) {
-        TreeNode currentNode = recursionGetTreeNode(topic,root);
-        currentNode.addSubscriber(subscription);
-        return true;
+    public int subscribe(String topic, Subscription subscription) {
+        int rs;
+        try{
+            TreeNode currentNode = recursionGetTreeNode(topic,root);
+            Set<Subscription> subscriptions = currentNode.getSubscribers();
+            for(Subscription sub : subscriptions){
+                if(sub.equals(subscription)){
+                    if(sub.getQos() == subscription.getQos()){
+                        rs = 2;
+                        return rs;
+                    }
+                }
+            }
+            rs = 1;
+            currentNode.addSubscriber(subscription);
+        }catch(Exception ex){
+            log.warn("[Subscription] -> Subscribe failed,clientId={},topic={},qos={}",subscription.getClientId(),subscription.getTopic(),subscription.getQos());
+            rs = 0;
+        }
+        return rs;
     }
 
     @Override
@@ -54,6 +72,33 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
         Set<Subscription> subscriptions =  new HashSet<>();
         recursionMatch(topic,root,subscriptions);
         return subscriptions;
+    }
+
+    @Override
+    public boolean isMatch(String pubTopic, String subTopic) {
+        String[] pubTokenStr = pubTopic.split("/");
+        String[] subTokenStr = subTopic.split("/");
+        int pubLen = pubTokenStr.length;
+        int subLen = subTokenStr.length;
+        if(pubLen != subLen){
+            Token lastSubToken = new Token(subTokenStr[subLen-1]);
+            if(subLen > pubLen || (!lastSubToken.equals(MULTY))){
+                return false;
+            }
+        }
+        for(int i = 0; i < pubLen; i++){
+            Token pubToken = new Token(pubTokenStr[i]);
+            Token subToken = new Token(subTokenStr[i]);
+            if(subToken.equals(MULTY)){
+                return true;
+            }else if((!pubToken.equals(subToken)) && (!subToken.equals(SINGLE))){
+                return false;
+            }
+            if(i == subLen-1){
+                return false;
+            }
+        }
+        return false;
     }
 
     private void recursionMatch(String topic,TreeNode node,Set<Subscription> subscriptions){
