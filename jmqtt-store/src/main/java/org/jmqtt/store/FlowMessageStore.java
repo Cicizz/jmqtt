@@ -2,15 +2,12 @@ package org.jmqtt.store;
 
 import org.jmqtt.common.bean.Message;
 
+import java.util.Collection;
+
 /**
  * 存储与释放过程消息
  */
 public interface FlowMessageStore {
-
-    /**
-     * 初始化每个客户端的过程消息存储介质（qos1,qos2）
-     */
-    void initClientFlowCache(String clientId);
 
     void clearClientFlowCache(String clientId);
 
@@ -21,6 +18,8 @@ public interface FlowMessageStore {
     Message releaseRecMsg(String clientId,int msgId);
 
     boolean cacheSendMsg(String clientId,Message message);
+
+    Collection<Message> getAllSendMsg(String clientId);
 
     boolean releaseSendMsg(String clientId,int msgId);
 

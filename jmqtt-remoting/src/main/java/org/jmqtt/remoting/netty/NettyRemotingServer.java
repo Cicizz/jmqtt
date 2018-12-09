@@ -51,13 +51,13 @@ public class NettyRemotingServer implements RemotingServer {
         this.willMessageStore = willMessageStore;
 
         if(!nettyConfig.isUseEpoll()){
-            selectorGroup = new NioEventLoopGroup(nettyConfig.getIoThreadNum(),
+            selectorGroup = new NioEventLoopGroup(nettyConfig.getSelectorThreadNum(),
                     new ThreadFactoryImpl("SelectorEventGroup"));
             ioGroup = new NioEventLoopGroup(nettyConfig.getIoThreadNum(),
                     new ThreadFactoryImpl("IOEventGroup"));
             clazz = NioServerSocketChannel.class;
         }else{
-            selectorGroup = new EpollEventLoopGroup(nettyConfig.getIoThreadNum(),
+            selectorGroup = new EpollEventLoopGroup(nettyConfig.getSelectorThreadNum(),
                     new ThreadFactoryImpl("SelectorEventGroup"));
             ioGroup = new EpollEventLoopGroup(nettyConfig.getIoThreadNum(),
                     new ThreadFactoryImpl("IOEventGroup"));
