@@ -17,13 +17,13 @@ public class ClientSession {
 
     private AtomicInteger messageIdCounter = new AtomicInteger(1);
 
-
     public ClientSession(){}
 
     public ClientSession(String clientId, boolean cleanSession){
         this.clientId = clientId;
         this.cleanSession = cleanSession;
     }
+
     public String getClientId() {
         return clientId;
     }

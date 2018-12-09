@@ -2,10 +2,8 @@ package org.jmqtt.broker;
 
 import io.netty.handler.codec.mqtt.MqttMessageType;
 import org.jmqtt.broker.dispatcher.DefaultDispatcherMessage;
-import org.jmqtt.store.RetainMessageStore;
-import org.jmqtt.store.WillMessageStore;
-import org.jmqtt.store.memory.DefaultFlowMessageStore;
-import org.jmqtt.store.FlowMessageStore;
+import org.jmqtt.store.*;
+import org.jmqtt.store.memory.*;
 import org.jmqtt.remoting.netty.MessageDispatcher;
 import org.jmqtt.broker.processor.*;
 import org.jmqtt.broker.subscribe.DefaultSubscriptionTreeMatcher;
@@ -18,8 +16,6 @@ import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.netty.NettyRemotingServer;
 import org.jmqtt.remoting.netty.RequestProcessor;
-import org.jmqtt.store.memory.DefaultRetainMessageStore;
-import org.jmqtt.store.memory.DefaultWillMessageStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +44,9 @@ public class BrokerController {
     private SubscriptionMatcher subscriptionMatcher;
     private WillMessageStore willMessageStore;
     private RetainMessageStore retainMessageStore;
+    private OfflineMessageStore offlineMessageStore;
+    private SubscriptionStore subscriptionStore;
+    private SessionStore sessionStore;
 
 
     public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig){
@@ -64,8 +63,10 @@ public class BrokerController {
             this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
             this.willMessageStore = new DefaultWillMessageStore();
             this.retainMessageStore = new DefaultRetainMessageStore();
-            this.messageDispatcher = new DefaultDispatcherMessage(brokerConfig.getPollThreadNum(), subscriptionMatcher, flowMessageStore);
-
+            this.offlineMessageStore = new DefaultOfflineMessageStore();
+            this.subscriptionStore = new DefaultSubscriptionStore();
+            this.sessionStore = new DefaultSessionStore();
+            this.messageDispatcher = new DefaultDispatcherMessage(brokerConfig.getPollThreadNum(), subscriptionMatcher, flowMessageStore,offlineMessageStore);
         }
 
         this.remotingServer = new NettyRemotingServer(nettyConfig,messageDispatcher,willMessageStore);
@@ -109,7 +110,7 @@ public class BrokerController {
         MixAll.printProperties(log,nettyConfig);
 
         {//init and register processor
-            RequestProcessor connectProcessor = new ConnectProcessor(brokerConfig, flowMessageStore,willMessageStore);
+            RequestProcessor connectProcessor = new ConnectProcessor(this);
             RequestProcessor disconnectProcessor = new DisconnectProcessor(willMessageStore);
             RequestProcessor pingProcessor = new PingProcessor();
             RequestProcessor publishProcessor = new PublishProcessor(messageDispatcher, flowMessageStore,retainMessageStore);
@@ -141,5 +142,81 @@ public class BrokerController {
         this.subExecutor.shutdown();
         this.pingExecutor.shutdown();
         this.messageDispatcher.shutdown();
+    }
+
+    public BrokerConfig getBrokerConfig() {
+        return brokerConfig;
+    }
+
+    public NettyConfig getNettyConfig() {
+        return nettyConfig;
+    }
+
+    public ExecutorService getConnectExecutor() {
+        return connectExecutor;
+    }
+
+    public ExecutorService getPubExecutor() {
+        return pubExecutor;
+    }
+
+    public ExecutorService getSubExecutor() {
+        return subExecutor;
+    }
+
+    public ExecutorService getPingExecutor() {
+        return pingExecutor;
+    }
+
+    public LinkedBlockingQueue getConnectQueue() {
+        return connectQueue;
+    }
+
+    public LinkedBlockingQueue getPubQueue() {
+        return pubQueue;
+    }
+
+    public LinkedBlockingQueue getSubQueue() {
+        return subQueue;
+    }
+
+    public LinkedBlockingQueue getPingQueue() {
+        return pingQueue;
+    }
+
+    public NettyRemotingServer getRemotingServer() {
+        return remotingServer;
+    }
+
+    public MessageDispatcher getMessageDispatcher() {
+        return messageDispatcher;
+    }
+
+    public FlowMessageStore getFlowMessageStore() {
+        return flowMessageStore;
+    }
+
+    public SubscriptionMatcher getSubscriptionMatcher() {
+        return subscriptionMatcher;
+    }
+
+    public WillMessageStore getWillMessageStore() {
+        return willMessageStore;
+    }
+
+    public RetainMessageStore getRetainMessageStore() {
+        return retainMessageStore;
+    }
+
+    public OfflineMessageStore getOfflineMessageStore() {
+        return offlineMessageStore;
+    }
+
+    public SubscriptionStore getSubscriptionStore() {
+        return subscriptionStore;
+    }
+
+    public SessionStore getSessionStore() {
+        return sessionStore;
     }
 }

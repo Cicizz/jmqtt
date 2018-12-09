@@ -2,19 +2,20 @@ package org.jmqtt.store;
 
 import org.jmqtt.common.bean.Message;
 
-import java.util.concurrent.BlockingQueue;
+import java.util.Collection;
 
 /**
  * cleansession message
  */
 public interface OfflineMessageStore {
 
-    void initOfflneMsgCache(String clientId,int size);
+    void clearOfflineMsgCache(String clientId);
 
-    void clearOfflineMsgCache(String clientId,int size);
+    boolean containOfflineMsg(String clientId);
 
     boolean addOfflineMessage(String clientId, Message message);
 
-    BlockingQueue<Message> getAllOfflineMessage(String clientId);
+    Collection<Message> getAllOfflineMessage(String clientId);
+
 
 }

@@ -5,7 +5,9 @@ import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.remoting.netty.MessageDispatcher;
 import org.jmqtt.store.FlowMessageStore;
+import org.jmqtt.store.OfflineMessageStore;
 import org.jmqtt.store.memory.DefaultFlowMessageStore;
+import org.jmqtt.store.memory.DefaultOfflineMessageStore;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -17,7 +19,8 @@ public class MessageDispatcherTest {
     public void init(){
         SubscriptionMatcher subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
         FlowMessageStore flowMessageStore = new DefaultFlowMessageStore();
-        dispatcher = new DefaultDispatcherMessage(10,subscriptionMatcher, flowMessageStore);
+        OfflineMessageStore offlineMessageStore = new DefaultOfflineMessageStore();
+        dispatcher = new DefaultDispatcherMessage(10,subscriptionMatcher, flowMessageStore,offlineMessageStore);
         dispatcher.start();
     }
 

@@ -1,11 +1,9 @@
 package org.jmqtt.broker.processor;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.mqtt.MqttConnAckMessage;
-import io.netty.handler.codec.mqtt.MqttConnectMessage;
-import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
-import io.netty.handler.codec.mqtt.MqttMessage;
+import io.netty.handler.codec.mqtt.*;
 import org.apache.commons.lang3.StringUtils;
+import org.jmqtt.broker.BrokerController;
 import org.jmqtt.common.bean.ClientSession;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.bean.MessageHeader;
@@ -16,15 +14,11 @@ import org.jmqtt.remoting.netty.RequestProcessor;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.remoting.util.NettyUtil;
-import org.jmqtt.store.FlowMessageStore;
-import org.jmqtt.store.WillMessageStore;
+import org.jmqtt.store.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class ConnectProcessor implements RequestProcessor {
@@ -34,11 +28,17 @@ public class ConnectProcessor implements RequestProcessor {
     private BrokerConfig brokerConfig;
     private FlowMessageStore flowMessageStore;
     private WillMessageStore willMessageStore;
+    private OfflineMessageStore offlineMessageStore;
+    private SubscriptionStore subscriptionStore;
+    private SessionStore sessionStore;
 
-    public ConnectProcessor(BrokerConfig brokerConfig, FlowMessageStore flowMessageStore,WillMessageStore willMessageStore){
-        this.brokerConfig = brokerConfig;
-        this.flowMessageStore = flowMessageStore;
-        this.willMessageStore = willMessageStore;
+    public ConnectProcessor(BrokerController brokerController){
+        this.brokerConfig = brokerController.getBrokerConfig();
+        this.flowMessageStore = brokerController.getFlowMessageStore();
+        this.willMessageStore = brokerController.getWillMessageStore();
+        this.offlineMessageStore = brokerController.getOfflineMessageStore();
+        this.subscriptionStore = brokerController.getSubscriptionStore();
+        this.sessionStore = brokerController.getSessionStore();
     }
 
     @Override
@@ -63,17 +63,23 @@ public class ConnectProcessor implements RequestProcessor {
                 returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_BAD_USER_NAME_OR_PASSWORD;
             } else{
                 if(cleansession){
-                    clientSession = createNewClientSession(clientId);
+                    clientSession = createNewClientSession(clientId,ctx);
                     sessionPresent = false;
                 }else{
-                    boolean hasSession = reloadClientSession(clientSession,clientId);
-                    if(hasSession){
-                        sessionPresent = true;
-                    }{
+                    Object lastState = sessionStore.getLastSession(clientId);
+                    if(Objects.nonNull(lastState)){
+                        if(!lastState.equals(true)){
+                            clientSession = reloadClientSession(ctx,clientId);
+                            sessionPresent = true;
+                        }else{
+                            //TODO  该连接在集群中显示在线，需要处理
+                        }
+                    }else{
+                        clientSession = new ClientSession(clientId,false);
                         sessionPresent = false;
                     }
                 }
-                clientSession.setCtx(ctx);
+                sessionStore.setSession(clientId,true);
                 boolean willFlag = connectMessage.variableHeader().isWillFlag();
                 if(willFlag){
                     boolean willRetain = connectMessage.variableHeader().isWillRetain();
@@ -87,7 +93,6 @@ public class ConnectProcessor implements RequestProcessor {
                 returnCode = MqttConnectReturnCode.CONNECTION_ACCEPTED;
                 NettyUtil.setClientId(ctx.channel(),clientId);
                 ConnectManager.getInstance().putClient(clientId,clientSession);
-                this.flowMessageStore.initClientFlowCache(clientId);
             }
             MqttConnAckMessage ackMessage = MessageUtil.getConnectAckMessage(returnCode,sessionPresent);
             ctx.writeAndFlush(ackMessage);
@@ -116,29 +121,36 @@ public class ConnectProcessor implements RequestProcessor {
         log.info("[WillMessageStore] : {} store will message:{}",clientSession.getClientId(),message);
     }
 
-    private ClientSession createNewClientSession(String clientId){
+    private ClientSession createNewClientSession(String clientId,ChannelHandlerContext ctx){
         ClientSession clientSession = new ClientSession(clientId,true);
-        //TODO clean previous subscriptions and messages
-
+        clientSession.setCtx(ctx);
+        //clear previous sessions
+        this.flowMessageStore.clearClientFlowCache(clientId);
+        this.offlineMessageStore.clearOfflineMsgCache(clientId);
+        this.subscriptionStore.clearSubscription(clientId);
+        this.sessionStore.clearSession(clientId);
         return clientSession;
     }
 
     /**
      * cleansession is true, reload client session
      */
-    private boolean reloadClientSession(ClientSession clientSession,String clientId){
-        clientSession = new ClientSession(clientId,false);
-        //TODO 1.load subscriptions;
-        List<Subscription> subscriptionList = new ArrayList<>();
-        //TODO 2.republish messages;
-        if(subscriptionList != null){
-            for(Subscription subscription : subscriptionList){
-                //pub messages
+    private ClientSession reloadClientSession(ChannelHandlerContext ctx,String clientId){
+            ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
+            clientSession.setCtx(ctx);
+            Collection<Message> flowMsgs = flowMessageStore.getAllSendMsg(clientId);
+            for(Message message : flowMsgs){
+                MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message,false, (Integer) message.getHeader(MessageHeader.QOS),message.getMsgId());
+                clientSession.getCtx().writeAndFlush(publishMessage);
             }
-            clientSession.setSubscriptions(subscriptionList);
-            return true;
-        }
-        return false;
+            if(offlineMessageStore.containOfflineMsg(clientId)){
+                Collection<Message> messages = offlineMessageStore.getAllOfflineMessage(clientId);
+                for(Message message : messages){
+                    MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message,false, (Integer) message.getHeader(MessageHeader.QOS),clientSession.generateMessageId());
+                    clientSession.getCtx().writeAndFlush(publishMessage);
+                }
+            }
+            return clientSession;
     }
 
     private boolean authentication(String clientId,String username,byte[] password){
