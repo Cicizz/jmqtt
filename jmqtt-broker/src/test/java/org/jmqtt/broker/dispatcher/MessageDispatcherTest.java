@@ -3,10 +3,13 @@ package org.jmqtt.broker.dispatcher;
 import org.jmqtt.broker.subscribe.DefaultSubscriptionTreeMatcher;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.jmqtt.common.bean.Message;
+import org.jmqtt.remoting.netty.MessageDispatcher;
+import org.jmqtt.store.FlowMessageStore;
+import org.jmqtt.store.OfflineMessageStore;
+import org.jmqtt.store.memory.DefaultFlowMessageStore;
+import org.jmqtt.store.memory.DefaultOfflineMessageStore;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class MessageDispatcherTest {
 
@@ -15,8 +18,9 @@ public class MessageDispatcherTest {
     @Before
     public void init(){
         SubscriptionMatcher subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
-        FlowMessage flowMessage = new DefaultFlowMessage();
-        dispatcher = new DefaultDispatcherMessage(10,subscriptionMatcher,flowMessage);
+        FlowMessageStore flowMessageStore = new DefaultFlowMessageStore();
+        OfflineMessageStore offlineMessageStore = new DefaultOfflineMessageStore();
+        dispatcher = new DefaultDispatcherMessage(10,subscriptionMatcher, flowMessageStore,offlineMessageStore);
         dispatcher.start();
     }
 

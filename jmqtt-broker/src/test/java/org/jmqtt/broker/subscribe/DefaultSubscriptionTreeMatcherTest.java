@@ -26,7 +26,7 @@ public class DefaultSubscriptionTreeMatcherTest {
         String topic = "MQTT_TEST/2/+/E/#";
         String clientId = "clientid_test";
         Subscription subscription = new Subscription(clientId,topic,1);
-        Assert.assertTrue(this.subscriptionMatcher.subscribe(topic,subscription) == true);
+        Assert.assertTrue(this.subscriptionMatcher.subscribe(topic,subscription) != 0);
     }
 
     @Test

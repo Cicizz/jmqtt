@@ -10,8 +10,11 @@ import org.jmqtt.common.bean.Subscription;
 import org.jmqtt.common.helper.RejectHandler;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
+import org.jmqtt.remoting.netty.MessageDispatcher;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.util.MessageUtil;
+import org.jmqtt.store.FlowMessageStore;
+import org.jmqtt.store.OfflineMessageStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,12 +36,14 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
     private ThreadPoolExecutor pollThread;
     private int pollThreadNum;
     private SubscriptionMatcher subscriptionMatcher;
-    private FlowMessage flowMessage;
+    private FlowMessageStore flowMessageStore;
+    private OfflineMessageStore offlineMessageStore;
 
-    public DefaultDispatcherMessage(int pollThreadNum,SubscriptionMatcher subscriptionMatcher,FlowMessage flowMessage){
+    public DefaultDispatcherMessage(int pollThreadNum, SubscriptionMatcher subscriptionMatcher, FlowMessageStore flowMessageStore, OfflineMessageStore offlineMessageStore){
         this.pollThreadNum = pollThreadNum;
         this.subscriptionMatcher = subscriptionMatcher;
-        this.flowMessage = flowMessage;
+        this.flowMessageStore = flowMessageStore;
+        this.offlineMessageStore = offlineMessageStore;
         this.start();
     }
 
@@ -90,7 +95,6 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
         return isNotFull;
     }
 
-
     @Override
     public void shutdown(){
         this.stoped = true;
@@ -100,8 +104,7 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
     class AsyncDispatcher implements Runnable{
 
         private List<Message> messages;
-
-        public AsyncDispatcher(List<Message> messages){
+        AsyncDispatcher(List<Message> messages){
             this.messages = messages;
         }
 
@@ -113,18 +116,18 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
                     for(Subscription subscription : subscriptions){
                         String clientId = subscription.getClientId();
                         ClientSession clientSession = ConnectManager.getInstance().getClient(subscription.getClientId());
-                        if(Objects.nonNull(clientSession)){
+                        if(ConnectManager.getInstance().containClient(clientId)){
                             int qos = MessageUtil.getMinQos((int)message.getHeader(MessageHeader.QOS),subscription.getQos());
                             int messageId = clientSession.generateMessageId();
                             message.putHeader(MessageHeader.QOS,qos);
                             message.setMsgId(messageId);
                             if(qos > 0){
-                                flowMessage.cacheSendMsg(clientId,message);
+                                flowMessageStore.cacheSendMsg(clientId,message);
                             }
                             MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message,false,qos,messageId);
                             clientSession.getCtx().writeAndFlush(publishMessage);
                         }else{
-                            //TODO 离线消息处理
+                            offlineMessageStore.addOfflineMessage(clientId,message);
                         }
                     }
                 }
