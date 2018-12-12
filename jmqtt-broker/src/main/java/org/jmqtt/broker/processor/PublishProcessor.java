@@ -5,8 +5,8 @@ import io.netty.handler.codec.mqtt.MqttMessage;
 import io.netty.handler.codec.mqtt.MqttPubAckMessage;
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
 import io.netty.handler.codec.mqtt.MqttQoS;
-import org.jmqtt.broker.dispatcher.FlowMessage;
-import org.jmqtt.broker.dispatcher.MessageDispatcher;
+import org.jmqtt.store.FlowMessageStore;
+import org.jmqtt.remoting.netty.MessageDispatcher;
 import org.jmqtt.common.bean.ClientSession;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.bean.MessageHeader;
@@ -15,6 +15,7 @@ import org.jmqtt.remoting.netty.RequestProcessor;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.remoting.util.NettyUtil;
+import org.jmqtt.store.RetainMessageStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,11 +25,11 @@ import java.util.Map;
 public class PublishProcessor extends AbstractMessageProcessor implements RequestProcessor {
     private Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
 
-    private FlowMessage flowMessage;
+    private FlowMessageStore flowMessageStore;
 
-    public PublishProcessor(MessageDispatcher messageDispatcher,FlowMessage flowMessage){
-        super(messageDispatcher);
-        this.flowMessage = flowMessage;
+    public PublishProcessor(MessageDispatcher messageDispatcher, FlowMessageStore flowMessageStore, RetainMessageStore retainMessageStore){
+        super(messageDispatcher,retainMessageStore);
+        this.flowMessageStore = flowMessageStore;
     }
 
     @Override
@@ -65,7 +66,7 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
 
     private void processQos2(ChannelHandlerContext ctx,Message innerMsg){
         log.debug("[PubMessage] -> Process qos2 message,clientId={}",innerMsg.getClientSession().getClientId());
-        boolean flag = flowMessage.cacheRecMsg(innerMsg.getClientSession().getClientId(),innerMsg);
+        boolean flag = flowMessageStore.cacheRecMsg(innerMsg.getClientSession().getClientId(),innerMsg);
         if(!flag){
             log.warn("[PubMessage] -> cache qos2 pub message failure,clientId={}",innerMsg.getClientSession().getClientId());
         }

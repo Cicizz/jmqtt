@@ -7,10 +7,6 @@ public class Subscription {
     private int qos;
     private String topic;
 
-    public Subscription(String topic){
-        this.topic = topic;
-    }
-
     public Subscription(String clientId,String topic,int qos){
         this.clientId = clientId;
         this.topic = topic;

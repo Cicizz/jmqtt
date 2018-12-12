@@ -1,13 +1,13 @@
-package org.jmqtt.broker.dispatcher;
+package org.jmqtt.store;
 
 import org.jmqtt.common.bean.Message;
+
+import java.util.Collection;
 
 /**
  * 存储与释放过程消息
  */
-public interface FlowMessage {
-
-    void initClientFlowCache(String clientId);
+public interface FlowMessageStore {
 
     void clearClientFlowCache(String clientId);
 
@@ -18,6 +18,8 @@ public interface FlowMessage {
     Message releaseRecMsg(String clientId,int msgId);
 
     boolean cacheSendMsg(String clientId,Message message);
+
+    Collection<Message> getAllSendMsg(String clientId);
 
     boolean releaseSendMsg(String clientId,int msgId);
 
