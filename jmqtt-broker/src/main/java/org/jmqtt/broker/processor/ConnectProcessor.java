@@ -62,18 +62,20 @@ public class ConnectProcessor implements RequestProcessor {
             } else if(!authentication(clientId,userName,password)){
                 returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_BAD_USER_NAME_OR_PASSWORD;
             } else{
+                Object lastState = sessionStore.getLastSession(clientId);
+                if(Objects.nonNull(lastState) && lastState.equals(true)){
+                    //clear previous connect
+                    ClientSession previousClient = ConnectManager.getInstance().getClient(clientId);
+                    previousClient.getCtx().close();
+                    ConnectManager.getInstance().removeClient(clientId);
+                }
                 if(cleansession){
                     clientSession = createNewClientSession(clientId,ctx);
                     sessionPresent = false;
                 }else{
-                    Object lastState = sessionStore.getLastSession(clientId);
                     if(Objects.nonNull(lastState)){
-                        if(!lastState.equals(true)){
-                            clientSession = reloadClientSession(ctx,clientId);
-                            sessionPresent = true;
-                        }else{
-                            //TODO  该连接在集群中显示在线，需要处理
-                        }
+                        clientSession = reloadClientSession(ctx,clientId);
+                        sessionPresent = true;
                     }else{
                         clientSession = new ClientSession(clientId,false);
                         sessionPresent = false;
