@@ -8,22 +8,22 @@ import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.codec.mqtt.MqttDecoder;
 import io.netty.handler.codec.mqtt.MqttEncoder;
 import io.netty.handler.codec.mqtt.MqttMessage;
 import io.netty.handler.codec.mqtt.MqttMessageType;
-import io.netty.handler.timeout.IdleState;
-import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
-import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.config.NettyConfig;
+import org.jmqtt.common.helper.MixAll;
 import org.jmqtt.common.helper.Pair;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.RemotingServer;
-import org.jmqtt.remoting.util.NettyUtil;
-import org.jmqtt.remoting.util.RemotingHelper;
-import org.jmqtt.store.WillMessageStore;
+import org.jmqtt.remoting.netty.codec.ByteBuf2WebSocketEncoder;
+import org.jmqtt.remoting.netty.codec.WebSocket2ByteBufDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,14 +41,12 @@ public class NettyRemotingServer implements RemotingServer {
     private EventLoopGroup ioGroup;
     private Class<? extends ServerChannel> clazz;
     private Map<MqttMessageType, Pair<RequestProcessor, ExecutorService>> processorTable;
-    private MessageDispatcher messageDispatcher;
-    private WillMessageStore willMessageStore;
+    private NettyEventExcutor nettyEventExcutor;
 
-    public NettyRemotingServer(NettyConfig nettyConfig,MessageDispatcher messageDispatcher,WillMessageStore willMessageStore) {
+    public NettyRemotingServer(NettyConfig nettyConfig,ChannelEventListener listener) {
         this.nettyConfig = nettyConfig;
         this.processorTable = new HashMap();
-        this.messageDispatcher = messageDispatcher;
-        this.willMessageStore = willMessageStore;
+        this.nettyEventExcutor = new NettyEventExcutor(listener);
 
         if(!nettyConfig.isUseEpoll()){
             selectorGroup = new NioEventLoopGroup(nettyConfig.getSelectorThreadNum(),
@@ -68,6 +66,17 @@ public class NettyRemotingServer implements RemotingServer {
 
     @Override
     public void start() {
+        //Netty event excutor start
+        this.nettyEventExcutor.start();
+        // start TCP 1883 server
+        startTcpServer();
+        // start Websocket server
+        if(nettyConfig.isStartWebsocket()){
+            startWebsocketServer();
+        }
+    }
+
+    private void startWebsocketServer(){
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(selectorGroup,ioGroup)
                 .channel(clazz)
@@ -81,23 +90,61 @@ public class NettyRemotingServer implements RemotingServer {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast("mqttEncoder", MqttEncoder.INSTANCE)
+                        pipeline.addLast("idleStateHandler", new IdleStateHandler(0, 0, 60))
+                                .addLast("nettyConnectionManager", new NettyConnectHandler(nettyEventExcutor))
+                                .addLast("httpCodec",new HttpServerCodec())
+                                .addLast("aggregator",new HttpObjectAggregator(65535))
+                                .addLast("webSocketHandler",new WebSocketServerProtocolHandler("/mqtt", MixAll.MQTT_VERSION_SUPPORT))
+                                .addLast("webSocket2ByteBufDecoder",new WebSocket2ByteBufDecoder())
+                                .addLast("byteBuf2WebSocketEncoder",new ByteBuf2WebSocketEncoder())
+                                .addLast("mqttEncoder", MqttEncoder.INSTANCE)
                                 .addLast("mqttDecoder", new MqttDecoder(nettyConfig.getMaxMsgSize()))
-                                .addLast("idleStateHandler", new IdleStateHandler(0, 0, 60))
-                                .addLast("nettyConnectionManager", new NettyConnectManager())
                                 .addLast("nettyMqttHandler", new NettyMqttHandler());
                     }
                 });
         if(nettyConfig.isPooledByteBufAllocatorEnable()){
             bootstrap.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         }
+        try {
+            ChannelFuture future = bootstrap.bind(nettyConfig.getWebsocketPort()).sync();
+            log.info("Start webSocket server success,port = {}",nettyConfig.getWebsocketPort());
+        }catch (InterruptedException ex){
+            log.error("Start webSocket server failure.cause={}",ex);
+        }
+    }
 
+    private void startTcpServer(){
+        ServerBootstrap bootstrap = new ServerBootstrap();
+        bootstrap.group(selectorGroup,ioGroup)
+                .channel(clazz)
+                .option(ChannelOption.SO_BACKLOG, nettyConfig.getTcpBackLog())
+                .childOption(ChannelOption.TCP_NODELAY, nettyConfig.isTcpNoDelay())
+                .childOption(ChannelOption.SO_SNDBUF, nettyConfig.getTcpSndBuf())
+                .option(ChannelOption.SO_RCVBUF, nettyConfig.getTcpRcvBuf())
+                .option(ChannelOption.SO_REUSEADDR, nettyConfig.isTcpReuseAddr())
+                .childOption(ChannelOption.SO_KEEPALIVE, nettyConfig.isTcpKeepAlive())
+                .childHandler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    protected void initChannel(SocketChannel socketChannel) throws Exception {
+                        ChannelPipeline pipeline = socketChannel.pipeline();
+                        pipeline.addLast("idleStateHandler", new IdleStateHandler(0, 0, 60))
+                                .addLast("nettyConnectionManager", new NettyConnectHandler(nettyEventExcutor))
+                                .addLast("mqttEncoder", MqttEncoder.INSTANCE)
+                                .addLast("mqttDecoder", new MqttDecoder(nettyConfig.getMaxMsgSize()))
+                                .addLast("nettyMqttHandler", new NettyMqttHandler());
+                    }
+                });
+        if(nettyConfig.isPooledByteBufAllocatorEnable()){
+            bootstrap.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
+        }
         try {
             ChannelFuture future = bootstrap.bind(nettyConfig.getTcpPort()).sync();
+            log.info("Start tcp server success,port = {}",nettyConfig.getTcpPort());
         }catch (InterruptedException ex){
             log.error("Start tcp server failure.cause={}",ex);
         }
     }
+
 
 
     @Override
@@ -139,36 +186,4 @@ public class NettyRemotingServer implements RemotingServer {
 
     }
 
-    class NettyConnectManager extends ChannelDuplexHandler {
-
-        @Override
-        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-            final String remoteAddr = RemotingHelper.getRemoteAddr(ctx.channel());
-            log.info("[channelInactive] -> addr = {}",remoteAddr);
-            String clientId = NettyUtil.getClientId(ctx.channel());
-            if(willMessageStore.hasWillMessage(clientId)){
-                Message willMessage = willMessageStore.getWillMessage(clientId);
-                messageDispatcher.appendMessage(willMessage);
-            }
-        }
-
-        @Override
-        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-            if(evt instanceof IdleStateHandler){
-                IdleStateEvent event = (IdleStateEvent) evt;
-                if(event.state().equals(IdleState.ALL_IDLE)){
-                    final String remoteAddr = RemotingHelper.getRemoteAddr(ctx.channel());
-                    log.warn("[HEART_BEAT] -> IDLE exception, addr = {}",remoteAddr);
-                    RemotingHelper.closeChannel(ctx.channel());
-                }
-            }
-        }
-
-        @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-            log.warn("Channel caught Exception remotingAddr = {}", RemotingHelper.getRemoteAddr(ctx.channel()));
-            log.warn("Channel caught Exception,cause = {}", cause);
-            RemotingHelper.closeChannel(ctx.channel());
-        }
-    }
 }

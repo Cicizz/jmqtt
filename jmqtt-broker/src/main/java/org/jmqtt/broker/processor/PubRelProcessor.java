@@ -3,7 +3,7 @@ package org.jmqtt.broker.processor;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttMessage;
 import org.jmqtt.store.FlowMessageStore;
-import org.jmqtt.remoting.netty.MessageDispatcher;
+import org.jmqtt.broker.dispatcher.MessageDispatcher;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.netty.RequestProcessor;

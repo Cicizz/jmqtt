@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>webSocket test</title>
+</head>
+<body>
+    <h1>Test WebSocket function</h1>
+    <div>
+        <span>server ip:</span>
+        <input name="serverIp" type="text" value="127.0.0.1">
+    </div>
+    <div>
+        <span>webSocket port:</span>
+        <input name="port" type="text" value="1884">
+    </div>
+    <div>
+        <span>clientId:</span>
+        <input name="clientId" type="text" value="client_test_id">
+    </div>
+    <button class="connect">connect</button>
+    <br>
+    <br>
+    <div>
+        <span>Pub Topic:</span>
+        <input name="topic" type="text" value="T_WEBSOCKET_TEST">
+    </div>
+    <div>
+        <span>Message:</span>
+        <input name="message" type="text" value="this is a message from webSocket client">
+    </div>
+    <button class="pub">pubMessage</button>
+    <br>
+    <br>
+    <div>
+        <span>Sub Topic:</span>
+        <input name="subTopic" type="text" value="T_WEBSOCKET_TEST">
+    </div>
+    <button class="sub">Subscribe</button>
+    <button class="unSub">UnSubscribe</button>
+    <div class="recMessage"></div>
+
+</body>
+<script src="http://libs.baidu.com/jquery/2.1.4/jquery.min.js"></script>
+<script src="paho-mqtt-min.js" type="text/javascript"></script>
+<script>
+    $(function(){
+        var client;
+        $(".connect").click(function(){
+            var ip = $("input[name='serverIp']").val();
+            var port = $("input[name='port']").val();
+            var clientId = $("input[name='clientId']").val();
+            client = connect(ip,port,clientId);
+        })
+        $(".pub").click(function () {
+            var topic = $("input[name='topic']").val();
+            var message = $("input[name='message']").val();
+            pubMessage(client,topic,message);
+        })
+        $(".sub").click(function () {
+            var subTopic = $("input[name='subTopic']").val();
+            subscribe(client,subTopic);
+        })
+        $(".unSub").click(function () {
+            var subTopic = $("input[name='subTopic']").val();
+            unSubscribe(client,subTopic);
+        })
+
+
+    })
+
+    function connect(ip,port,clientId){
+        console.log("ip:"+ip);
+        console.log("port:"+port);
+        console.log("clientId:"+clientId);
+        var client = new Paho.MQTT.Client(ip, Number(port),"/mqtt", clientId);
+        client.onConnectionLost = onConnectionLost;
+        client.onMessageArrived = onMessageArrived;
+        client.onMessageDelivered = onMessageDelivered;
+        client.connect({onSuccess:onConnect});
+        return client;
+    }
+
+    function pubMessage(client,topic,message){
+        var message = new Paho.MQTT.Message(message);
+        message.destinationName = topic;
+        client.send(message);
+    }
+
+    function subscribe(client,subTopic){
+        client.subscribe(subTopic);
+        alert("sub topic success");
+    }
+
+    function unSubscribe(client,subTopic){
+        client.unsubscribe(subTopic);
+        alert("un sub topic success");
+    }
+
+    function onMessageArrived(message){
+        console.log("receive message:" + message.payloadString);
+        var txt = "<p>"+ message.payloadString +"</p>";
+        $(".recMessage").append(txt);
+    }
+
+    function onMessageDelivered(message){
+        console.log("pub message" + message.payloadString)
+        alert("pub message success,message: " + message.payloadString);
+    }
+
+    // called when the client connects
+    function onConnect() {
+        alert("connect success.");
+    }
+
+    // called when the client loses its connection
+    function onConnectionLost(responseObject) {
+        if (responseObject.errorCode !== 0) {
+            console.log("onConnectionLost:"+responseObject.errorMessage);
+        }
+    }
+</script>
+</html>

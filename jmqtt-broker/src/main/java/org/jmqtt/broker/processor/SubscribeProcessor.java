@@ -7,7 +7,6 @@ import io.netty.handler.codec.mqtt.MqttSubscribeMessage;
 import io.netty.handler.codec.mqtt.MqttTopicSubscription;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.jmqtt.common.bean.*;
-import org.jmqtt.remoting.netty.MessageDispatcher;
 import org.jmqtt.remoting.netty.RequestProcessor;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.util.MessageUtil;

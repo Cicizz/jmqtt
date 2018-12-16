@@ -18,6 +18,12 @@ public class NettyConfig {
      */
     private int tcpPort = 1883;
 
+    private boolean startWebsocket = true;
+    /**
+     * websocket port default 1884
+     */
+    private int websocketPort = 1884;
+
     /**
      * max mqtt message size
      */
@@ -118,4 +124,22 @@ public class NettyConfig {
     public void setPooledByteBufAllocatorEnable(boolean pooledByteBufAllocatorEnable) {
         this.pooledByteBufAllocatorEnable = pooledByteBufAllocatorEnable;
     }
+
+    public boolean isStartWebsocket() {
+        return startWebsocket;
+    }
+
+    public void setStartWebsocket(boolean startWebsocket) {
+        this.startWebsocket = startWebsocket;
+    }
+
+    public int getWebsocketPort() {
+        return websocketPort;
+    }
+
+    public void setWebsocketPort(int websocketPort) {
+        this.websocketPort = websocketPort;
+    }
+
+
 }
