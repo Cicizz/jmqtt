@@ -1,6 +1,7 @@
 package org.jmqtt.remoting.util;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.mqtt.*;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.bean.MessageHeader;
@@ -11,6 +12,12 @@ import java.util.List;
  * transfer message from Message and MqttMessage
  */
 public class MessageUtil {
+
+    public static byte[] readBytesFromByteBuf(ByteBuf byteBuf){
+        byte[] bytes = new byte[byteBuf.readableBytes()];
+        byteBuf.readBytes(bytes);
+        return bytes;
+    }
 
     public static Message getMessage(MqttMessage mqttMessage){
         Message message = new Message();
@@ -47,7 +54,8 @@ public class MessageUtil {
     public static MqttPublishMessage getPubMessage(Message message,boolean dup,int qos,int messageId){
         MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH,dup,MqttQoS.valueOf(qos),false,0);
         MqttPublishVariableHeader publishVariableHeader = new MqttPublishVariableHeader((String) message.getHeader(MessageHeader.TOPIC),messageId);
-        return new MqttPublishMessage(fixedHeader,publishVariableHeader,(ByteBuf)message.getPayload());
+        ByteBuf heapBuf = Unpooled.wrappedBuffer((byte[])message.getPayload());
+        return new MqttPublishMessage(fixedHeader,publishVariableHeader,heapBuf);
     }
 
     public static MqttMessage getSubAckMessage(int messageId, List<Integer> qos){

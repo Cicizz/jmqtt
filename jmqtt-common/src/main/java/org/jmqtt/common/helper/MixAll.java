@@ -9,6 +9,8 @@ import java.util.Properties;
 
 public class MixAll {
 
+    public static String MQTT_VERSION_SUPPORT = "mqtt, mqtt3.1, mqtt3.1.1";
+
     public static void printProperties(Logger log,Object obj){
         Class clazz = obj.getClass();
         Field[] fields = clazz.getDeclaredFields();

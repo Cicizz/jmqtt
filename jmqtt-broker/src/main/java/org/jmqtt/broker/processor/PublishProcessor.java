@@ -6,7 +6,7 @@ import io.netty.handler.codec.mqtt.MqttPubAckMessage;
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import org.jmqtt.store.FlowMessageStore;
-import org.jmqtt.remoting.netty.MessageDispatcher;
+import org.jmqtt.broker.dispatcher.MessageDispatcher;
 import org.jmqtt.common.bean.ClientSession;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.bean.MessageHeader;
@@ -40,7 +40,7 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
         String clientId = NettyUtil.getClientId(ctx.channel());
         ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
         innerMsg.setClientSession(clientSession);
-        innerMsg.setPayload(publishMessage.payload());
+        innerMsg.setPayload(MessageUtil.readBytesFromByteBuf(publishMessage.payload()));
         innerMsg.setType(Message.Type.valueOf(mqttMessage.fixedHeader().messageType().value()));
         Map<String,Object> headers = new HashMap<>();
         headers.put(MessageHeader.TOPIC,publishMessage.variableHeader().topicName());
