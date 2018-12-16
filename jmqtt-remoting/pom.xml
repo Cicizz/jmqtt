@@ -26,10 +26,6 @@
             <groupId>org.jmqtt</groupId>
             <artifactId>jmqtt-common</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.jmqtt</groupId>
-            <artifactId>jmqtt-store</artifactId>
-        </dependency>
     </dependencies>
 
 </project>

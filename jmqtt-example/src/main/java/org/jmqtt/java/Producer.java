@@ -20,8 +20,6 @@ public class Producer {
             pubClient.publish(topic,mqttMessage);
             System.out.println("Send message success.");
         }
-        Thread.sleep(1000);
-        pubClient.disconnect();
     }
 
     private static MqttMessage getMqttMessage(){
@@ -34,6 +32,7 @@ public class Producer {
         try {
             MqttClient pubClient = new MqttClient(broker,clientId,new MemoryPersistence());
             MqttConnectOptions connectOptions = new MqttConnectOptions();
+            connectOptions.setWill("lwt","this is a will message".getBytes(),1,false);
             connectOptions.setCleanSession(true);
             System.out.println("Connecting to broker: " + broker);
             pubClient.connect(connectOptions);

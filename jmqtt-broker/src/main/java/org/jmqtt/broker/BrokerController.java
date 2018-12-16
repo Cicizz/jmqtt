@@ -1,10 +1,12 @@
 package org.jmqtt.broker;
 
 import io.netty.handler.codec.mqtt.MqttMessageType;
+import org.jmqtt.broker.client.ClientLifeCycleHookService;
 import org.jmqtt.broker.dispatcher.DefaultDispatcherMessage;
+import org.jmqtt.remoting.netty.ChannelEventListener;
 import org.jmqtt.store.*;
 import org.jmqtt.store.memory.*;
-import org.jmqtt.remoting.netty.MessageDispatcher;
+import org.jmqtt.broker.dispatcher.MessageDispatcher;
 import org.jmqtt.broker.processor.*;
 import org.jmqtt.broker.subscribe.DefaultSubscriptionTreeMatcher;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
@@ -38,6 +40,7 @@ public class BrokerController {
     private LinkedBlockingQueue pubQueue;
     private LinkedBlockingQueue subQueue;
     private LinkedBlockingQueue pingQueue;
+    private ChannelEventListener channelEventListener;
     private NettyRemotingServer remotingServer;
     private MessageDispatcher messageDispatcher;
     private FlowMessageStore flowMessageStore;
@@ -68,8 +71,8 @@ public class BrokerController {
             this.sessionStore = new DefaultSessionStore();
             this.messageDispatcher = new DefaultDispatcherMessage(brokerConfig.getPollThreadNum(), subscriptionMatcher, flowMessageStore,offlineMessageStore);
         }
-
-        this.remotingServer = new NettyRemotingServer(nettyConfig,messageDispatcher,willMessageStore);
+        this.channelEventListener = new ClientLifeCycleHookService(willMessageStore,messageDispatcher);
+        this.remotingServer = new NettyRemotingServer(nettyConfig,channelEventListener);
 
         int coreThreadNum = Runtime.getRuntime().availableProcessors();
         this.connectExecutor = new ThreadPoolExecutor(coreThreadNum*2,
@@ -111,7 +114,7 @@ public class BrokerController {
 
         {//init and register processor
             RequestProcessor connectProcessor = new ConnectProcessor(this);
-            RequestProcessor disconnectProcessor = new DisconnectProcessor(willMessageStore);
+            RequestProcessor disconnectProcessor = new DisconnectProcessor(this);
             RequestProcessor pingProcessor = new PingProcessor();
             RequestProcessor publishProcessor = new PublishProcessor(messageDispatcher, flowMessageStore,retainMessageStore);
             RequestProcessor pubRelProcessor = new PubRelProcessor(messageDispatcher, flowMessageStore,retainMessageStore);

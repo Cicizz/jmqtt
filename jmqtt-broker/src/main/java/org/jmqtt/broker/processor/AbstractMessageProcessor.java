@@ -1,6 +1,6 @@
 package org.jmqtt.broker.processor;
 
-import org.jmqtt.remoting.netty.MessageDispatcher;
+import org.jmqtt.broker.dispatcher.MessageDispatcher;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.bean.MessageHeader;
 import org.jmqtt.store.RetainMessageStore;
