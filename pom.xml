@@ -14,6 +14,7 @@
         <module>jmqtt-store</module>
         <module>jmqtt-common</module>
         <module>jmqtt-distribution</module>
+        <module>jmqtt-example</module>
     </modules>
 
     <name>jmqtt</name>

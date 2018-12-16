@@ -10,7 +10,6 @@ import org.jmqtt.common.bean.Subscription;
 import org.jmqtt.common.helper.RejectHandler;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
-import org.jmqtt.remoting.netty.MessageDispatcher;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.store.FlowMessageStore;
