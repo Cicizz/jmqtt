@@ -2,7 +2,7 @@ package org.jmqtt.common.config;
 
 public class RedisConfig {
     private String host = "127.0.0.1";
-    private Integer port = 6379;                          /* 修改*/
+    private Integer port = 6379;
     private String password = "123456";
     private Integer maxIdle = 100;
     private Integer maxActive = 300;
