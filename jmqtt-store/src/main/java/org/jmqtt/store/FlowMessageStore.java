@@ -11,7 +11,7 @@ public interface FlowMessageStore {
 
     void clearClientFlowCache(String clientId);
 
-    Message getRecMsg(String clientId,int msgId);
+    Message getRecMsg(String clientId, int msgId);
 
     boolean cacheRecMsg(String clientId,Message message);
 
@@ -21,7 +21,7 @@ public interface FlowMessageStore {
 
     Collection<Message> getAllSendMsg(String clientId);
 
-    boolean releaseSendMsg(String clientId,int msgId);
+    Message releaseSendMsg(String clientId,int msgId);
 
     boolean containSendMsg(String clientId,int msgId);
 
