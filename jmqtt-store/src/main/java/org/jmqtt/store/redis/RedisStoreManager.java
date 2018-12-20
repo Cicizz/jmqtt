@@ -1,4 +1,4 @@
-package org.jmqtt.store.memory;
+package org.jmqtt.store.redis;
 
 import org.jmqtt.common.config.RedisConfig;
 import redis.clients.jedis.HostAndPort;

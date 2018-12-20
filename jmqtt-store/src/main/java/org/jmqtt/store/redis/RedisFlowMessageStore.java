@@ -1,13 +1,10 @@
-package org.jmqtt.store.memory;
+package org.jmqtt.store.redis;
 
-import net.sf.json.JSONObject;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.config.RedisConfig;
 import org.jmqtt.store.FlowMessageStore;
-import redis.clients.jedis.JedisCluster;
 
 import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class RedisFlowMessageStore implements FlowMessageStore {
 

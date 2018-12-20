@@ -1,8 +1,10 @@
-package org.jmqtt.store.memory;
+package org.jmqtt.store.redis;
 
 import net.sf.json.JSONObject;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.config.RedisConfig;
+import org.jmqtt.store.redis.RedisDao;
+import org.jmqtt.store.redis.RedisStoreManager;
 import redis.clients.jedis.JedisCluster;
 
 import java.util.ArrayList;
