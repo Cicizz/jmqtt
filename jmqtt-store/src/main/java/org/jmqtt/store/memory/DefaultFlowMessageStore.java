@@ -6,6 +6,7 @@ import org.jmqtt.store.FlowMessageStore;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DefaultFlowMessageStore implements FlowMessageStore {
@@ -66,8 +67,9 @@ public class DefaultFlowMessageStore implements FlowMessageStore {
     }
 
     @Override
-    public Message releaseSendMsg(String clientId, int msgId) {
-        return this.sendCache.get(clientId).remove(msgId);
+    public boolean releaseSendMsg(String clientId, int msgId) {
+        this.sendCache.get(clientId).remove(msgId);
+        return true;
     }
 
     @Override

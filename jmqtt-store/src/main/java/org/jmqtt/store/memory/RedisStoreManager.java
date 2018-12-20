@@ -37,10 +37,9 @@ public class RedisStoreManager {
         poolConfig.setMaxTotal(redisConfig.getMaxActive());
         poolConfig.setMaxIdle(redisConfig.getMaxIdle());
         poolConfig.setMaxWaitMillis(redisConfig.getTimeout());
-        nodes.add(new HostAndPort(redisConfig.getHost1(),redisConfig.getPort1()));
-        nodes.add(new HostAndPort(redisConfig.getHost2(),redisConfig.getPort2()));
-        nodes.add(new HostAndPort(redisConfig.getHost3(),redisConfig.getPort3()));
-        nodes.add(new HostAndPort(redisConfig.getHost4(),redisConfig.getPort4()));
+        for (Integer id=0;id<4;id++){
+            nodes.add(new HostAndPort(redisConfig.getHost(id),redisConfig.getPort(id)));
+        }
         cluster = new JedisCluster(nodes,poolConfig);
     }
 
@@ -52,7 +51,5 @@ public class RedisStoreManager {
         }
     }
 
-    public void show(){
-        System.out.println(redisConfig.getHost1());
-    }
+
 }
