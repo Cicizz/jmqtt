@@ -1,32 +1,27 @@
 package org.jmqtt.common.config;
 
+import java.util.ArrayList;
+import java.util.Set;
+
 public class RedisConfig {
-    private String host = "127.0.0.1";
-    private Integer port = 6379;
+    private ArrayList<String> hosts = new ArrayList<>();
+    private ArrayList<Integer> ports = new ArrayList<>();
     private String password = "123456";
     private Integer maxIdle = 100;
     private Integer maxActive = 300;
     private Integer maxWait = 1000;
     private Integer timeout = 100000;
 
+    public void setHosts(String host){ hosts.add(host); }
+
+    public String getHost(Integer hostId){ return hosts.get(hostId); }
+
+    public Integer getPort(Integer portId) { return ports.get(portId); }
+
+    public void setPorts(Integer port) { ports.add(port); }
+
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public Integer getPort() {
-        return port;
-    }
-
-    public void setPort(Integer port) {
-        this.port = port;
     }
 
     public Integer getMaxIdle() {
