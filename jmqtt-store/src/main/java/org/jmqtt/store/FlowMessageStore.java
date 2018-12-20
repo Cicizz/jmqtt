@@ -21,7 +21,7 @@ public interface FlowMessageStore {
 
     Collection<Message> getAllSendMsg(String clientId);
 
-    Message releaseSendMsg(String clientId,int msgId);
+    boolean releaseSendMsg(String clientId,int msgId);
 
     boolean containSendMsg(String clientId,int msgId);
 

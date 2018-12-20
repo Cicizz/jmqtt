@@ -13,41 +13,43 @@ public class RedisStoreUtil implements RedisDao {
     private RedisConfig redisConfig;
     private RedisStoreManager redisStoreManager;
     private JedisCluster cluster;
-    public RedisStoreUtil(RedisConfig Config){
+    private String keyName;
+    public RedisStoreUtil(RedisConfig Config,String keyName){
         this.redisConfig = Config;
         this.redisStoreManager = RedisStoreManager.getInstance(redisConfig);
         this.cluster = redisStoreManager.getCluster();
+        this.keyName = keyName;
     }
     @Override
     public void delete(String clientId) {
-        cluster.del(clientId);
+        cluster.del(keyName+clientId);
     }
 
     @Override
     public Message getMsg(String clientId, Integer msgId) {
-        jsonObject = JSONObject.fromObject(cluster.hget(clientId,String.valueOf(msgId)));
+        jsonObject = JSONObject.fromObject(cluster.hget(keyName+clientId,String.valueOf(msgId)));
         return (Message)JSONObject.toBean(jsonObject,Message.class);
     }
 
     @Override
     public boolean storeMsg(String clientId, Message message) {
         jsonObject = JSONObject.fromObject(message);
-        cluster.hset(clientId,String.valueOf(message.getMsgId()),jsonObject.toString());
+        cluster.hset(keyName+clientId,String.valueOf(message.getMsgId()),jsonObject.toString());
         return true;
     }
 
     @Override
     public Message releaseMsg(String clientId, int msgId) {
         Message message = this.getMsg(clientId,msgId);
-        cluster.hdel(clientId,String.valueOf(msgId));
+        cluster.hdel(keyName+clientId,String.valueOf(msgId));
         return message;
     }
 
     @Override
     public Collection<Message> getAllMsg(String clientId) {
         ArrayList<Message> messagesList = new ArrayList<>();
-        if (cluster.exists(clientId)){
-            for (String temp:cluster.hvals(clientId)){
+        if (cluster.exists(keyName+clientId)){
+            for (String temp:cluster.hvals(keyName+clientId)){
                 messagesList.add((Message) JSONObject.toBean(JSONObject.fromObject(temp),Message.class));
             }
            return messagesList;
@@ -57,7 +59,7 @@ public class RedisStoreUtil implements RedisDao {
 
     @Override
     public boolean containMsg(String clientId, int msgId) {
-        return cluster.hexists(clientId,String.valueOf(msgId));
+        return cluster.hexists(keyName+clientId,String.valueOf(msgId));
     }
 
 }

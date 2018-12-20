@@ -16,8 +16,8 @@ public class RedisFlowMessageStore implements FlowMessageStore {
     private RedisStoreUtil recCache;
     private RedisStoreUtil sendCache;
     public  RedisFlowMessageStore(RedisConfig Config){
-        recCache = new RedisStoreUtil(Config);
-        sendCache = new RedisStoreUtil(Config);
+        recCache = new RedisStoreUtil(Config,"recCache:");
+        sendCache = new RedisStoreUtil(Config,"sendCache:");
     }
 
     @Override
@@ -37,9 +37,7 @@ public class RedisFlowMessageStore implements FlowMessageStore {
     }
 
     @Override
-    public Message releaseRecMsg(String clientId, int msgId) {
-        return recCache.releaseMsg(clientId,msgId);
-    }
+    public Message releaseRecMsg(String clientId, int msgId) { return recCache.releaseMsg(clientId,msgId); }
 
     @Override
     public boolean cacheSendMsg(String clientId, Message message) {
@@ -52,8 +50,9 @@ public class RedisFlowMessageStore implements FlowMessageStore {
     }
 
     @Override
-    public Message releaseSendMsg(String clientId, int msgId) {
-        return sendCache.releaseMsg(clientId,msgId);
+    public boolean releaseSendMsg(String clientId, int msgId) {
+         sendCache.releaseMsg(clientId,msgId);
+         return true;
     }
 
     @Override
