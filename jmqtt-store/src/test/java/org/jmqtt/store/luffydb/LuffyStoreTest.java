@@ -84,12 +84,20 @@ public class LuffyStoreTest {
         hset(key,field1,value1);
         hset(key,field2,value2);
         RocksIterator iterator = rocksDB.newIterator();
-
+        for(iterator.seek(key.getBytes());iterator.isValid();iterator.next()){
+            System.out.println(new String(iterator.key()) + "=====" + new String(iterator.value()));
+        }
     }
+
 
     private void hset(String key,String field,String value) throws RocksDBException {
         String relKey = key + sep + field;
         rocksDB.put(relKey.getBytes(),value.getBytes());
     }
+
+    private void hList(String key,String value) throws RocksDBException {
+        rocksDB.put(key.getBytes(),value.getBytes());
+    }
+
 
 }
