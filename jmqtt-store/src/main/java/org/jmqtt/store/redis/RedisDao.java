@@ -4,11 +4,19 @@ import org.jmqtt.common.bean.Message;
 
 import java.util.Collection;
 
+
 public interface RedisDao {
     void delete(String clientId);
-    Message getMsg(String clientId,Integer msgId);
-    boolean storeMsg(String clientId,Message message);
-    Message releaseMsg(String clientId,int msgId);
-    Collection<Message> getAllMsg(String clientId);
-    boolean containMsg(String clientId,int msgId);
+    Message hgetMsg(String clientId,Integer msgId);
+    boolean hstoreMsg(String clientId, String str, Object obj);
+    Message hreleaseMsg(String clientId,int msgId);
+    <T> Collection<T> hgetAllMsg(String clientId,Class<T> objectClass);
+    boolean hcontainMsg(String clientId,int msgId);
+    Collection<Message> sgetAllMsg();
+    void sstoreMsg(String str,Message message);
+    boolean scontain(String str);
+    <T> T sgetSetMsg(String str,Object obj);
+    <T> T sgetMsg(String str,Class objectClass);
+    Collection<Message> lgetAllMsg(String str);
+    boolean laddMsg(Integer num,String str,Message message);
 }
