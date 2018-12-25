@@ -8,13 +8,11 @@ import java.util.Collection;
 
 public class RedisFlowMessageStore implements FlowMessageStore {
 
-//    private ConcurrentHashMap<String,Message> recCache = new ConcurrentHashMap<>();
-//    private ConcurrentHashMap<String,Message> sendCache = new ConcurrentHashMap<>();
     private RedisStoreUtil recCache;
     private RedisStoreUtil sendCache;
     public  RedisFlowMessageStore(RedisConfig Config){
-        recCache = new RedisStoreUtil(Config,"recCache:");
-        sendCache = new RedisStoreUtil(Config,"sendCache:");
+        recCache = new RedisStoreUtil(Config,"recCache");
+        sendCache = new RedisStoreUtil(Config,"sendCache");
     }
 
     @Override
@@ -24,37 +22,35 @@ public class RedisFlowMessageStore implements FlowMessageStore {
     }
 
     @Override
-    public Message getRecMsg(String clientId, int msgId) {
-        return recCache.getMsg(clientId,msgId);
-    }
+    public Message getRecMsg(String clientId, int msgId) { return recCache.hgetMsg(clientId,msgId); }
 
     @Override
     public boolean cacheRecMsg(String clientId, Message message) {
-        return recCache.storeMsg(clientId,message);
+        return recCache.hstoreMsg(clientId,String.valueOf(message.getMsgId()),message);
     }
 
     @Override
-    public Message releaseRecMsg(String clientId, int msgId) { return recCache.releaseMsg(clientId,msgId); }
+    public Message releaseRecMsg(String clientId, int msgId) { return recCache.hreleaseMsg(clientId,msgId); }
 
     @Override
     public boolean cacheSendMsg(String clientId, Message message) {
-        return sendCache.storeMsg(clientId,message);
+        return sendCache.hstoreMsg(clientId,String.valueOf(message.getMsgId()),message);
     }
 
     @Override
     public Collection<Message> getAllSendMsg(String clientId) {
-        return sendCache.getAllMsg(clientId);
+        return sendCache.hgetAllMsg(clientId,Message.class);
     }
 
     @Override
     public boolean releaseSendMsg(String clientId, int msgId) {
-         sendCache.releaseMsg(clientId,msgId);
+         sendCache.hreleaseMsg(clientId,msgId);
          return true;
     }
 
     @Override
     public boolean containSendMsg(String clientId, int msgId) {
-        return sendCache.containMsg(clientId,msgId);
+        return sendCache.hcontainMsg(clientId,msgId);
     }
 
 }
