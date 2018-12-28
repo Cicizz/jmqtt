@@ -8,7 +8,7 @@ public class RedisConfig {
     private ArrayList<Integer> ports = new ArrayList<>();
     private String password = "123456";
     private Integer maxIdle = 100;
-    private Integer maxActive = 300;
+    private Integer maxActive = 600;
     private Integer maxWait = 1000;
     private Integer timeout = 100000;
 

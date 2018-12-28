@@ -10,7 +10,7 @@ public interface RedisDao {
     Message hgetMsg(String clientId,Integer msgId);
     boolean hstoreMsg(String clientId, String str, Object obj);
     Message hreleaseMsg(String clientId,int msgId);
-    <T> Collection<T> hgetAllMsg(String clientId,Class<T> objectClass);
+    <T> Collection<T> hgetAllMsg(String clientId,Class objectClass);
     boolean hcontainMsg(String clientId,int msgId);
     Collection<Message> sgetAllMsg();
     void sstoreMsg(String str,Message message);

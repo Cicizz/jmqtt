@@ -20,6 +20,7 @@ public class RedisStoreUtil implements RedisDao {
     public RedisStoreUtil(RedisConfig Config,String keyName){
         this.redisConfig = Config;
         this.redisStoreManager = RedisStoreManager.getInstance(redisConfig);
+        redisStoreManager.initialization();
         this.cluster = redisStoreManager.getCluster();
         this.keyName = "{"+keyName+":}";
     }
@@ -49,7 +50,7 @@ public class RedisStoreUtil implements RedisDao {
     }
 
     @Override
-    public <T> Collection<T> hgetAllMsg(String clientId,Class<T> objectClass) {
+    public <T> Collection<T> hgetAllMsg(String clientId,Class objectClass) {
         ArrayList<T> messagesList = new ArrayList<>();
         if (cluster.exists(keyName+clientId)){
             for (String temp:cluster.hvals(keyName+clientId)){
@@ -68,7 +69,6 @@ public class RedisStoreUtil implements RedisDao {
     @Override
     public Collection<Message> sgetAllMsg() {
         Set<Message> messages = new HashSet<>();
-        cluster.getClusterNodes();
         ScanParams scanParams = new ScanParams();
         scanParams.match(keyName+"*");
         scanParams.count(1000);
