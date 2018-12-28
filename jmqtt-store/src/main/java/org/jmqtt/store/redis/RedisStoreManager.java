@@ -37,10 +37,10 @@ public class RedisStoreManager {
         poolConfig.setMaxTotal(redisConfig.getMaxActive());
         poolConfig.setMaxIdle(redisConfig.getMaxIdle());
         poolConfig.setMaxWaitMillis(redisConfig.getTimeout());
-        for (Integer id=0;id<4;id++){
+        for (Integer id=0;id<6;id++){
             nodes.add(new HostAndPort(redisConfig.getHost(id),redisConfig.getPort(id)));
         }
-        cluster = new JedisCluster(nodes,poolConfig);
+        this.cluster = new JedisCluster(nodes,poolConfig);
     }
 
     public void shutDown(){
