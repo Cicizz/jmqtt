@@ -1,21 +1,25 @@
-package org.jmqtt.store.luffydb;
+package org.jmqtt.store.rocksdb;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.jmqtt.common.config.StoreConfig;
+import org.jmqtt.common.log.LoggerName;
 import org.rocksdb.*;
 import org.rocksdb.util.SizeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.*;
+public class RocksdbDao {
 
-public class LuffyStoreTest {
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE);
 
     private RocksDB rocksDB;
-    private char sep = 1;
+    private String rocksDbPath;
 
-    @Before
-    public void before(){
+    public RocksdbDao(StoreConfig storeConfig){
         RocksDB.loadLibrary();
+        this.rocksDbPath = storeConfig.getRocksDbPath();
+    }
+
+    public void init() throws Exception {
         Options options = new Options();
         options.setCreateIfMissing(true)
                 .setWriteBufferSize(64 * SizeUnit.KB)
@@ -24,9 +28,7 @@ public class LuffyStoreTest {
                 .setCompressionType(CompressionType.NO_COMPRESSION)
                 .setCompactionStyle(CompactionStyle.UNIVERSAL);
         Filter bloomFilter = new BloomFilter(100);
-        ReadOptions readOptions = new ReadOptions().setFillCache(false);
         RateLimiter rateLimiter = new RateLimiter(10000000, 10000, 10);
-
         options.setMemTableConfig(
                 new HashSkipListMemTableConfig()
                         .setHeight(4)
@@ -61,43 +63,10 @@ public class LuffyStoreTest {
         try {
             rocksDB = RocksDB.open(options,"db");
         } catch (RocksDBException e) {
-            e.printStackTrace();
+            log.error("Initialize rocksdb failure.cause = {}",e);
+            throw new Exception("Initialize StoreException");
         }
-    }
-
-    @Test
-    public void testMap() throws RocksDBException {
-        String key = "key1";
-        String value = "this is a test value";
-        rocksDB.put(key.getBytes(),value.getBytes());
-        String getValue = new String(rocksDB.get(key.getBytes()));
-        Assert.assertTrue(getValue.equals(value));
-    }
-
-    @Test
-    public void testHash() throws RocksDBException {
-        String key = "hashKey";
-        String field1 = "field1";
-        String field2 = "field2";
-        String value1 = "value1";
-        String value2 = "value2";
-        hset(key,field1,value1);
-        hset(key,field2,value2);
-        RocksIterator iterator = rocksDB.newIterator();
-        for(iterator.seek(key.getBytes());iterator.isValid();iterator.next()){
-            System.out.println(new String(iterator.key()) + "=====" + new String(iterator.value()));
-        }
-    }
-
-
-    private void hset(String key,String field,String value) throws RocksDBException {
-        String relKey = key + sep + field;
-        rocksDB.put(relKey.getBytes(),value.getBytes());
-    }
-
-    private void hList(String key,String value) throws RocksDBException {
-        rocksDB.put(key.getBytes(),value.getBytes());
-    }
+    };
 
 
 }
