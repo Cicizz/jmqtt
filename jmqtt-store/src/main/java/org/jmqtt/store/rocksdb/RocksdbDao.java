@@ -61,12 +61,13 @@ public class RocksdbDao {
 
         options.setTableFormatConfig(table_options);
         try {
-            rocksDB = RocksDB.open(options,"db");
+            rocksDB = RocksDB.open(options,rocksDbPath);
         } catch (RocksDBException e) {
             log.error("Initialize rocksdb failure.cause = {}",e);
             throw new Exception("Initialize StoreException");
         }
     };
+
 
 
 }
