@@ -1,4 +1,4 @@
-package org.jmqtt.store.rocksdb.vo;
+package org.jmqtt.store.rocksdb.utils;
 
 public abstract class AbstractRocksHandler {
 
