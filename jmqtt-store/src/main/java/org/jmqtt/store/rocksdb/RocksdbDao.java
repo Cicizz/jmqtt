@@ -1,7 +1,11 @@
 package org.jmqtt.store.rocksdb;
 
+import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.config.StoreConfig;
 import org.jmqtt.common.log.LoggerName;
+import org.jmqtt.store.rocksdb.utils.RocksHash;
+import org.jmqtt.store.rocksdb.utils.RocksList;
+import org.jmqtt.store.rocksdb.utils.RocksMap;
 import org.rocksdb.*;
 import org.rocksdb.util.SizeUnit;
 import org.slf4j.Logger;
@@ -14,9 +18,14 @@ public class RocksdbDao {
     private RocksDB rocksDB;
     private String rocksDbPath;
 
-    public RocksdbDao(StoreConfig storeConfig){
+    private RocksList rocksList;
+    private RocksHash rocksHash;
+    private RocksMap rocksMap;
+
+    public RocksdbDao(StoreConfig storeConfig) throws Exception {
         RocksDB.loadLibrary();
         this.rocksDbPath = storeConfig.getRocksDbPath();
+        init();
     }
 
     public void init() throws Exception {
@@ -62,12 +71,24 @@ public class RocksdbDao {
         options.setTableFormatConfig(table_options);
         try {
             rocksDB = RocksDB.open(options,rocksDbPath);
+            this.rocksList = new RocksList(rocksDB);
+            this.rocksHash = new RocksHash(rocksDB);
+            this.rocksMap = new RocksMap(rocksDB);
         } catch (RocksDBException e) {
             log.error("Initialize rocksdb failure.cause = {}",e);
-            throw new Exception("Initialize StoreException");
+            throw new Exception("Initialize Rocksdb StoreException");
         }
     };
 
+    public RocksList getRocksList() {
+        return rocksList;
+    }
 
+    public RocksHash getRocksHash() {
+        return rocksHash;
+    }
 
+    public RocksMap getRocksMap() {
+        return rocksMap;
+    }
 }

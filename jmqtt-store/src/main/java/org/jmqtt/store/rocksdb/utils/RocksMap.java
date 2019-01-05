@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class RocksMap<T,K> extends AbstractRocksHandler{
+public class RocksMap extends AbstractRocksHandler{
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE);
 
@@ -18,11 +18,11 @@ public class RocksMap<T,K> extends AbstractRocksHandler{
         this.rocksDB = rocksDB;
     }
 
-    public K get(T key){
+    public byte[] get(String key){
         try {
             byte[] valueBytes = rocksDB.get(SerializeHelper.serialize(key));
             if(valueBytes != null){
-                return (K)SerializeHelper.deserialize(valueBytes,Object.class);
+                return valueBytes;
             }
         } catch (RocksDBException e) {
             log.warn("RockDB get String error,cause={}",e);
@@ -30,11 +30,20 @@ public class RocksMap<T,K> extends AbstractRocksHandler{
         return null;
     }
 
-    public void set(T key,K value){
-        byte[] keyByte = SerializeHelper.serialize(key);
-        byte[] valByte = SerializeHelper.serialize(value);
+    public boolean contains(String key){
         try {
-            rocksDB.put(keyByte,valByte);
+            byte[] valueBytes = rocksDB.get(SerializeHelper.serialize(key));
+            return valueBytes == null ? false : true;
+        } catch (RocksDBException e) {
+            log.warn("RockDB get String error,cause={}",e);
+        }
+        return false;
+    }
+
+    public void set(String key,byte[] value){
+        byte[] keyByte = SerializeHelper.serialize(key);
+        try {
+            rocksDB.put(keyByte,value);
         } catch (RocksDBException e) {
             log.warn("RockDB store String error,cause={}",e);
         }

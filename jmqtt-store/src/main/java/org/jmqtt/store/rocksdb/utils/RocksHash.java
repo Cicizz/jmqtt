@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 
-public class RocksHash<T,K> extends AbstractRocksHandler {
+public class RocksHash extends AbstractRocksHandler {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE);
 
@@ -25,19 +25,19 @@ public class RocksHash<T,K> extends AbstractRocksHandler {
         this.rocksDB = rocksDB;
     }
 
-    public K get(String key,T field){
+    public byte[] get(String key,String field){
         if(!metaHashMap.containsKey(key)){
             return null;
         }
         try {
-            return (K)SerializeHelper.deserialize(rocksDB.get((key+separator+field).getBytes()),Object.class);
+            return rocksDB.get((key+separator+field).getBytes());
         } catch (RocksDBException e) {
             log.warn("RockDB get Hash error,cause={}",e);
         }
         return null;
     }
 
-    public void put(String key,T field,K value){
+    public void put(String key,String field,byte[] value){
         try {
             if(!metaHashMap.containsKey(key)){
                 synchronized (this){
@@ -70,10 +70,6 @@ public class RocksHash<T,K> extends AbstractRocksHandler {
             log.warn("RockDB store Hash error,cause={}",e);
         }
     }
-
-
-
-
 
     class MetaHash{
         String key;

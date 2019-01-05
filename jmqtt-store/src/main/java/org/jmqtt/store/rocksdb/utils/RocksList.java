@@ -7,13 +7,12 @@ import org.rocksdb.RocksDBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class RocksList<T> extends AbstractRocksHandler{
+public class RocksList extends AbstractRocksHandler{
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE);
     private RocksDB rocksDB;
@@ -23,14 +22,22 @@ public class RocksList<T> extends AbstractRocksHandler{
         this.rocksDB = rocksDB;
     }
 
-    public T getFromLast(String key){
+    public byte[] getFromLast(String key){
         if(!metaListMap.containsKey(key)){
             throw new RuntimeException("The key of list is not exist!");
         }
         return get(key,metaListMap.get(key).getListSize());
     }
 
-    public T get(String key,long index){
+
+    public long size(String key){
+        if(!metaListMap.containsKey(key)){
+            throw new RuntimeException("The key of list is not exist!");
+        }
+        return metaListMap.get(key).getListSize();
+    };
+
+    public byte[] get(String key,long index){
         if(!metaListMap.containsKey(key)){
             throw new RuntimeException("The key of list is not exist!");
         }
@@ -43,15 +50,14 @@ public class RocksList<T> extends AbstractRocksHandler{
             if(value == null){
                 return null;
             }
-            return (T)SerializeHelper.deserialize(value,Object.class);
+            return value;
         } catch (RocksDBException e) {
             log.warn("RockDB get last value from List error,cause={}",e);
         }
         return null;
-
     }
 
-    public void add(String key,T value){
+    public void add(String key,byte[] value){
         try{
             if(!metaListMap.containsKey(key)){
                 synchronized (this){
@@ -69,7 +75,7 @@ public class RocksList<T> extends AbstractRocksHandler{
                             this.rocksDB.put(SerializeHelper.serialize(key),SerializeHelper.serialize(metaValue));
                         }
                         metaListMap.put(key,metaList);
-                        this.rocksDB.put((key+separator+metaList.getListSize()).getBytes(),SerializeHelper.serialize(value));
+                        this.rocksDB.put(SerializeHelper.serialize(key+separator+metaList.getListSize()),value);
                     }
                 }
             }else{
@@ -77,7 +83,7 @@ public class RocksList<T> extends AbstractRocksHandler{
                 metaList.addListSize();
                 metaList.setTimeStamp(System.currentTimeMillis());
                 String metaValue = "" + metaList.getListSize() + separator + metaList.getTimeStamp();
-                this.rocksDB.put((key+separator+metaList.getListSize()).getBytes(),SerializeHelper.serialize(value));
+                this.rocksDB.put((key+separator+metaList.getListSize()).getBytes(),value);
                 this.rocksDB.put(SerializeHelper.serialize(key),SerializeHelper.serialize(metaValue));
             }
         }catch (Exception e){
