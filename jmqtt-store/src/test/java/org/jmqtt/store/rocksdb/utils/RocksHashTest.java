@@ -38,25 +38,29 @@ public class RocksHashTest {
     @Test
     public void size() throws InterruptedException {
         String key = "testHash2";
-        CountDownLatch latch = new CountDownLatch(10);
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
-        for(int i = 0; i < 10 ;i++){
+        long beginSize = rocksHash.size(key);
+        System.out.println(beginSize);
+        CountDownLatch latch = new CountDownLatch(1000);
+        ExecutorService executorService = Executors.newFixedThreadPool(1000);
+        for(int i = 0; i < 100 ;i++){
             final AtomicInteger count = new AtomicInteger(0);
             executorService.execute(new Runnable() {
                 @Override
                 public void run() {
-                    for(int j = 0; j < 10; j++){
-                        String field = "testField"+j*count.get();
+                    for(int j = 0; j < 1000; j++){
+                        String field = "testField"+ j * count.get();
                         Message message = new Message();
                         rocksHash.put(key,field,SerializeHelper.serialize(message));
                         long size = rocksHash.size(key);
-                        System.out.println("获取的消息大小：" + size);
                     }
                     latch.countDown();
                 }
             });
         }
         latch.await();
+        long size = rocksHash.size(key);
+        System.out.println(size);
+        assert size == (beginSize + 100*1000);
     }
 
     @Test
