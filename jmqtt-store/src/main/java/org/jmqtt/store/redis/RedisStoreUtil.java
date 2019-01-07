@@ -120,9 +120,13 @@ public class RedisStoreUtil implements RedisDao {
 
     @Override
     public boolean laddMsg(Integer num,String str, Message message) {
+        if (cluster.exists(keyName+str)){
+            if (cluster.lrange(keyName+str,0,-1).size() > num){
+                cluster.lpop(keyName+str);
+            }
+        }
         jsonObject = JSONObject.fromObject(message);
-        cluster.lpush(keyName+str,jsonObject.toString());
-        cluster.ltrim(keyName+str,0,num-1);
+        cluster.rpush(keyName+str,jsonObject.toString());
         return true;
     }
 
