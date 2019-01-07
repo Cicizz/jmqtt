@@ -37,6 +37,30 @@ public class RocksHash extends AbstractRocksHandler {
         return null;
     }
 
+    public long size(String key){
+        if(!metaHashMap.containsKey(key)){
+            return 0L;
+        }
+        try {
+            return metaHashMap.get(key).hashSize.get();
+        } catch (Exception e) {
+            log.warn("RockDB get Hash error,cause={}",e);
+        }
+        return 0L;
+    }
+
+    public boolean contains(String key,String field){
+        if(!metaHashMap.containsKey(key)){
+            return false;
+        }
+        try {
+            return rocksDB.get((key+separator+field).getBytes()) != null;
+        } catch (RocksDBException e) {
+            log.warn("RockDB get Hash error,cause={}",e);
+        }
+        return true;
+    }
+
     public void put(String key,String field,byte[] value){
         try {
             if(!metaHashMap.containsKey(key)){
@@ -48,14 +72,14 @@ public class RocksHash extends AbstractRocksHandler {
                             String metaValue = SerializeHelper.deserialize(isExists,String.class);
                             long hashSize = Long.parseLong( metaValue.substring(0,metaValue.indexOf(separator)));
                             long timeStamp = Long.parseLong( metaValue.substring(metaValue.indexOf(separator)+1));
-                            metaHash = new MetaHash(key,hashSize,timeStamp);
+                            metaHash = new MetaHash(key,hashSize+1,timeStamp);
                         }else{
                             metaHash = new MetaHash(key,1L,System.currentTimeMillis());
                             String metaValue = "" + metaHash.getHashSize() + separator + metaHash.getTimeStamp();
                             this.rocksDB.put(SerializeHelper.serialize(key),SerializeHelper.serialize(metaValue));
                         }
                         metaHashMap.put(key,metaHash);
-                        this.rocksDB.put((key+separator+field).getBytes(),SerializeHelper.serialize(value));
+                        this.rocksDB.put(SerializeHelper.serialize(key+separator+field),value);
                     }
                 }
             }else{
@@ -63,7 +87,7 @@ public class RocksHash extends AbstractRocksHandler {
                 metaHash.addHashSize();
                 metaHash.setTimeStamp(System.currentTimeMillis());
                 String metaValue = "" + metaHash.getHashSize() + separator + metaHash.getTimeStamp();
-                this.rocksDB.put((key+separator+field).getBytes(),SerializeHelper.serialize(value));
+                this.rocksDB.put(SerializeHelper.serialize(key+separator+field),value);
                 this.rocksDB.put(SerializeHelper.serialize(key),SerializeHelper.serialize(metaValue));
             }
         } catch (RocksDBException e) {

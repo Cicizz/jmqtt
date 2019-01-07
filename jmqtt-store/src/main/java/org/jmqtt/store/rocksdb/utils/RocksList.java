@@ -68,9 +68,9 @@ public class RocksList extends AbstractRocksHandler{
                             String metaValue = SerializeHelper.deserialize(isExists,String.class);
                             long listSize = Long.parseLong(metaValue.substring(0,metaValue.indexOf(separator)));
                             long timeStamp = Long.parseLong( metaValue.substring(metaValue.indexOf(separator)+1));
-                            metaList = new MetaList(key,listSize,timeStamp);
+                            metaList = new MetaList(key,listSize+1,timeStamp);
                         }else{
-                            metaList = new MetaList(key,0L,System.currentTimeMillis());
+                            metaList = new MetaList(key,1L,System.currentTimeMillis());
                             String metaValue = "" + metaList.getListSize() + separator + metaList.getTimeStamp();
                             this.rocksDB.put(SerializeHelper.serialize(key),SerializeHelper.serialize(metaValue));
                         }
@@ -83,7 +83,7 @@ public class RocksList extends AbstractRocksHandler{
                 metaList.addListSize();
                 metaList.setTimeStamp(System.currentTimeMillis());
                 String metaValue = "" + metaList.getListSize() + separator + metaList.getTimeStamp();
-                this.rocksDB.put((key+separator+metaList.getListSize()).getBytes(),value);
+                this.rocksDB.put(SerializeHelper.serialize(key+separator+metaList.getListSize()),value);
                 this.rocksDB.put(SerializeHelper.serialize(key),SerializeHelper.serialize(metaValue));
             }
         }catch (Exception e){

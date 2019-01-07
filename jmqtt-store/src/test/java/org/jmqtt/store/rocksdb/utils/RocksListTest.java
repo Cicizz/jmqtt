@@ -7,6 +7,11 @@ import org.jmqtt.store.rocksdb.RocksdbDao;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
+
 public class RocksListTest {
 
     private RocksList  rocksList;
@@ -25,7 +30,27 @@ public class RocksListTest {
     }
 
     @Test
-    public void size() {
+    public void size() throws InterruptedException {
+        ExecutorService service = Executors.newFixedThreadPool(10);
+        CountDownLatch latch = new CountDownLatch(10);
+        AtomicLong lastSize = new AtomicLong(0);
+        for(int i = 0; i < 10; i++){
+            service.execute(new Runnable() {
+                @Override
+                public void run() {
+                    for(int i = 0; i < 10; i++){
+                        Message message = new Message();
+                        rocksList.add("testClient", SerializeHelper.serialize(message));
+                        long size = rocksList.size("testClient");
+                        lastSize.incrementAndGet();
+                        System.out.println(size);
+                    }
+                    latch.countDown();
+                }
+            });
+        }
+        latch.await();
+        assert lastSize.get() == 100;
     }
 
     @Test
