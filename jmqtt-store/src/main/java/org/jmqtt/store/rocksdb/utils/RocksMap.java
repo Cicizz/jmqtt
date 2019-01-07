@@ -18,6 +18,16 @@ public class RocksMap extends AbstractRocksHandler{
         this.rocksDB = rocksDB;
     }
 
+    public boolean remove(String key){
+        try {
+            rocksDB.delete(SerializeHelper.serialize(key));
+            return true;
+        } catch (RocksDBException e) {
+            log.warn("RockDB get String error,cause={}",e);
+        }
+        return false;
+    }
+
     public byte[] get(String key){
         try {
             byte[] valueBytes = rocksDB.get(SerializeHelper.serialize(key));

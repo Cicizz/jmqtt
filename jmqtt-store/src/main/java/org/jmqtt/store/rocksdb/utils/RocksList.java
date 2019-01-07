@@ -4,49 +4,58 @@ import org.jmqtt.common.helper.SerializeHelper;
 import org.jmqtt.common.log.LoggerName;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
+import org.rocksdb.WriteBatch;
+import org.rocksdb.WriteOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class RocksList extends AbstractRocksHandler{
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE);
     private RocksDB rocksDB;
-    private Map<String,MetaList> metaListMap = new ConcurrentHashMap<>();
+    private Map<String, AtomicLong> metaList = new ConcurrentHashMap<>();
 
     public RocksList(RocksDB rocksDB){
         this.rocksDB = rocksDB;
     }
 
-    public byte[] getFromLast(String key){
-        if(!metaListMap.containsKey(key)){
-            throw new RuntimeException("The key of list is not exist!");
-        }
-        return get(key,metaListMap.get(key).getListSize());
-    }
-
 
     public long size(String key){
-        if(!metaListMap.containsKey(key)){
-            throw new RuntimeException("The key of list is not exist!");
+        if(!metaList.containsKey(key)){
+            synchronized (this){
+                if(!metaList.containsKey(key)){
+                    loadMetaList(key);
+                }
+            }
+            return metaList.get(key).get();
+        }else{
+            return metaList.get(key).get();
         }
-        return metaListMap.get(key).getListSize();
     };
 
-    public byte[] get(String key,long index){
-        if(!metaListMap.containsKey(key)){
+    public boolean contains(String key){
+        try {
+            byte[] isExists = rocksDB.get(getMetaKey(key));
+            return isExists != null;
+        } catch (RocksDBException e) {
+            log.warn("Get Rocksdb list error,{}",e);
+        }
+        return false;
+    };
+
+    public byte[] get(String key,long sequence){
+        if(!contains(key)){
             throw new RuntimeException("The key of list is not exist!");
         }
-        if(metaListMap.get(key).getListSize() < index){
+        if(metaList.get(key).get() < sequence){
             throw new RuntimeException("The index is over the list size");
         }
-        String relKey = key + separator + index;
         try {
-            byte[] value = rocksDB.get(SerializeHelper.serialize(relKey));
+            byte[] value = rocksDB.get(getDataKey(key,sequence));
             if(value == null){
                 return null;
             }
@@ -59,72 +68,57 @@ public class RocksList extends AbstractRocksHandler{
 
     public void add(String key,byte[] value){
         try{
-            if(!metaListMap.containsKey(key)){
+            if(!metaList.containsKey(key)){
                 synchronized (this){
-                    if(!metaListMap.containsKey(key)){
-                        byte[] isExists = rocksDB.get(SerializeHelper.serialize(key));
-                        MetaList metaList = null;
-                        if(isExists != null){
-                            String metaValue = SerializeHelper.deserialize(isExists,String.class);
-                            long listSize = Long.parseLong(metaValue.substring(0,metaValue.indexOf(separator)));
-                            long timeStamp = Long.parseLong( metaValue.substring(metaValue.indexOf(separator)+1));
-                            metaList = new MetaList(key,listSize+1,timeStamp);
-                        }else{
-                            metaList = new MetaList(key,1L,System.currentTimeMillis());
-                            String metaValue = "" + metaList.getListSize() + separator + metaList.getTimeStamp();
-                            this.rocksDB.put(SerializeHelper.serialize(key),SerializeHelper.serialize(metaValue));
-                        }
-                        metaListMap.put(key,metaList);
-                        this.rocksDB.put(SerializeHelper.serialize(key+separator+metaList.getListSize()),value);
+                    if(!metaList.containsKey(key)){
+                        loadMetaList(key);
+                        long size = metaList.get(key).incrementAndGet();
+                        WriteBatch writeBatch = new WriteBatch();
+                        writeBatch.put(getMetaKey(key),getMetaValue(size));
+                        writeBatch.put(getDataKey(key,size),value);
+                        this.rocksDB.write(new WriteOptions(),writeBatch);
+                        return;
                     }
                 }
-            }else{
-                MetaList metaList = metaListMap.get(key);
-                metaList.addListSize();
-                metaList.setTimeStamp(System.currentTimeMillis());
-                String metaValue = "" + metaList.getListSize() + separator + metaList.getTimeStamp();
-                this.rocksDB.put(SerializeHelper.serialize(key+separator+metaList.getListSize()),value);
-                this.rocksDB.put(SerializeHelper.serialize(key),SerializeHelper.serialize(metaValue));
             }
+            long size = metaList.get(key).incrementAndGet();
+            WriteBatch writeBatch = new WriteBatch();
+            writeBatch.put(getMetaKey(key),getMetaValue(size));
+            writeBatch.put(getDataKey(key,size),value);
+            this.rocksDB.write(new WriteOptions(),writeBatch);
         }catch (Exception e){
             log.warn("RockDB store List error,cause={}",e);
         }
     }
 
-    class MetaList{
-        String key;
-
-        AtomicLong listSize;
-        AtomicReference<Long> timeStamp;
-
-        public MetaList(String key,long listSize,long timeStamp){
-            this.key = key;
-            this.listSize = new AtomicLong(listSize);
-            this.timeStamp = new AtomicReference(timeStamp);
+    private void loadMetaList(String key){
+        try {
+            byte[] isKeyExists = rocksDB.get(getMetaKey(key));
+            AtomicLong sequence = null;
+            if(isKeyExists == null){
+                sequence = new AtomicLong(0);
+            }else{
+                sequence = new AtomicLong(SerializeHelper.deserialize(isKeyExists,Long.class));
+            }
+            this.metaList.put(key,sequence);
+        } catch (RocksDBException e) {
+            log.warn("Load RockDB store Hash error,cause={}",e);
         }
-
-        public String getKey() {
-            return key;
-        }
-
-
-        public long getListSize() {
-            return listSize.get();
-        }
-
-        public long addListSize() {
-            return this.listSize.incrementAndGet();
-        }
-
-        public long getTimeStamp() {
-            return timeStamp.get();
-        }
-
-        public void setTimeStamp(long timeStamp) {
-            this.timeStamp.set(timeStamp);
-        }
-
     }
 
+    private byte[] getMetaKey(String key){
+        return SerializeHelper.serialize(key);
+    }
+    private byte[] getMetaValue(Object metaValue){
+        return SerializeHelper.serialize(metaValue);
+    }
+
+    private byte[] getDataKey(String key,long sequence){
+        return SerializeHelper.serialize(key + separator + sequence);
+    }
+
+    private byte[] getDataValue(Object dataValue){
+        return SerializeHelper.serialize(dataValue);
+    }
 
 }

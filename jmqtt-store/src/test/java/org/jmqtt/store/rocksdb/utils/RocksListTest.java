@@ -24,33 +24,30 @@ public class RocksListTest {
         this.rocksList = rocksdbDao.getRocksList();
     }
 
-    @Test
-    public void getFromLast() {
-
-    }
 
     @Test
     public void size() throws InterruptedException {
-        ExecutorService service = Executors.newFixedThreadPool(10);
-        CountDownLatch latch = new CountDownLatch(10);
-        AtomicLong lastSize = new AtomicLong(0);
-        for(int i = 0; i < 10; i++){
+        ExecutorService service = Executors.newFixedThreadPool(100);
+        String testKey = "testListKey";
+        long beginSize = rocksList.size(testKey);
+        System.out.println("begin size:" + beginSize);
+        CountDownLatch latch = new CountDownLatch(100);
+        for(int i = 0; i < 100; i++){
             service.execute(new Runnable() {
                 @Override
                 public void run() {
-                    for(int i = 0; i < 10; i++){
+                    for(int i = 0; i < 100; i++){
                         Message message = new Message();
-                        rocksList.add("testClient", SerializeHelper.serialize(message));
-                        long size = rocksList.size("testClient");
-                        lastSize.incrementAndGet();
-                        System.out.println(size);
+                        rocksList.add(testKey, SerializeHelper.serialize(message));
                     }
                     latch.countDown();
                 }
             });
         }
         latch.await();
-        assert lastSize.get() == 100;
+        long endSize = rocksList.size(testKey);
+        System.out.println("end size:" + endSize);
+        assert( beginSize + 100*100) == endSize;
     }
 
     @Test

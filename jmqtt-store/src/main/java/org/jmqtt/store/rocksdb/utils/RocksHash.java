@@ -4,20 +4,26 @@ import org.jmqtt.common.helper.SerializeHelper;
 import org.jmqtt.common.log.LoggerName;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
+import org.rocksdb.WriteBatch;
+import org.rocksdb.WriteOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class RocksHash extends AbstractRocksHandler {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE);
 
-    private Map<String,MetaHash> metaHashMap = new ConcurrentHashMap<>();
+
+    private Lock lock = new ReentrantLock();
+
+    private Map<String/* key */, AtomicLong /* key的大小，计数器 */> metaHash = new ConcurrentHashMap<>();
 
     private RocksDB rocksDB;
 
@@ -26,9 +32,6 @@ public class RocksHash extends AbstractRocksHandler {
     }
 
     public byte[] get(String key,String field){
-        if(!metaHashMap.containsKey(key)){
-            return null;
-        }
         try {
             return rocksDB.get((key+separator+field).getBytes());
         } catch (RocksDBException e) {
@@ -38,11 +41,17 @@ public class RocksHash extends AbstractRocksHandler {
     }
 
     public long size(String key){
-        if(!metaHashMap.containsKey(key)){
-            return 0L;
-        }
         try {
-            return metaHashMap.get(key).hashSize.get();
+            if(!metaHash.containsKey(key)){
+                synchronized (this){
+                    if(!metaHash.containsKey(key)){
+                        loadMetaHash(key);
+                        return metaHash.get(key).get();
+                    }
+                }
+            }else{
+                return metaHash.get(key).get();
+            }
         } catch (Exception e) {
             log.warn("RockDB get Hash error,cause={}",e);
         }
@@ -50,9 +59,6 @@ public class RocksHash extends AbstractRocksHandler {
     }
 
     public boolean contains(String key,String field){
-        if(!metaHashMap.containsKey(key)){
-            return false;
-        }
         try {
             return rocksDB.get((key+separator+field).getBytes()) != null;
         } catch (RocksDBException e) {
@@ -63,71 +69,56 @@ public class RocksHash extends AbstractRocksHandler {
 
     public void put(String key,String field,byte[] value){
         try {
-            if(!metaHashMap.containsKey(key)){
+            if(!metaHash.containsKey(key)){
                 synchronized (this){
-                    if(!metaHashMap.containsKey(key)){
-                        byte[] isExists = rocksDB.get(SerializeHelper.serialize(key));
-                        MetaHash metaHash = null;
-                        if(isExists != null){
-                            String metaValue = SerializeHelper.deserialize(isExists,String.class);
-                            long hashSize = Long.parseLong( metaValue.substring(0,metaValue.indexOf(separator)));
-                            long timeStamp = Long.parseLong( metaValue.substring(metaValue.indexOf(separator)+1));
-                            metaHash = new MetaHash(key,hashSize+1,timeStamp);
-                        }else{
-                            metaHash = new MetaHash(key,1L,System.currentTimeMillis());
-                            String metaValue = "" + metaHash.getHashSize() + separator + metaHash.getTimeStamp();
-                            this.rocksDB.put(SerializeHelper.serialize(key),SerializeHelper.serialize(metaValue));
-                        }
-                        metaHashMap.put(key,metaHash);
-                        this.rocksDB.put(SerializeHelper.serialize(key+separator+field),value);
+                    if(!metaHash.containsKey(key)){
+                        loadMetaHash(key);
+                        long size = metaHash.get(key).incrementAndGet();
+                        WriteBatch writeBatch = new WriteBatch();
+                        writeBatch.put(getMetaKey(key),getMetaValue(size));
+                        writeBatch.put(getDataKey(key,field),value);
+                        this.rocksDB.write(new WriteOptions(),writeBatch);
+                        return;
                     }
                 }
-            }else{
-                MetaHash metaHash = metaHashMap.get(key);
-                metaHash.addHashSize();
-                metaHash.setTimeStamp(System.currentTimeMillis());
-                String metaValue = "" + metaHash.getHashSize() + separator + metaHash.getTimeStamp();
-                this.rocksDB.put(SerializeHelper.serialize(key+separator+field),value);
-                this.rocksDB.put(SerializeHelper.serialize(key),SerializeHelper.serialize(metaValue));
             }
-        } catch (RocksDBException e) {
+            long size = metaHash.get(key).incrementAndGet();
+            WriteBatch writeBatch = new WriteBatch();
+            writeBatch.put(getMetaKey(key),getMetaValue(size));
+            writeBatch.put(getDataKey(key,field),value);
+            this.rocksDB.write(new WriteOptions(),writeBatch);
+        } catch (Exception e) {
             log.warn("RockDB store Hash error,cause={}",e);
         }
     }
 
-    class MetaHash{
-        String key;
-
-        AtomicLong hashSize;
-        AtomicReference<Long> timeStamp;
-
-        public MetaHash(String key,long hashSize,long timeStamp){
-            this.key = key;
-            this.hashSize = new AtomicLong(hashSize);
-            this.timeStamp = new AtomicReference(timeStamp);
+    private void loadMetaHash(String key){
+        try {
+            byte[] isKeyExists = rocksDB.get(getMetaKey(key));
+            AtomicLong size = null;
+            if(isKeyExists == null){
+                size = new AtomicLong(0);
+            }else{
+                size = new AtomicLong(SerializeHelper.deserialize(isKeyExists,Long.class));
+            }
+            this.metaHash.put(key,size);
+        } catch (RocksDBException e) {
+            log.warn("Load RockDB Store Hash error,cause={}",e);
         }
-
-        public String getKey() {
-            return key;
-        }
-
-
-        public long getHashSize() {
-            return hashSize.get();
-        }
-
-        public long addHashSize() {
-            return this.hashSize.incrementAndGet();
-        }
-
-        public long getTimeStamp() {
-            return timeStamp.get();
-        }
-
-        public void setTimeStamp(long timeStamp) {
-            this.timeStamp.set(timeStamp);
-        }
-
     }
 
+    private byte[] getMetaKey(String key){
+        return SerializeHelper.serialize(key);
+    }
+    private byte[] getMetaValue(Object metaValue){
+        return SerializeHelper.serialize(metaValue);
+    }
+
+    private byte[] getDataKey(String key,String field){
+        return SerializeHelper.serialize(key + separator + field);
+    }
+
+    private byte[] getDataValue(Object dataValue){
+        return SerializeHelper.serialize(dataValue);
+    }
 }

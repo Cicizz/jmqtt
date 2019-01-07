@@ -1,5 +1,6 @@
 package org.jmqtt.store.rocksdb;
 
+import org.jmqtt.common.helper.SerializeHelper;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.store.SessionStore;
 import org.jmqtt.store.rocksdb.utils.RocksMap;
@@ -25,16 +26,21 @@ public class RocksdbSessionStore implements SessionStore {
 
     @Override
     public Object setSession(String clientId, Object obj) {
-        return null;
+        rocksMap.set(RocksdbStorePrefix.SESSION + clientId, SerializeHelper.serialize(obj));
+        return obj;
     }
 
     @Override
     public Object getLastSession(String clientId) {
+        byte[] sessionBytes = rocksMap.get(RocksdbStorePrefix.SESSION + clientId);
+        if(sessionBytes != null){
+            return SerializeHelper.deserialize(sessionBytes,Object.class);
+        }
         return null;
     }
 
     @Override
     public boolean clearSession(String clientId) {
-        return false;
+        return rocksMap.remove(RocksdbStorePrefix.SESSION + clientId);
     }
 }
