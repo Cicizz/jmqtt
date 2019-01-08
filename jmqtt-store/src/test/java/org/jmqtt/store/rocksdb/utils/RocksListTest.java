@@ -63,4 +63,21 @@ public class RocksListTest {
         Message message = new Message();
         rocksList.add("testClient",SerializeHelper.serialize(message));
     }
+
+    @Test
+    public void clear() {
+        String key = "listKey";
+        String value = "listValue";
+        int len = 100;
+        for(int i = 0 ; i < len; i++){
+            this.rocksList.add(key,SerializeHelper.serialize(value));
+        }
+        this.rocksList.clear(key);
+        long size = this.rocksList.size(key);
+        assert size == 0;
+        for(int i = 0; i < len; i++){
+            byte[] tempValue = this.rocksList.get(key,i);
+            assert tempValue == null;
+        }
+    }
 }
