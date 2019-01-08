@@ -2,13 +2,12 @@ package org.jmqtt.store.rocksdb.utils;
 
 import org.jmqtt.common.helper.SerializeHelper;
 import org.jmqtt.common.log.LoggerName;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.WriteBatch;
-import org.rocksdb.WriteOptions;
+import org.rocksdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -58,13 +57,52 @@ public class RocksHash extends AbstractRocksHandler {
         return 0L;
     }
 
+    public Collection<byte[]> values(String key){
+        byte[] keyPrefix = SerializeHelper.serialize(key + separator);
+        RocksIterator iterator = this.rocksDB.newIterator();
+        Collection<byte[]> values = new ArrayList<>();
+        for(iterator.seek(keyPrefix);iterator.isValid();iterator.next()){
+            values.add(iterator.value());
+        }
+        return values;
+    }
+
     public boolean contains(String key,String field){
         try {
-            return rocksDB.get((key+separator+field).getBytes()) != null;
+            return rocksDB.get(SerializeHelper.serialize(key + field)) != null;
         } catch (RocksDBException e) {
             log.warn("RockDB get Hash error,cause={}",e);
         }
         return true;
+    }
+
+    public void clear(String key){
+        this.metaHash.remove(key);
+        byte[] keyPrefix = SerializeHelper.serialize(key + separator);
+        try {
+            WriteBatch writeBatch = new WriteBatch();
+            writeBatch.delete(SerializeHelper.serialize(key));
+            RocksIterator iterator = this.rocksDB.newIterator();
+            for(iterator.seek(keyPrefix);iterator.isValid();iterator.next()){
+                writeBatch.delete(iterator.key());
+            }
+            this.rocksDB.write(new WriteOptions(),writeBatch);
+        } catch (RocksDBException e) {
+            log.warn("Clear key data failure,cause={}",e);
+        }
+    }
+
+    public void remove(String key,String field){
+        long size = this.metaHash.get(key).decrementAndGet();
+        byte[] relKey = SerializeHelper.serialize(key + separator + field);
+        try {
+            WriteBatch writeBatch = new WriteBatch();
+            writeBatch.delete(relKey);
+            writeBatch.put(getMetaKey(key),getMetaValue(size));
+            this.rocksDB.write(new WriteOptions(),writeBatch);
+        } catch (RocksDBException e) {
+            log.warn("Delete key data failure,cause={}",e);
+        }
     }
 
     public void put(String key,String field,byte[] value){

@@ -2,6 +2,7 @@ package org.jmqtt.broker.subscribe;
 
 import org.jmqtt.common.bean.Subscription;
 import org.jmqtt.common.log.LoggerName;
+import org.jmqtt.store.SubscriptionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +19,9 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
     private Token SINGLE = new Token("+");
     private Token MULTY = new Token("*");
 
-    public DefaultSubscriptionTreeMatcher(){};
+
+    public DefaultSubscriptionTreeMatcher(){
+    };
 
     @Override
     public int subscribe(String topic, Subscription subscription) {
