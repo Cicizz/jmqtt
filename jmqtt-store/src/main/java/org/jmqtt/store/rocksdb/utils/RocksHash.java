@@ -19,9 +19,6 @@ public class RocksHash extends AbstractRocksHandler {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE);
 
-
-    private Lock lock = new ReentrantLock();
-
     private Map<String/* key */, AtomicLong /* key的大小，计数器 */> metaHash = new ConcurrentHashMap<>();
 
     private RocksDB rocksDB;

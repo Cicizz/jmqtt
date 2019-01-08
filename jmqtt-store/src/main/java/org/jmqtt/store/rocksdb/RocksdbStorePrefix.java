@@ -4,7 +4,9 @@ public interface RocksdbStorePrefix {
 
     String SESSION = "session:";
 
-    String FLOW_MESSAGE = "flowMessage:";
+    String REC_FLOW_MESSAGE = "recFlowMessage:";
+
+    String SEND_FLOW_MESSAGE = "sendFlowMessage:";
 
     String OFFLINE_MESSAGE = "offlineMessage:";
 
