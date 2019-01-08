@@ -13,6 +13,7 @@ import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.remoting.util.NettyUtil;
 import org.jmqtt.store.FlowMessageStore;
 import org.jmqtt.store.RetainMessageStore;
+import org.jmqtt.store.SubscriptionStore;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,11 +24,13 @@ public class SubscribeProcessor implements RequestProcessor {
     private SubscriptionMatcher subscriptionMatcher;
     private RetainMessageStore retainMessageStore;
     private FlowMessageStore flowMessageStore;
+    private SubscriptionStore subscriptionStore;
 
-    public SubscribeProcessor(SubscriptionMatcher subscriptionMatcher,RetainMessageStore retainMessageStore,FlowMessageStore flowMessageStore){
+    public SubscribeProcessor(SubscriptionMatcher subscriptionMatcher,RetainMessageStore retainMessageStore,FlowMessageStore flowMessageStore,SubscriptionStore subscriptionStore){
         this.subscriptionMatcher = subscriptionMatcher;
         this.retainMessageStore = retainMessageStore;
         this.flowMessageStore = flowMessageStore;
+        this.subscriptionStore = subscriptionStore;
     }
 
     @Override
@@ -63,6 +66,7 @@ public class SubscribeProcessor implements RequestProcessor {
                 }
             }
             clientSession.subscribe(subscription);
+            this.subscriptionStore.storeSubscription(clientSession.getClientId(),subscription);
             topicQosList.add(topic.getQos());
         }
         return topicQosList;
