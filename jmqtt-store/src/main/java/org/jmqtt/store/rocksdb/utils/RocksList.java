@@ -2,13 +2,12 @@ package org.jmqtt.store.rocksdb.utils;
 
 import org.jmqtt.common.helper.SerializeHelper;
 import org.jmqtt.common.log.LoggerName;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.WriteBatch;
-import org.rocksdb.WriteOptions;
+import org.rocksdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -23,6 +22,14 @@ public class RocksList extends AbstractRocksHandler{
         this.rocksDB = rocksDB;
     }
 
+    public Collection<byte[]> values(String key){
+        Collection<byte[]> values = new ArrayList<>();
+        RocksIterator iterator = rocksDB.newIterator();
+        for(iterator.seek(SerializeHelper.serialize(key+separator));iterator.isValid();iterator.next()){
+            values.add(iterator.key());
+        }
+        return values;
+    }
 
     public long size(String key){
         if(!metaList.containsKey(key)){
@@ -37,6 +44,22 @@ public class RocksList extends AbstractRocksHandler{
         }
     };
 
+    public void clear(String key){
+        try {
+            this.metaList.remove(key);
+            WriteBatch writeBatch = new WriteBatch();
+            writeBatch.delete(SerializeHelper.serialize(key));
+            RocksIterator iterator = rocksDB.newIterator();
+            for(iterator.seek(SerializeHelper.serialize(key+separator));iterator.isValid();iterator.next()){
+                writeBatch.delete(iterator.key());
+            }
+            this.rocksDB.write(new WriteOptions(),writeBatch);
+        } catch (RocksDBException e) {
+            log.warn("Rocksdb clear List failure,cause={}",e);
+        }
+
+    }
+
     public boolean contains(String key){
         try {
             byte[] isExists = rocksDB.get(getMetaKey(key));
@@ -48,12 +71,6 @@ public class RocksList extends AbstractRocksHandler{
     };
 
     public byte[] get(String key,long sequence){
-        if(!contains(key)){
-            throw new RuntimeException("The key of list is not exist!");
-        }
-        if(metaList.get(key).get() < sequence){
-            throw new RuntimeException("The index is over the list size");
-        }
         try {
             byte[] value = rocksDB.get(getDataKey(key,sequence));
             if(value == null){

@@ -29,4 +29,9 @@ public class RedisSubscriptionStore implements SubscriptionStore {
         subscritionCache.delete(clientId);
         return true;
     }
+
+    @Override
+    public boolean removeSubscription(String clientId, String topic) {
+        return false;
+    }
 }

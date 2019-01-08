@@ -12,6 +12,7 @@ import org.jmqtt.remoting.netty.RequestProcessor;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.remoting.util.NettyUtil;
+import org.jmqtt.store.SubscriptionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,9 +24,11 @@ public class UnSubscribeProcessor implements RequestProcessor {
     private Logger log = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
 
     private SubscriptionMatcher subscriptionMatcher;
+    private SubscriptionStore subscriptionStore;
 
-    public UnSubscribeProcessor(SubscriptionMatcher subscriptionMatcher){
+    public UnSubscribeProcessor(SubscriptionMatcher subscriptionMatcher,SubscriptionStore subscriptionStore){
         this.subscriptionMatcher = subscriptionMatcher;
+        this.subscriptionStore = subscriptionStore;
     }
 
     @Override
@@ -41,6 +44,7 @@ public class UnSubscribeProcessor implements RequestProcessor {
         topics.forEach( topic -> {
             clientSession.unSubscribe(topic);
             subscriptionMatcher.unSubscribe(topic,clientId);
+            subscriptionStore.removeSubscription(clientId,topic);
         });
         MqttUnsubAckMessage unsubAckMessage = MessageUtil.getUnSubAckMessage(MessageUtil.getMessageId(mqttMessage));
         ctx.writeAndFlush(unsubAckMessage);
