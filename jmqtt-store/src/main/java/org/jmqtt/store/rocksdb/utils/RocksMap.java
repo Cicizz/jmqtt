@@ -4,8 +4,12 @@ import org.jmqtt.common.helper.SerializeHelper;
 import org.jmqtt.common.log.LoggerName;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
+import org.rocksdb.RocksIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 
 public class RocksMap extends AbstractRocksHandler{
@@ -26,6 +30,15 @@ public class RocksMap extends AbstractRocksHandler{
             log.warn("RockDB get String error,cause={}",e);
         }
         return false;
+    }
+
+    public Collection<byte[]> values(String key){
+        RocksIterator iterator = this.rocksDB.newIterator();
+        Collection<byte[]> values = new ArrayList<>();
+        for(iterator.seek(SerializeHelper.serialize(key));iterator.isValid();iterator.next()){
+            values.add(iterator.value());
+        }
+        return values;
     }
 
     public byte[] get(String key){
