@@ -37,4 +37,12 @@ public class DefaultSubscriptionStore implements SubscriptionStore {
         this.subscriptionCache.remove(clientId);
         return true;
     }
+
+    @Override
+    public boolean removeSubscription(String clientId, String topic) {
+        if(this.subscriptionCache.containsKey(clientId)){
+            this.subscriptionCache.remove(topic);
+        }
+        return true;
+    }
 }
