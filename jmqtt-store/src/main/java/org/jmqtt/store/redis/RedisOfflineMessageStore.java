@@ -32,6 +32,6 @@ public class RedisOfflineMessageStore implements OfflineMessageStore {
 
     @Override
     public Collection<Message> getAllOfflineMessage(String clientId) {
-        return offlineTable.lgetAllMsg(clientId);
+        return offlineTable.lgetAllMsg(clientId,msgMaxNum);
     }
 }
