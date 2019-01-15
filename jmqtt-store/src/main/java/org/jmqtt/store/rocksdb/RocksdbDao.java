@@ -80,6 +80,10 @@ public class RocksdbDao {
         }
     };
 
+    public void close(){
+        this.rocksDB.close();
+    }
+
     public RocksList getRocksList() {
         return rocksList;
     }

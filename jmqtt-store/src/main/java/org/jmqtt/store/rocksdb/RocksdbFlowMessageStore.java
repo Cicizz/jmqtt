@@ -17,8 +17,8 @@ public class RocksdbFlowMessageStore implements FlowMessageStore {
 
     private RocksHash rocksHash;
 
-    public RocksdbFlowMessageStore(RocksHash rocksHash){
-        this.rocksHash = rocksHash;
+    public RocksdbFlowMessageStore(RocksdbDao rocksdbDao){
+        this.rocksHash = rocksdbDao.getRocksHash();
     }
 
     @Override

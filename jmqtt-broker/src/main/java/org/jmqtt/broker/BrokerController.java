@@ -3,6 +3,7 @@ package org.jmqtt.broker;
 import io.netty.handler.codec.mqtt.MqttMessageType;
 import org.jmqtt.broker.client.ClientLifeCycleHookService;
 import org.jmqtt.broker.dispatcher.DefaultDispatcherMessage;
+import org.jmqtt.common.config.StoreConfig;
 import org.jmqtt.remoting.netty.ChannelEventListener;
 import org.jmqtt.store.*;
 import org.jmqtt.store.memory.*;
@@ -18,6 +19,7 @@ import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.netty.NettyRemotingServer;
 import org.jmqtt.remoting.netty.RequestProcessor;
+import org.jmqtt.store.rocksdb.RocksdbMqttStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +34,7 @@ public class BrokerController {
 
     private BrokerConfig brokerConfig;
     private NettyConfig nettyConfig;
+    private StoreConfig storeConfig;
     private ExecutorService connectExecutor;
     private ExecutorService pubExecutor;
     private ExecutorService subExecutor;
@@ -50,11 +53,14 @@ public class BrokerController {
     private OfflineMessageStore offlineMessageStore;
     private SubscriptionStore subscriptionStore;
     private SessionStore sessionStore;
+    private AbstractMqttStore abstractMqttStore;
 
 
-    public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig){
+
+    public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig,StoreConfig storeConfig){
         this.brokerConfig = brokerConfig;
         this.nettyConfig = nettyConfig;
+        this.storeConfig = storeConfig;
 
         this.connectQueue = new LinkedBlockingQueue(100000);
         this.pubQueue = new LinkedBlockingQueue(100000);
@@ -62,15 +68,33 @@ public class BrokerController {
         this.pingQueue = new LinkedBlockingQueue(10000);
 
         {//store pluggable
-            this.flowMessageStore = new DefaultFlowMessageStore();
-            this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
-            this.willMessageStore = new DefaultWillMessageStore();
-            this.retainMessageStore = new DefaultRetainMessageStore();
-            this.offlineMessageStore = new DefaultOfflineMessageStore();
-            this.subscriptionStore = new DefaultSubscriptionStore();
-            this.sessionStore = new DefaultSessionStore();
-            this.messageDispatcher = new DefaultDispatcherMessage(brokerConfig.getPollThreadNum(), subscriptionMatcher, flowMessageStore,offlineMessageStore);
-        }
+            switch (storeConfig.getStoreType()){
+                case 1:
+                    this.abstractMqttStore = new RocksdbMqttStore(storeConfig);
+                    break;
+                case 2:
+                    //TODO  redis  store
+                    break;
+                default:
+                    this.abstractMqttStore = new DefaultMqttStore();
+                break;
+            }
+            try {
+                this.abstractMqttStore.init();
+            } catch (Exception e) {
+                System.out.println("Init Store failure,exception=" + e);
+                e.printStackTrace();
+            }
+            this.flowMessageStore = this.abstractMqttStore.getFlowMessageStore();
+            this.willMessageStore = this.abstractMqttStore.getWillMessageStore();
+            this.retainMessageStore = this.abstractMqttStore.getRetainMessageStore();
+            this.offlineMessageStore = this.abstractMqttStore.getOfflineMessageStore();
+            this.subscriptionStore = this.abstractMqttStore.getSubscriptionStore();
+            this.sessionStore = this.abstractMqttStore.getSessionStore();
+         }
+        this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
+        this.messageDispatcher = new DefaultDispatcherMessage(brokerConfig.getPollThreadNum(), subscriptionMatcher, flowMessageStore,offlineMessageStore);
+
         this.channelEventListener = new ClientLifeCycleHookService(willMessageStore,messageDispatcher);
         this.remotingServer = new NettyRemotingServer(nettyConfig,channelEventListener);
 
