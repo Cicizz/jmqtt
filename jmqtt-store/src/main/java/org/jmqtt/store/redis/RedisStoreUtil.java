@@ -6,10 +6,16 @@ import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.config.RedisConfig;
 import org.jmqtt.store.redis.RedisDao;
 import org.jmqtt.store.redis.RedisStoreManager;
+import org.redisson.Redisson;
+import org.redisson.RedissonReadWriteLock;
+import org.redisson.api.RBucket;
+import org.redisson.api.RReadWriteLock;
+import org.redisson.api.RedissonClient;
 import redis.clients.jedis.*;
 import redis.clients.util.JedisClusterCRC16;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class RedisStoreUtil implements RedisDao {
     private JSONObject jsonObject;
@@ -17,12 +23,16 @@ public class RedisStoreUtil implements RedisDao {
     private RedisStoreManager redisStoreManager;
     public static JedisCluster cluster;
     private String keyName;
+//    RedissonLock redissonLock = new RedissonLock();
+//    RedissonClient redissonClient = redissonLock.getRedisson();
+//    RReadWriteLock rwlock = redissonClient.getReadWriteLock("anyLock");
+
     public RedisStoreUtil(RedisConfig Config,String keyName){
         this.redisConfig = Config;
         this.redisStoreManager = RedisStoreManager.getInstance(redisConfig);
         redisStoreManager.initialization();
         this.cluster = redisStoreManager.getCluster();
-        this.keyName = "{"+keyName+":}";
+        this.keyName = "{"+keyName+"}:";
     }
     @Override
     public void delete(String clientId) {
@@ -110,9 +120,10 @@ public class RedisStoreUtil implements RedisDao {
     }
 
     @Override
-    public Collection<Message> lgetAllMsg(String str) {
+    public Collection<Message> lgetAllMsg(String str,Integer num) {
         Collection<Message> allMessage = new ArrayList<>();
-        for (String temp:cluster.lrange(keyName+str,0,-1)){
+        List<String> temps = cluster.lrange(keyName+str,0,num-1);
+        for (String temp:temps){
             allMessage.add((Message) JSONObject.toBean(JSONObject.fromObject(temp),Message.class));
         }
         return allMessage;
@@ -120,11 +131,42 @@ public class RedisStoreUtil implements RedisDao {
 
     @Override
     public boolean laddMsg(Integer num,String str, Message message) {
+
         jsonObject = JSONObject.fromObject(message);
         cluster.lpush(keyName+str,jsonObject.toString());
         cluster.ltrim(keyName+str,0,num-1);
+
+
+//        自己写的redis分布式锁
+//        jsonObject = JSONObject.fromObject(message);
+//        RedisLock lock = new RedisLock("push",100,1000);
+//        if (lock.lock()){
+//            cluster.lpush(keyName+str,jsonObject.toString());
+//            cluster.ltrim(keyName+str,0,num-1);
+//        }
+//        lock.unlock();
+
+
+
+//         用Redisson实现分布式锁
+//        jsonObject = JSONObject.fromObject(message);
+//        try {
+//            boolean res = rwlock.writeLock().tryLock(100,10, TimeUnit.SECONDS);
+////            RBucket keyObject =
+//            if (res){
+//                cluster.lpush(keyName+str,jsonObject.toString());
+//                cluster.ltrim(keyName+str,0,num-1);
+//            }
+//        }catch (InterruptedException e){
+//            e.printStackTrace();
+//        }finally {
+//            rwlock.writeLock().unlock();
+//        }
+
         return true;
     }
 
-
+    public void close(){
+        redisStoreManager.shutDown();
+    }
 }

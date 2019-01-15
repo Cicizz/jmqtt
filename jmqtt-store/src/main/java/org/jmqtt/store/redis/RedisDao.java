@@ -17,6 +17,6 @@ public interface RedisDao {
     boolean scontain(String str);
     <T> T sgetSetMsg(String str,Object obj);
     <T> T sgetMsg(String str,Class objectClass);
-    Collection<Message> lgetAllMsg(String str);
+    Collection<Message> lgetAllMsg(String str,Integer num);
     boolean laddMsg(Integer num,String str,Message message);
 }
