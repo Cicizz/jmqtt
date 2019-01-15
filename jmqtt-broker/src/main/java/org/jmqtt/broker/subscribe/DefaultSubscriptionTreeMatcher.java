@@ -57,16 +57,20 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
         String[] tokens = topic.split("/");
         Token token = new Token(tokens[0]);
         TreeNode matchNode = node.getChildNodeByToken(token);
-        TreeNode currentNode =  matchNode;
-        if(Objects.isNull(currentNode)){
-            currentNode = new TreeNode(token);
-            node.addChild(currentNode);
+        if(Objects.isNull(matchNode)){
+            synchronized (node){
+                matchNode = node.getChildNodeByToken(token);
+                if(Objects.isNull(matchNode)){
+                    matchNode = new TreeNode(token);
+                    node.addChild(matchNode);
+                }
+            }
         }
         if(tokens.length > 1){
             String childTopic = topic.substring(topic.indexOf("/")+1);
-            return recursionGetTreeNode(childTopic,currentNode);
+            return recursionGetTreeNode(childTopic,matchNode);
         }else{
-            return currentNode;
+            return matchNode;
         }
     }
 
@@ -126,7 +130,6 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
             }
         }
     }
-
 
     class Token{
         String token;
