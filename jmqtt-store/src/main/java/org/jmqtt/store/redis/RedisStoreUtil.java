@@ -13,9 +13,6 @@ public class RedisStoreUtil implements RedisDao {
     private RedisStoreManager redisStoreManager;
     public static JedisCluster cluster;
     private String keyName;
-//    RedissonLock redissonLock = new RedissonLock();
-//    RedissonClient redissonClient = redissonLock.getRedisson();
-//    RReadWriteLock rwlock = redissonClient.getReadWriteLock("anyLock");
 
     public RedisStoreUtil(StoreConfig Config,String keyName){
         this.redisConfig = Config;
