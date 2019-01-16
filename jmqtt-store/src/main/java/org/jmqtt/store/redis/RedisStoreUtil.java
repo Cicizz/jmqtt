@@ -1,25 +1,15 @@
 package org.jmqtt.store.redis;
 
-import net.sf.json.JSON;
 import net.sf.json.JSONObject;
 import org.jmqtt.common.bean.Message;
-import org.jmqtt.common.config.RedisConfig;
-import org.jmqtt.store.redis.RedisDao;
-import org.jmqtt.store.redis.RedisStoreManager;
-import org.redisson.Redisson;
-import org.redisson.RedissonReadWriteLock;
-import org.redisson.api.RBucket;
-import org.redisson.api.RReadWriteLock;
-import org.redisson.api.RedissonClient;
+import org.jmqtt.common.config.StoreConfig;
 import redis.clients.jedis.*;
-import redis.clients.util.JedisClusterCRC16;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 public class RedisStoreUtil implements RedisDao {
     private JSONObject jsonObject;
-    private RedisConfig redisConfig;
+    private StoreConfig redisConfig;
     private RedisStoreManager redisStoreManager;
     public static JedisCluster cluster;
     private String keyName;
@@ -27,7 +17,7 @@ public class RedisStoreUtil implements RedisDao {
 //    RedissonClient redissonClient = redissonLock.getRedisson();
 //    RReadWriteLock rwlock = redissonClient.getReadWriteLock("anyLock");
 
-    public RedisStoreUtil(RedisConfig Config,String keyName){
+    public RedisStoreUtil(StoreConfig Config,String keyName){
         this.redisConfig = Config;
         this.redisStoreManager = RedisStoreManager.getInstance(redisConfig);
         redisStoreManager.initialization();
