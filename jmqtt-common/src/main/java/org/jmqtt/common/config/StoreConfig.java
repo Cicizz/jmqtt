@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class StoreConfig {
 
     /**
-     * store type default 1:rocksdb  2.memory  3.redis
+     * store type default 1:rocksdb  2.redis  3.in memory
      */
     private int storeType = 1;
 
