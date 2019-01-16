@@ -7,7 +7,7 @@ public class RedisMqttStore extends AbstractMqttStore {
    private StoreConfig redisConfig;
    private RedisStoreManager redisStoreManager;
 
-   public void RedisMqttStore(StoreConfig redisConfig){ this.redisConfig = redisConfig; }
+   public RedisMqttStore(StoreConfig redisConfig){ this.redisConfig = redisConfig; }
 
     @Override
     public void init() throws Exception {
