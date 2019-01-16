@@ -1,7 +1,7 @@
 package org.jmqtt.store.redis;
 
 import org.jmqtt.common.bean.Subscription;
-import org.jmqtt.common.config.RedisConfig;
+import org.jmqtt.common.config.StoreConfig;
 import org.jmqtt.store.SubscriptionStore;
 
 import java.util.Collection;
@@ -9,7 +9,7 @@ import java.util.Collection;
 public class RedisSubscriptionStore implements SubscriptionStore {
     private RedisStoreUtil subscritionCache;
 
-    public RedisSubscriptionStore(RedisConfig redisConfig){
+    public RedisSubscriptionStore(StoreConfig redisConfig){
         this.subscritionCache = new RedisStoreUtil(redisConfig,"subscritionCache:");
     }
 

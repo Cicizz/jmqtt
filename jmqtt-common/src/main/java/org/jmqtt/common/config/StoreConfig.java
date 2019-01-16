@@ -1,5 +1,7 @@
 package org.jmqtt.common.config;
 
+import java.util.ArrayList;
+
 public class StoreConfig {
 
     /**
@@ -27,5 +29,56 @@ public class StoreConfig {
 
     public void setStoreType(int storeType) {
         this.storeType = storeType;
+    }
+
+    /*redis store configuration start */
+    private String nodes;
+    private String password;
+    private Integer maxIdle = 100;
+    private Integer maxActive = 600;
+    private Integer timeout = 100000;
+
+
+
+    /*redis store configuration end */
+
+    public String getNodes() {
+        return nodes;
+    }
+
+    public void setNodes(String nodes) {
+        this.nodes = nodes;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Integer getMaxIdle() {
+        return maxIdle;
+    }
+
+    public void setMaxIdle(Integer maxIdle) {
+        this.maxIdle = maxIdle;
+    }
+
+    public Integer getMaxActive() {
+        return maxActive;
+    }
+
+    public void setMaxActive(Integer maxActive) {
+        this.maxActive = maxActive;
+    }
+
+    public Integer getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(Integer timeout) {
+        this.timeout = timeout;
     }
 }

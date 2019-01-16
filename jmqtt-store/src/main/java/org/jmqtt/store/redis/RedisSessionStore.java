@@ -1,13 +1,13 @@
 package org.jmqtt.store.redis;
 
-import org.jmqtt.common.config.RedisConfig;
+import org.jmqtt.common.config.StoreConfig;
 import org.jmqtt.store.SessionStore;
 
 public class RedisSessionStore implements SessionStore {
 
     private RedisStoreUtil sessionTable;
 
-    public RedisSessionStore(RedisConfig redisConfig){
+    public RedisSessionStore(StoreConfig redisConfig){
         this.sessionTable = new RedisStoreUtil(redisConfig,"sessionTable:");
     }
 

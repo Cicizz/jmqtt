@@ -1,7 +1,7 @@
 package org.jmqtt.store.redis;
 
 import org.jmqtt.common.bean.Message;
-import org.jmqtt.common.config.RedisConfig;
+import org.jmqtt.common.config.StoreConfig;
 import org.jmqtt.store.RetainMessageStore;
 
 import java.util.Collection;
@@ -9,7 +9,7 @@ import java.util.Collection;
 public class RedisRetainMessageStore implements RetainMessageStore {
     private RedisStoreUtil retainTable;
 
-    public RedisRetainMessageStore(RedisConfig redisConfig){
+    public RedisRetainMessageStore(StoreConfig redisConfig){
         this.retainTable = new RedisStoreUtil(redisConfig,"retainTable");
     }
 
