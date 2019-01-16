@@ -34,10 +34,9 @@ public class StoreConfig {
     /*redis store configuration start */
     private String nodes;
     private String password;
-    private Integer maxIdle;
-    private Integer maxActive;
-    private Integer timeout;
-    private Integer nodeNum = 6;
+    private Integer maxIdle = 100;
+    private Integer maxActive = 600;
+    private Integer timeout = 100000;
 
 
 
@@ -81,13 +80,5 @@ public class StoreConfig {
 
     public void setTimeout(Integer timeout) {
         this.timeout = timeout;
-    }
-
-    public Integer getNodeNum() {
-        return nodeNum;
-    }
-
-    public void setNodeNum(Integer nodeNum) {
-        this.nodeNum = nodeNum;
     }
 }

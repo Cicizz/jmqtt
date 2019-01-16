@@ -37,7 +37,6 @@ public class RedisStoreManager {
         poolConfig.setMaxTotal(redisConfig.getMaxActive());
         poolConfig.setMaxIdle(redisConfig.getMaxIdle());
         poolConfig.setMaxWaitMillis(redisConfig.getTimeout());
-        Integer num = redisConfig.getNodeNum();
         String[] clusterNodes = redisConfig.getNodes().split(";");
         for (String node : clusterNodes){
             nodes.add(new HostAndPort(node.split(":")[0],Integer.valueOf(node.split(":")[1])));
