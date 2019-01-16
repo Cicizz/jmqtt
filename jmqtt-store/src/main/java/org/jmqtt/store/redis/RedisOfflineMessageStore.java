@@ -1,7 +1,7 @@
 package org.jmqtt.store.redis;
 
 import org.jmqtt.common.bean.Message;
-import org.jmqtt.common.config.RedisConfig;
+import org.jmqtt.common.config.StoreConfig;
 import org.jmqtt.store.OfflineMessageStore;
 
 import java.util.Collection;
@@ -11,7 +11,7 @@ public class RedisOfflineMessageStore implements OfflineMessageStore {
     private RedisStoreUtil offlineTable;
     private int msgMaxNum = 1000;
 
-    public RedisOfflineMessageStore(RedisConfig redisConfig){
+    public RedisOfflineMessageStore(StoreConfig redisConfig){
         this.offlineTable = new RedisStoreUtil(redisConfig,"offlineTable:");
     }
 

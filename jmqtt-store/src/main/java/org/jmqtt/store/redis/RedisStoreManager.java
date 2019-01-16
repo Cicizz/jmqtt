@@ -1,6 +1,6 @@
 package org.jmqtt.store.redis;
 
-import org.jmqtt.common.config.RedisConfig;
+import org.jmqtt.common.config.StoreConfig;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPoolConfig;
@@ -9,7 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class RedisStoreManager {
-    private RedisConfig redisConfig;
+    private StoreConfig redisConfig;
     private Set<HostAndPort> nodes = new LinkedHashSet<HostAndPort>();
     private JedisCluster cluster;
     private JedisPoolConfig poolConfig = new JedisPoolConfig();
@@ -19,7 +19,7 @@ public class RedisStoreManager {
 
     }
 
-    public static RedisStoreManager getInstance(RedisConfig redisConfig){
+    public static RedisStoreManager getInstance(StoreConfig redisConfig){
         if (null == INSTANCE){
             synchronized (RedisStoreManager .class){
                 if (null == INSTANCE){
@@ -37,8 +37,10 @@ public class RedisStoreManager {
         poolConfig.setMaxTotal(redisConfig.getMaxActive());
         poolConfig.setMaxIdle(redisConfig.getMaxIdle());
         poolConfig.setMaxWaitMillis(redisConfig.getTimeout());
-        for (Integer id=0;id<6;id++){
-            nodes.add(new HostAndPort(redisConfig.getHost(id),redisConfig.getPort(id)));
+        Integer num = redisConfig.getNodeNum();
+        String[] clusterNodes = redisConfig.getNodes().split(";");
+        for (String node : clusterNodes){
+            nodes.add(new HostAndPort(node.split(":")[0],Integer.valueOf(node.split(":")[1])));
         }
         this.cluster = new JedisCluster(nodes,poolConfig);
     }
