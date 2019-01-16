@@ -1,13 +1,13 @@
 package org.jmqtt.store.redis;
 
-import org.jmqtt.common.config.RedisConfig;
+import org.jmqtt.common.config.StoreConfig;
 import org.jmqtt.store.AbstractMqttStore;
 
 public class RedisMqttStore extends AbstractMqttStore {
-   private RedisConfig redisConfig;
+   private StoreConfig redisConfig;
    private RedisStoreManager redisStoreManager;
 
-   public void RedisMqttStore(RedisConfig redisConfig){ this.redisConfig = redisConfig; }
+   public RedisMqttStore(StoreConfig redisConfig){ this.redisConfig = redisConfig; }
 
     @Override
     public void init() throws Exception {
