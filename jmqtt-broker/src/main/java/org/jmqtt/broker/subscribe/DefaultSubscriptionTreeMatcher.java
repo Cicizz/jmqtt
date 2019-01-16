@@ -14,6 +14,8 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
 
+    private final Object lock = new Object();
+
     private TreeNode root = new TreeNode(new Token("root"));
     private Token EMPTY = new Token("");
     private Token SINGLE = new Token("+");
@@ -58,7 +60,7 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
         Token token = new Token(tokens[0]);
         TreeNode matchNode = node.getChildNodeByToken(token);
         if(Objects.isNull(matchNode)){
-            synchronized (node){
+            synchronized (lock){
                 matchNode = node.getChildNodeByToken(token);
                 if(Objects.isNull(matchNode)){
                     matchNode = new TreeNode(token);

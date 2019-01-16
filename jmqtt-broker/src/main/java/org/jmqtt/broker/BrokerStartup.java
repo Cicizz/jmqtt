@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.Objects;
 import java.util.Properties;
 
 public class BrokerStartup {
@@ -98,7 +99,9 @@ public class BrokerStartup {
             System.out.println("Handle jmqttConfig IO exception,cause = " + e);
         } finally {
             try {
-                bufferedReader.close();
+                if(Objects.nonNull(bufferedReader)){
+                    bufferedReader.close();
+                }
             } catch (IOException e) {
                 System.out.println("Handle jmqttConfig IO exception,cause = " + e);
             }
