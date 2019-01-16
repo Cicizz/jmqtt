@@ -19,6 +19,7 @@ import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.netty.NettyRemotingServer;
 import org.jmqtt.remoting.netty.RequestProcessor;
+import org.jmqtt.store.redis.RedisMqttStore;
 import org.jmqtt.store.rocksdb.RocksdbMqttStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +74,7 @@ public class BrokerController {
                     this.abstractMqttStore = new RocksdbMqttStore(storeConfig);
                     break;
                 case 2:
-                    //TODO  redis  store
+                    this.abstractMqttStore = new RedisMqttStore(storeConfig);
                     break;
                 default:
                     this.abstractMqttStore = new DefaultMqttStore();

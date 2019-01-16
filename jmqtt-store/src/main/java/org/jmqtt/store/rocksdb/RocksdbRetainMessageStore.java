@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 public class RocksdbRetainMessageStore implements RetainMessageStore {
 
@@ -25,7 +26,10 @@ public class RocksdbRetainMessageStore implements RetainMessageStore {
         Collection<byte[]> values = this.rocksMap.values(RocksdbStorePrefix.RETAIN_MESSAGE);
         Collection<Message> retainMessages = new ArrayList<>();
         for(byte[] value : values){
-            retainMessages.add(SerializeHelper.deserialize(value,Message.class));
+            Message retainMsg = SerializeHelper.deserialize(value,Message.class);
+            if(Objects.nonNull(retainMsg)){
+                retainMessages.add(retainMsg);
+            }
         }
         return retainMessages;
     }

@@ -58,7 +58,7 @@ public class RocksHash extends AbstractRocksHandler {
         byte[] keyPrefix = SerializeHelper.serialize(key + separator);
         RocksIterator iterator = this.rocksDB.newIterator();
         Collection<byte[]> values = new ArrayList<>();
-        for(iterator.seek(keyPrefix);iterator.isValid();iterator.next()){
+        for(iterator.seek(keyPrefix);iterator.isValid() &&  SerializeHelper.deserialize(iterator.key(),String.class).startsWith(key + separator);iterator.next()){
             values.add(iterator.value());
         }
         return values;
@@ -80,7 +80,7 @@ public class RocksHash extends AbstractRocksHandler {
             WriteBatch writeBatch = new WriteBatch();
             writeBatch.delete(SerializeHelper.serialize(key));
             RocksIterator iterator = this.rocksDB.newIterator();
-            for(iterator.seek(keyPrefix);iterator.isValid();iterator.next()){
+            for(iterator.seek(keyPrefix);iterator.isValid() && SerializeHelper.deserialize(iterator.key(),String.class).startsWith(key + separator);iterator.next()){
                 writeBatch.delete(iterator.key());
             }
             this.rocksDB.write(new WriteOptions(),writeBatch);

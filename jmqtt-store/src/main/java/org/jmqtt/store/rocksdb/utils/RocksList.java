@@ -50,7 +50,7 @@ public class RocksList extends AbstractRocksHandler{
             WriteBatch writeBatch = new WriteBatch();
             writeBatch.delete(SerializeHelper.serialize(key));
             RocksIterator iterator = rocksDB.newIterator();
-            for(iterator.seek(SerializeHelper.serialize(key+separator));iterator.isValid();iterator.next()){
+            for(iterator.seek(SerializeHelper.serialize(key+separator));iterator.isValid() &&  SerializeHelper.deserialize(iterator.key(),String.class).startsWith(key + separator);iterator.next()){
                 writeBatch.delete(iterator.key());
             }
             this.rocksDB.write(new WriteOptions(),writeBatch);
