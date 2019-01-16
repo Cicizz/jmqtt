@@ -7,12 +7,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.jmqtt.broker.exception.BrokerException;
 import org.jmqtt.common.config.BrokerConfig;
 import org.jmqtt.common.config.NettyConfig;
+import org.jmqtt.common.config.StoreConfig;
 import org.jmqtt.common.helper.MixAll;
 import org.jmqtt.common.log.LoggerName;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.Objects;
 import java.util.Properties;
 
 public class BrokerStartup {
@@ -36,6 +39,7 @@ public class BrokerStartup {
         String jmqttConfigPath = null;
         BrokerConfig brokerConfig = new BrokerConfig();
         NettyConfig nettyConfig = new NettyConfig();
+        StoreConfig storeConfig = new StoreConfig();
         if(commandLine != null){
             jmqttHome = commandLine.getOptionValue("h");
             jmqttConfigPath = commandLine.getOptionValue("c");
@@ -55,7 +59,7 @@ public class BrokerStartup {
         lc.reset();
         configurator.doConfigure(jmqttHome + "/conf/logback_broker.xml");
 
-        BrokerController brokerController = new BrokerController(brokerConfig,nettyConfig);
+        BrokerController brokerController = new BrokerController(brokerConfig,nettyConfig, storeConfig);
         brokerController.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
@@ -95,7 +99,9 @@ public class BrokerStartup {
             System.out.println("Handle jmqttConfig IO exception,cause = " + e);
         } finally {
             try {
-                bufferedReader.close();
+                if(Objects.nonNull(bufferedReader)){
+                    bufferedReader.close();
+                }
             } catch (IOException e) {
                 System.out.println("Handle jmqttConfig IO exception,cause = " + e);
             }

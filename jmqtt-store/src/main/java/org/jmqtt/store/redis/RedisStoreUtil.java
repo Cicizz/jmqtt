@@ -131,38 +131,18 @@ public class RedisStoreUtil implements RedisDao {
 
     @Override
     public boolean laddMsg(Integer num,String str, Message message) {
-
         jsonObject = JSONObject.fromObject(message);
         cluster.lpush(keyName+str,jsonObject.toString());
         cluster.ltrim(keyName+str,0,num-1);
 
 
-//        自己写的redis分布式锁
-//        jsonObject = JSONObject.fromObject(message);
-//        RedisLock lock = new RedisLock("push",100,1000);
-//        if (lock.lock()){
-//            cluster.lpush(keyName+str,jsonObject.toString());
-//            cluster.ltrim(keyName+str,0,num-1);
-//        }
-//        lock.unlock();
-
-
-
-//         用Redisson实现分布式锁
-//        jsonObject = JSONObject.fromObject(message);
-//        try {
-//            boolean res = rwlock.writeLock().tryLock(100,10, TimeUnit.SECONDS);
-////            RBucket keyObject =
-//            if (res){
-//                cluster.lpush(keyName+str,jsonObject.toString());
-//                cluster.ltrim(keyName+str,0,num-1);
-//            }
-//        }catch (InterruptedException e){
-//            e.printStackTrace();
-//        }finally {
-//            rwlock.writeLock().unlock();
-//        }
-
+        if (cluster.exists(keyName+str)){
+            if (cluster.lrange(keyName+str,0,-1).size() > num){
+                cluster.lpop(keyName+str);
+            }
+        }
+        jsonObject = JSONObject.fromObject(message);
+        cluster.rpush(keyName+str,jsonObject.toString());
         return true;
     }
 
