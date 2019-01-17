@@ -2,6 +2,7 @@ package org.jmqtt.store.rocksdb.utils;
 
 import org.jmqtt.common.helper.SerializeHelper;
 import org.jmqtt.common.log.LoggerName;
+import org.rocksdb.ReadOptions;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
@@ -33,9 +34,11 @@ public class RocksMap extends AbstractRocksHandler{
     }
 
     public Collection<byte[]> values(String key){
-        RocksIterator iterator = this.rocksDB.newIterator();
+        ReadOptions readOptions = new ReadOptions();
+        readOptions.prefixSameAsStart();
+        RocksIterator iterator = this.rocksDB.newIterator(readOptions);
         Collection<byte[]> values = new ArrayList<>();
-        for(iterator.seek(SerializeHelper.serialize(key));iterator.isValid();iterator.next()){
+        for(iterator.seek(SerializeHelper.serialize(key));iterator.isValid() && SerializeHelper.deserialize(iterator.key(),String.class).startsWith(key);iterator.next()){
             values.add(iterator.value());
         }
         return values;

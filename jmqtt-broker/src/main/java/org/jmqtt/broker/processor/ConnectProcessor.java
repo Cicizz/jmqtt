@@ -64,10 +64,12 @@ public class ConnectProcessor implements RequestProcessor {
             } else{
                 Object lastState = sessionStore.getLastSession(clientId);
                 if(Objects.nonNull(lastState) && lastState.equals(true)){
-                    //clear previous connect
+                    //TODO cluster clear and disconnect previous connect
                     ClientSession previousClient = ConnectManager.getInstance().getClient(clientId);
-                    previousClient.getCtx().close();
-                    ConnectManager.getInstance().removeClient(clientId);
+                    if(previousClient != null){
+                        previousClient.getCtx().close();
+                        ConnectManager.getInstance().removeClient(clientId);
+                    }
                 }
                 if(cleansession){
                     clientSession = createNewClientSession(clientId,ctx);
