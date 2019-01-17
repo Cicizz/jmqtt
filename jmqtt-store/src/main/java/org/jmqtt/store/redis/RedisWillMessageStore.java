@@ -1,13 +1,13 @@
 package org.jmqtt.store.redis;
 
 import org.jmqtt.common.bean.Message;
-import org.jmqtt.common.config.RedisConfig;
+import org.jmqtt.common.config.StoreConfig;
 import org.jmqtt.store.WillMessageStore;
 
 public class RedisWillMessageStore implements WillMessageStore {
     private RedisStoreUtil willTable;
 
-    public RedisWillMessageStore(RedisConfig redisConfig){
+    public RedisWillMessageStore(StoreConfig redisConfig){
         this.willTable = new RedisStoreUtil(redisConfig,"willTable:");
     }
 

@@ -45,7 +45,7 @@ public class BrokerStartup {
             jmqttConfigPath = commandLine.getOptionValue("c");
         }
         if(StringUtils.isNotEmpty(jmqttConfigPath)){
-            initConfig(jmqttConfigPath,brokerConfig,nettyConfig);
+            initConfig(jmqttConfigPath,brokerConfig,nettyConfig,storeConfig);
         }
         if(StringUtils.isEmpty(jmqttHome)){
             jmqttHome = brokerConfig.getJmqttHome();
@@ -85,7 +85,7 @@ public class BrokerStartup {
         return options;
     }
 
-    private static void initConfig(String jmqttConfigPath,BrokerConfig brokerConfig,NettyConfig nettyConfig){
+    private static void initConfig(String jmqttConfigPath,BrokerConfig brokerConfig,NettyConfig nettyConfig,StoreConfig storeConfig){
         Properties properties = new Properties();
         BufferedReader  bufferedReader = null;
         try {
@@ -93,6 +93,7 @@ public class BrokerStartup {
             properties.load(bufferedReader);
             MixAll.properties2POJO(properties,brokerConfig);
             MixAll.properties2POJO(properties,nettyConfig);
+            MixAll.properties2POJO(properties,storeConfig);
         } catch (FileNotFoundException e) {
             System.out.println("jmqtt.properties cannot find,cause = " + e);
         } catch (IOException e) {
