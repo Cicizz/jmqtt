@@ -5,8 +5,11 @@ import io.netty.handler.codec.mqtt.MqttMessage;
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
 import io.netty.handler.codec.mqtt.MqttSubscribeMessage;
 import io.netty.handler.codec.mqtt.MqttTopicSubscription;
+import org.jmqtt.broker.BrokerController;
+import org.jmqtt.broker.acl.PubSubPermission;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.jmqtt.common.bean.*;
+import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.netty.RequestProcessor;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.util.MessageUtil;
@@ -14,6 +17,8 @@ import org.jmqtt.remoting.util.NettyUtil;
 import org.jmqtt.store.FlowMessageStore;
 import org.jmqtt.store.RetainMessageStore;
 import org.jmqtt.store.SubscriptionStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,16 +26,20 @@ import java.util.List;
 
 public class SubscribeProcessor implements RequestProcessor {
 
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
+
     private SubscriptionMatcher subscriptionMatcher;
     private RetainMessageStore retainMessageStore;
     private FlowMessageStore flowMessageStore;
     private SubscriptionStore subscriptionStore;
+    private PubSubPermission pubSubPermission;
 
-    public SubscribeProcessor(SubscriptionMatcher subscriptionMatcher,RetainMessageStore retainMessageStore,FlowMessageStore flowMessageStore,SubscriptionStore subscriptionStore){
-        this.subscriptionMatcher = subscriptionMatcher;
-        this.retainMessageStore = retainMessageStore;
-        this.flowMessageStore = flowMessageStore;
-        this.subscriptionStore = subscriptionStore;
+    public SubscribeProcessor(BrokerController controller){
+        this.subscriptionMatcher = controller.getSubscriptionMatcher();
+        this.retainMessageStore = controller.getRetainMessageStore();
+        this.flowMessageStore = controller.getFlowMessageStore();
+        this.subscriptionStore = controller.getSubscriptionStore();
+        this.pubSubPermission = controller.getPubSubPermission();
     }
 
     @Override
@@ -40,6 +49,13 @@ public class SubscribeProcessor implements RequestProcessor {
         int messageId = subscribeMessage.variableHeader().messageId();
         ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
         List<MqttTopicSubscription> recTopicList = subscribeMessage.payload().topicSubscriptions();
+        for(MqttTopicSubscription topic : recTopicList){
+            if(!pubSubPermission.subscribeVerfy(clientId,topic.topicName())){
+                log.warn("[SubPermission] this clientId:{} have no permission to subscribe this topic:{}",clientId,topic.topicName());
+                clientSession.getCtx().close();
+                return;
+            }
+        }
         List<Topic> validTopicList =validTopics(recTopicList);
         List<Integer> topicQosList = subscribe(clientSession,validTopicList);
         MqttMessage subAckMessage = MessageUtil.getSubAckMessage(messageId,topicQosList);
