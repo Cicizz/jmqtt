@@ -1,7 +1,5 @@
 package org.jmqtt.store;
 
-import org.jmqtt.common.config.StoreConfig;
-
 public abstract class AbstractMqttStore {
 
     protected FlowMessageStore flowMessageStore;

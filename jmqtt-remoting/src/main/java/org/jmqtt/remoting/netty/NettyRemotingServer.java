@@ -127,7 +127,7 @@ public class NettyRemotingServer implements RemotingServer {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast("idleStateHandler", new IdleStateHandler(0, 0, 60))
+                        pipeline.addLast("idleStateHandler", new IdleStateHandler(60, 0, 0))
                                 .addLast("nettyConnectionManager", new NettyConnectHandler(nettyEventExcutor))
                                 .addLast("mqttEncoder", MqttEncoder.INSTANCE)
                                 .addLast("mqttDecoder", new MqttDecoder(nettyConfig.getMaxMsgSize()))

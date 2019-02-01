@@ -15,9 +15,11 @@
         <module>jmqtt-common</module>
         <module>jmqtt-distribution</module>
         <module>jmqtt-example</module>
+        <module>jmqtt-group</module>
     </modules>
 
     <name>jmqtt</name>
+    <url>https://github.com/Cicizz/jmqtt</url>
 
     <licenses>
         <license>
@@ -42,6 +44,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.jmqtt</groupId>
+                <artifactId>jmqtt-group</artifactId>
+                <version>${version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.jmqtt</groupId>
                 <artifactId>jmqtt-common</artifactId>
