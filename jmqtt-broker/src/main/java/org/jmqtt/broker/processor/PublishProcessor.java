@@ -5,6 +5,8 @@ import io.netty.handler.codec.mqtt.MqttMessage;
 import io.netty.handler.codec.mqtt.MqttPubAckMessage;
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
 import io.netty.handler.codec.mqtt.MqttQoS;
+import org.jmqtt.broker.BrokerController;
+import org.jmqtt.broker.acl.PubSubPermission;
 import org.jmqtt.store.FlowMessageStore;
 import org.jmqtt.broker.dispatcher.MessageDispatcher;
 import org.jmqtt.common.bean.ClientSession;
@@ -27,9 +29,12 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
 
     private FlowMessageStore flowMessageStore;
 
-    public PublishProcessor(MessageDispatcher messageDispatcher, FlowMessageStore flowMessageStore, RetainMessageStore retainMessageStore){
-        super(messageDispatcher,retainMessageStore);
-        this.flowMessageStore = flowMessageStore;
+    private PubSubPermission pubSubPermission;
+
+    public PublishProcessor(BrokerController controller){
+        super(controller.getMessageDispatcher(),controller.getRetainMessageStore());
+        this.flowMessageStore = controller.getFlowMessageStore();
+        this.pubSubPermission = controller.getPubSubPermission();
     }
 
     @Override
@@ -39,6 +44,12 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
         Message innerMsg = new Message();
         String clientId = NettyUtil.getClientId(ctx.channel());
         ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
+        String topic = publishMessage.variableHeader().topicName();
+        if(!this.pubSubPermission.publishVerfy(clientId,topic)){
+            log.warn("[PubMessage] permission is not allowed");
+            clientSession.getCtx().close();
+            return;
+        }
         innerMsg.setClientSession(clientSession);
         innerMsg.setPayload(MessageUtil.readBytesFromByteBuf(publishMessage.payload()));
         innerMsg.setType(Message.Type.valueOf(mqttMessage.fixedHeader().messageType().value()));
