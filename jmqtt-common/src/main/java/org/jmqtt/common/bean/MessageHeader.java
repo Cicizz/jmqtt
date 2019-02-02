@@ -2,7 +2,6 @@ package org.jmqtt.common.bean;
 
 public class MessageHeader {
 
-
     public static final String TOPIC = "topic";
 
     public static final String QOS = "qos";
