@@ -11,6 +11,7 @@ import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.jmqtt.common.bean.*;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.netty.RequestProcessor;
+import org.jmqtt.remoting.session.ClientSession;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.remoting.util.NettyUtil;
