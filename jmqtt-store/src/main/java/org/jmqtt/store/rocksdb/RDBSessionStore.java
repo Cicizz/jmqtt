@@ -19,7 +19,6 @@ public class RDBSessionStore implements SessionStore {
 
     public RDBSessionStore(RDB rdb){
         this.rdb = rdb;
-        this.rdb.putSync(columnFamilyHandle(),RDBStorePrefix.SESSION.getBytes(),"".getBytes());
     }
 
     @Override

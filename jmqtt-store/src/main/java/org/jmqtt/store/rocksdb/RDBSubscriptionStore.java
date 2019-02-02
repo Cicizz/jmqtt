@@ -22,7 +22,6 @@ public class RDBSubscriptionStore implements SubscriptionStore {
 
     public RDBSubscriptionStore(RDB rdb){
         this.rdb = rdb;
-        this.rdb.putSync(columnFamilyHandle(),RDBStorePrefix.SUBSCRIPTION.getBytes(),"".getBytes());
     }
 
     @Override

@@ -22,8 +22,6 @@ public class RDBFlowMessageStore implements FlowMessageStore {
 
     public RDBFlowMessageStore(RDB rdb){
         this.rdb = rdb;
-        this.rdb.putSync(recColumnFamilyHandle(),sendKeyPrefix(""),"".getBytes());
-        this.rdb.putSync(sendColumnFamilyHandle(),recKeyPrefix(""),"".getBytes());
     }
 
     @Override
