@@ -3,7 +3,7 @@ package org.jmqtt.broker.dispatcher;
 
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
-import org.jmqtt.common.bean.ClientSession;
+import org.jmqtt.remoting.session.ClientSession;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.bean.MessageHeader;
 import org.jmqtt.common.bean.Subscription;

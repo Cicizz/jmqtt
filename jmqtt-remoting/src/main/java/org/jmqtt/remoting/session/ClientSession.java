@@ -1,11 +1,8 @@
-package org.jmqtt.common.bean;
+package org.jmqtt.remoting.session;
 
 import io.netty.channel.ChannelHandlerContext;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientSession {
