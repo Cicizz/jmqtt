@@ -57,8 +57,11 @@ public class RDB {
             int item = 0;
             WriteBatch writeBatch = new WriteBatch();
             for(iterator.seek(prefixKey);iterator.isValid();iterator.next()){
-                writeBatch.delete(iterator.key());
+                writeBatch.delete(cfh,iterator.key());
                 item++;
+            }
+            if(item > 0){
+                this.DB.write(WRITE_OPTIONS_SYNC,writeBatch);
             }
             log.info("[RocksDB] -> succ while delete by prefix,columnFamilyHandle:{}, prefixKey:{}, nums:{}",cfh.toString(),new String(prefixKey),item);
         }catch(RocksDBException e){

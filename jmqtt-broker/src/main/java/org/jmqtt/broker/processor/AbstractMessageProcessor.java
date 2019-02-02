@@ -21,10 +21,10 @@ public abstract class AbstractMessageProcessor {
         boolean retain = (boolean) message.getHeader(MessageHeader.RETAIN);
         if(retain){
             int qos = (int) message.getHeader(MessageHeader.QOS);
-            byte[] payload = (byte[])message.getPayload();
+            byte[] payload = message.getPayload();
             String topic = (String) message.getHeader(MessageHeader.TOPIC);
             //qos == 0 or payload is none,then clear previous retain message
-            if(qos == 0 || payload.length == 0){
+            if(qos == 0 || payload == null || payload.length == 0){
                 this.retainMessageStore.removeRetainMessage(topic);
             }else{
                 this.retainMessageStore.storeRetainMessage(topic,message);

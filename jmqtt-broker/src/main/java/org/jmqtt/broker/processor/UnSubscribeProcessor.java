@@ -42,7 +42,6 @@ public class UnSubscribeProcessor implements RequestProcessor {
             log.warn("[UnSubscribe] -> The client is not online.clientId={}",clientId);
         }
         topics.forEach( topic -> {
-            clientSession.unSubscribe(topic);
             subscriptionMatcher.unSubscribe(topic,clientId);
             subscriptionStore.removeSubscription(clientId,topic);
         });

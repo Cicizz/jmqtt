@@ -11,9 +11,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ClientSession {
 
     private String clientId;
-    private List<Subscription> subscriptions = new ArrayList<>();
     private boolean cleanSession;
-    private ChannelHandlerContext ctx;
+    private transient ChannelHandlerContext ctx;
 
     private AtomicInteger messageIdCounter = new AtomicInteger(1);
 
@@ -28,25 +27,9 @@ public class ClientSession {
         return clientId;
     }
 
-    public void subscribe(Subscription subscription){
-        this.subscriptions.add(subscription);
-    }
-
-    public void unSubscribe(String topic){
-        Subscription subscription = new Subscription(clientId,topic,1);
-        this.subscriptions.remove(subscription);
-    }
 
     public void setClientId(String clientId) {
         this.clientId = clientId;
-    }
-
-    public List<Subscription> getSubscriptions() {
-        return subscriptions;
-    }
-
-    public void setSubscriptions(List<Subscription> subscriptions) {
-        this.subscriptions = subscriptions;
     }
 
     public boolean isCleanSession() {
