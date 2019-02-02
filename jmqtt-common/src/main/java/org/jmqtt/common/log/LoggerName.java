@@ -3,7 +3,7 @@ package org.jmqtt.common.log;
 public interface LoggerName {
     String BROKER = "brokerLog";
 
-    String CLIENT_TRACE = "connectTraceLog";
+    String CLIENT_TRACE = "clientTraceLog";
 
     String MESSAGE_TRACE = "messageTraceLog";
 

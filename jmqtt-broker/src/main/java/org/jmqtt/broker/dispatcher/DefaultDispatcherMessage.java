@@ -43,7 +43,6 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
         this.subscriptionMatcher = subscriptionMatcher;
         this.flowMessageStore = flowMessageStore;
         this.offlineMessageStore = offlineMessageStore;
-        this.start();
     }
 
     @Override

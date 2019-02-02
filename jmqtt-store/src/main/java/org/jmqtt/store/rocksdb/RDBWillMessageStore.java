@@ -20,7 +20,6 @@ public class RDBWillMessageStore implements WillMessageStore {
 
     public RDBWillMessageStore(RDB rdb){
         this.rdb = rdb;
-        this.rdb.putSync(columnFamilyHandle(),RDBStorePrefix.WILL_MESSAGE.getBytes(),"".getBytes());
     }
 
     @Override

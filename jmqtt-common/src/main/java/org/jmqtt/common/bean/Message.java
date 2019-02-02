@@ -13,15 +13,15 @@ public class Message {
 
     private Map<String,Object> headers;
 
-    private ClientSession clientSession;
+    private String clientId;
 
     private Type type;
 
-    private Object payload;
+    private byte[] payload;
 
     public Message(){};
 
-    public Message(Type type,Map<String,Object> headers,Object payload){
+    public Message(Type type,Map<String,Object> headers,byte[] payload){
         this.type = type;
         this.headers = headers;
         this.payload = payload;
@@ -67,22 +67,21 @@ public class Message {
         this.type = type;
     }
 
-    public Object getPayload() {
+    public byte[] getPayload() {
         return payload;
     }
 
-    public void setPayload(Object payload) {
+    public void setPayload(byte[] payload) {
         this.payload = payload;
     }
 
-    public ClientSession getClientSession() {
-        return clientSession;
+    public String getClientId() {
+        return clientId;
     }
 
-    public void setClientSession(ClientSession clientSession) {
-        this.clientSession = clientSession;
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
-
 
     /**
      * mqtt message type
@@ -135,14 +134,14 @@ public class Message {
         Message message = (Message) o;
         return msgId == message.msgId &&
                 Objects.equals(headers, message.headers) &&
-                Objects.equals(clientSession, message.clientSession) &&
+                Objects.equals(clientId, message.clientId) &&
                 type == message.type &&
                 Objects.equals(payload, message.payload);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(msgId, headers, clientSession, type, payload);
+        return Objects.hash(msgId, headers, clientId, type, payload);
     }
 
     @Override
@@ -150,7 +149,7 @@ public class Message {
         return "Message{" +
                 "msgId=" + msgId +
                 ", headers=" + headers +
-                ", clientSession=" + clientSession +
+                ", clientId=" + clientId +
                 ", type=" + type +
                 ", payload=" + payload +
                 '}';
