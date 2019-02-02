@@ -6,7 +6,7 @@ import io.netty.handler.codec.mqtt.MqttUnsubAckMessage;
 import io.netty.handler.codec.mqtt.MqttUnsubscribeMessage;
 import io.netty.handler.codec.mqtt.MqttUnsubscribePayload;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
-import org.jmqtt.common.bean.ClientSession;
+import org.jmqtt.remoting.session.ClientSession;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.netty.RequestProcessor;
 import org.jmqtt.remoting.session.ConnectManager;

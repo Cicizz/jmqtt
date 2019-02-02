@@ -1,7 +1,5 @@
 package org.jmqtt.remoting.session;
 
-import org.jmqtt.common.bean.ClientSession;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
