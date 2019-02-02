@@ -13,7 +13,7 @@ public class DefaultConnectPermission implements ConnectPermission {
 
     @Override
     public boolean onBlacklist(String remoteAddr, String clientId) {
-        return true;
+        return false;
     }
 
     @Override

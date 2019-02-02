@@ -4,17 +4,16 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
-import org.jmqtt.broker.exception.BrokerException;
 import org.jmqtt.common.config.BrokerConfig;
 import org.jmqtt.common.config.NettyConfig;
 import org.jmqtt.common.config.StoreConfig;
 import org.jmqtt.common.helper.MixAll;
-import org.jmqtt.common.log.LoggerName;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.Properties;
 

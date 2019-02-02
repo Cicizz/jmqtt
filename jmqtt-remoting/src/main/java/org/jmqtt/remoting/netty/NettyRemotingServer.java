@@ -128,9 +128,9 @@ public class NettyRemotingServer implements RemotingServer {
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
                         pipeline.addLast("idleStateHandler", new IdleStateHandler(60, 0, 0))
-                                .addLast("nettyConnectionManager", new NettyConnectHandler(nettyEventExcutor))
                                 .addLast("mqttEncoder", MqttEncoder.INSTANCE)
                                 .addLast("mqttDecoder", new MqttDecoder(nettyConfig.getMaxMsgSize()))
+                                .addLast("nettyConnectionManager", new NettyConnectHandler(nettyEventExcutor))
                                 .addLast("nettyMqttHandler", new NettyMqttHandler());
                     }
                 });
@@ -164,10 +164,11 @@ public class NettyRemotingServer implements RemotingServer {
     class NettyMqttHandler extends ChannelInboundHandlerAdapter {
 
         @Override
-        public void channelRead(ChannelHandlerContext ctx, Object obj) throws Exception {
+        public void channelRead(ChannelHandlerContext ctx, Object obj){
             MqttMessage mqttMessage = (MqttMessage) obj;
             if(mqttMessage != null && mqttMessage.decoderResult().isSuccess()){
                 MqttMessageType messageType = mqttMessage.fixedHeader().messageType();
+                log.debug("[Remoting] -> receive mqtt code,type:{}",messageType.value());
                 Runnable runnable = new Runnable() {
                     @Override
                     public void run() {

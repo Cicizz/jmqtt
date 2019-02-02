@@ -11,7 +11,7 @@ public abstract class AbstractMqttStore {
 
     public abstract void init() throws Exception;
 
-    public abstract void close();
+    public abstract void shutdown();
 
     public FlowMessageStore getFlowMessageStore() {
         return flowMessageStore;

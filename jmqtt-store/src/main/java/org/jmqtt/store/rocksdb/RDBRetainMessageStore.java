@@ -22,7 +22,6 @@ public class RDBRetainMessageStore implements RetainMessageStore {
 
     public RDBRetainMessageStore(RDB rdb){
         this.rdb = rdb;
-        this.rdb.putSync(columnFamilyHandle(),RDBStorePrefix.RETAIN_MESSAGE.getBytes(),"".getBytes());
     }
 
     @Override

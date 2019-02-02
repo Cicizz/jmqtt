@@ -21,7 +21,6 @@ public class RDBOfflineMessageStore implements OfflineMessageStore {
 
     public RDBOfflineMessageStore(RDB rdb){
         this.rdb  = rdb;
-        this.rdb.putSync(columnFamilyHandle(),RDBStorePrefix.OFFLINE_MESSAGE.getBytes(),"".getBytes());
     }
 
     @Override

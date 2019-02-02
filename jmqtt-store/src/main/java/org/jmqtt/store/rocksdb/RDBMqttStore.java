@@ -27,7 +27,7 @@ public class RDBMqttStore extends AbstractMqttStore {
     }
 
     @Override
-    public void close() {
+    public void shutdown() {
         this.rdb.close();
     }
 
