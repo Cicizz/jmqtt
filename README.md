@@ -1,5 +1,20 @@
-#### 说明
-JMQTT是用java语言开发的支持mqtt协议的高可用，高性能，高可扩展性的broker，采用netty作为通信层组件，支持插件化开发。
+##  Jmqtt
+
+**注意**：`master` 分支在开发时可能不稳定，导致打包的文件不能运行甚至不能打包，请使用 [releases](https://github.com/Cicizz/jmqtt/releases) 版本
+
+![Jmqtt logo](jmqtt.png)
+
+## 功能特性
+
+* 基于Java及Netty开发，插件化模式，高性能，高扩展性
+* 支持mqtt协议qos0，qos1，qos2消息质量服务
+* 支持mqtt协议cleansession，retain，will等消息服务
+* 完整支持mqtt Topic匹配过滤
+* 支持websocket协议
+* 支持RocksDB进行数据本地存储，数据高可靠
+
+
+
 #### 架构设计图
 ![架构图](jmqtt%20design.jpg)
 #### 功能特性
