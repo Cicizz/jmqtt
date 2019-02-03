@@ -23,14 +23,14 @@ public class NettyConnectHandler extends ChannelDuplexHandler {
     @Override
     public void channelActive(ChannelHandlerContext ctx){
         final String remoteAddr = RemotingHelper.getRemoteAddr(ctx.channel());
-        log.info("[ChannelActive] -> addr = {}",remoteAddr);
+        log.debug("[ChannelActive] -> addr = {}",remoteAddr);
         this.eventExcutor.putNettyEvent(new NettyEvent(remoteAddr,NettyEventType.CONNECT,ctx.channel()));
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx){
         final String remoteAddr = RemotingHelper.getRemoteAddr(ctx.channel());
-        log.info("[ChannelInactive] -> addr = {}",remoteAddr);
+        log.debug("[ChannelInactive] -> addr = {}",remoteAddr);
         this.eventExcutor.putNettyEvent(new NettyEvent(remoteAddr,NettyEventType.CLOSE,ctx.channel()));
     }
 

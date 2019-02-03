@@ -91,7 +91,7 @@ public class ConnectProcessor implements RequestProcessor {
                         clientSession = reloadClientSession(ctx,clientId);
                         sessionPresent = true;
                     }else{
-                        clientSession = new ClientSession(clientId,false);
+                        clientSession = new ClientSession(clientId,false,ctx);
                         sessionPresent = false;
                     }
                 }

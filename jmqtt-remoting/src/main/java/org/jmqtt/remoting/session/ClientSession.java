@@ -20,6 +20,12 @@ public class ClientSession {
         this.cleanSession = cleanSession;
     }
 
+    public ClientSession(String clientId, boolean cleanSession,ChannelHandlerContext ctx){
+        this.clientId = clientId;
+        this.cleanSession = cleanSession;
+        this.ctx = ctx;
+    }
+
     public String getClientId() {
         return clientId;
     }
