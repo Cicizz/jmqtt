@@ -13,39 +13,57 @@
 * 支持websocket协议
 * 支持RocksDB进行数据本地存储，数据高可靠
 
+## 快速开始
 
+在线测试环境：`120.24.69.113`，TCP端口：`1883`；Websocket端口：`1884`，欢迎使用！
 
-#### 架构设计图
+1. 下载 [release](https://github.com/Cicizz/jmqtt/releases) 或`clone`本项目
+2. 在根目录执行：`mvn -Ppackage-all -DskipTests clean install -U`
+3. 在 `jmqtt-distrubution/target/jmqtt/bin` 目录下直接运行 `jmqttstart`脚本即可
+
+## 架构设计图
+
 ![架构图](jmqtt%20design.jpg)
-#### 功能特性
-1. 支持qos0,qos1,qos2消息特性
-2. 支持Rocksdb消息持久化
-3. 支持多级Topic过滤匹配
-4. 支持Websocket
-5. 支持redis存储
+## 模块简介及本地环境
 
-#### QuickStart
-1. clone本项目
-2. 输入`mvn -Ppackage-all -DskipTests clean install -U`打包
-3.  进入jmqtt-distrubution/target/jmqtt/bin下，直接运行jmqttstart脚本即可
-#### RoadMap
+* **broker**：mqtt协议层，逻辑处理，BrokerStartup为启动类，BrokerController为初始化类，初始化所有的必备环境，其中acl，store的插件配置也必须在这里初始化
 
-##### Version 3.x
+* **common**：公共层，存放工具类，bean类等
+* **remoting**：通信层，连接管理，协议解析，心跳等
+* **distribution**：配置模块，主要是配置文件，启停命令等存放
+* **example**：客户端示例，目前只有java以及websocket
+* **group**：集群管理模块：消息传输，集群管理，以及相关运维功能实现store：存储模块，提供了mqtt协议数据的几个接口，支持基于内存的和Rocksdb的本地存储
+
+## RoadMap
+
+### Version 3.x
 
 1. 支持简单运维功能
 2. 支持RocketMQ Bridge
 3. 支持Kafka Bridge
 4. 支持$SYS Topic监控
 
-##### Version 2.x（开发中）
+### Version 2.x（开发中）
+
 1. 支持集群化，多主机横向扩展，实现高可用
 2. 支持SSL/TLS
 3. 支持安全认证
-##### Version 1.0.0
+### Version 1.1.0
+
+1. 添加connect，publish，subsribe权限认证接口，可插件化
+2. 移除Redis存储
+3. 优化Rocksdb本地存储，现在性能提高了很多，并且容易管理
+4. 修复订阅的bug
+5. 修复离线消息不能接收大bug
+6. 修复retain消息偶尔接收不到的bug
+7. 添加storeLog，remotingLog，messageTraceLog，clientTraceLog记录日志
+
+### Version 1.0.0
+
 1. 完整支持mqtt协议
 2. 支持Websocket协议
 3. 支持数据本地持久化
-4. 支持redis存储
 
-#### 欢迎关注公众号进行交流
+## 欢迎关注公众号进行交流
+
 ![开发大小事](zze.jpg)
