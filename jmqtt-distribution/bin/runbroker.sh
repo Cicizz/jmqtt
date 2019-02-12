@@ -21,7 +21,7 @@ export CLASSPATH=.:${BASE_DIR}/conf:${CLASSPATH}
 #===========================================================================================
 # JVM Configuration
 #===========================================================================================
-JAVA_OPT="${JAVA_OPT} -server -Xms8g -Xmx8g -Xmn4g"
+JAVA_OPT="${JAVA_OPT} -server -Xms128m -Xmx128m -Xmn64m"
 JAVA_OPT="${JAVA_OPT} -XX:+UseG1GC -XX:G1HeapRegionSize=16m -XX:G1ReservePercent=25 -XX:InitiatingHeapOccupancyPercent=30 -XX:SoftRefLRUPolicyMSPerMB=0 -XX:SurvivorRatio=8"
 JAVA_OPT="${JAVA_OPT} -verbose:gc -Xloggc:/dev/shm/mq_gc_%p.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCApplicationStoppedTime -XX:+PrintAdaptiveSizePolicy"
 JAVA_OPT="${JAVA_OPT} -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=30m"
@@ -37,10 +37,10 @@ JAVA_OPT="${JAVA_OPT} -cp ${CLASSPATH}"
 numactl --interleave=all pwd > /dev/null 2>&1
 if [ $? -eq 0 ]
 then
-	if [ -z "$RMQ_NUMA_NODE" ] ; then
+	if [ -z "$JMQTT_NUMA_NODE" ] ; then
 		numactl --interleave=all $JAVA ${JAVA_OPT} $@
 	else
-		numactl --cpunodebind=$RMQ_NUMA_NODE --membind=$RMQ_NUMA_NODE $JAVA ${JAVA_OPT} $@
+		numactl --cpunodebind=$JMQTT_NUMA_NODE --membind=$JMQTT_NUMA_NODE $JAVA ${JAVA_OPT} $@
 	fi
 else
 	$JAVA ${JAVA_OPT} $@

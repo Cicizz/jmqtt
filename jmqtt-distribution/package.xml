@@ -38,6 +38,7 @@
                 <include>org.jmqtt:jmqtt-remoting</include>
                 <include>org.jmqtt:jmqtt-common</include>
                 <include>org.jmqtt:jmqtt-store</include>
+                <include>org.jmqtt:jmqtt-group</include>
             </includes>
             <binaries>
                 <outputDirectory>lib/</outputDirectory>
