@@ -21,18 +21,21 @@
 2. 在根目录执行：`mvn -Ppackage-all -DskipTests clean install -U`
 3. 在 `jmqtt-distrubution/target/jmqtt/bin` 目录下直接运行 `jmqttstart`脚本即可
 
+4. 本地启动：找到BrokerStartup类，配置启动环境变量：key是`JMQTT_HOME`，value是`jmqtt-distribution`所在的绝对地址，配置的目的是指定jmqtt配置文件和日志配置文件所在的地址。
+
+
 ## 架构设计图
 
 ![架构图](jmqtt%20design.jpg)
 ## 模块简介及本地环境
 
 * **broker**：mqtt协议层，逻辑处理，BrokerStartup为启动类，BrokerController为初始化类，初始化所有的必备环境，其中acl，store的插件配置也必须在这里初始化
-
 * **common**：公共层，存放工具类，bean类等
 * **remoting**：通信层，连接管理，协议解析，心跳等
 * **distribution**：配置模块，主要是配置文件，启停命令等存放
 * **example**：客户端示例，目前只有java以及websocket
-* **group**：集群管理模块：消息传输，集群管理，以及相关运维功能实现store：存储模块，提供了mqtt协议数据的几个接口，支持基于内存的和Rocksdb的本地存储
+* **group**：集群管理模块：消息传输，集群管理，以及相关运维功能实现
+* **store**：存储模块，提供了mqtt协议数据的几个接口，支持基于内存的和Rocksdb的本地存储
 
 ## RoadMap
 
@@ -54,7 +57,7 @@
 2. 移除Redis存储
 3. 优化Rocksdb本地存储，现在性能提高了很多，并且容易管理
 4. 修复订阅的bug
-5. 修复离线消息不能接收大bug
+5. 修复离线消息不能接收的bug
 6. 修复retain消息偶尔接收不到的bug
 7. 添加storeLog，remotingLog，messageTraceLog，clientTraceLog记录日志
 
