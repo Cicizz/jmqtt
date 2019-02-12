@@ -1,3 +1,4 @@
+[English](./README_EN.md) | **中文**
 ##  Jmqtt
 
 **注意**：`master` 分支在开发时可能不稳定，导致打包的文件不能运行甚至不能打包，请使用 [releases](https://github.com/Cicizz/jmqtt/releases) 版本
