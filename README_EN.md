@@ -22,7 +22,7 @@ Online test environment：`120.24.69.113`，TCP port ：`1883`；Websocket port�
 2. Execute in the root directory：`mvn -Ppackage-all -DskipTests clean install -U`
 3. Run the jmqttstart script directly in the `jmqtt-distrubution/target/jmqtt/bin` directory.
 
-4. local launch: Find the BrokerStartup class and configure the startup environment variable: The key is `JMQTT_HOME`, and the value is the absolute address where `jmqtt-distribution` is located. The purpose of the configuration is to specify the address where the jmqtt configuration file and log configuration file are located.
+4. Local launch: find the BrokerStartup class and configure the startup environment variable: The key is `JMQTT_HOME`, and the value is the absolute address where `jmqtt-distribution` is located. The purpose of the configuration is to specify the address where the jmqtt configuration file and log configuration file are located.
 
 
 ## Architecture Design
