@@ -1,6 +1,6 @@
-package org.jmqtt.store.rocksdb;
+package org.jmqtt.store.rocksdb.db;
 
-public interface RocksdbStorePrefix {
+public interface RDBStorePrefix {
 
     String SESSION = "session:";
 

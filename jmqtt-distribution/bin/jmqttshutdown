@@ -1,0 +1,14 @@
+#!/bin/sh
+
+pid=`ps ax | grep -i 'org.jmqtt.broker.BrokerStartup' |grep java | grep -v grep | awk '{print $1}'`
+if [ -z "$pid" ] ; then
+        echo "No jmqttBroker running."
+        exit -1;
+fi
+
+echo "The jmqttBroker(${pid}) is running..."
+
+kill ${pid}
+
+echo "Send shutdown request to jmqttBroker(${pid}) OK"
+

@@ -2,6 +2,7 @@ package org.jmqtt.common.helper;
 
 import org.slf4j.Logger;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Properties;
@@ -10,6 +11,10 @@ import java.util.Properties;
 public class MixAll {
 
     public static String MQTT_VERSION_SUPPORT = "mqtt, mqtt3.1, mqtt3.1.1";
+
+    public static boolean createIfNotExistsDir(File file){
+        return file != null && (file.exists() ? file.isDirectory() : file.mkdirs());
+    }
 
     public static void printProperties(Logger log,Object obj){
         Class clazz = obj.getClass();

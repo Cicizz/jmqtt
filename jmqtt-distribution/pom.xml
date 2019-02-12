@@ -5,13 +5,13 @@
     <parent>
         <artifactId>jmqtt</artifactId>
         <groupId>org.jmqtt</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.1.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.jmqtt</groupId>
     <artifactId>jmqtt-distribution</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -38,6 +38,10 @@
                 <dependency>
                     <groupId>org.jmqtt</groupId>
                     <artifactId>jmqtt-store</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>org.jmqtt</groupId>
+                    <artifactId>jmqtt-group</artifactId>
                 </dependency>
             </dependencies>
             <build>

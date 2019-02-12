@@ -1,7 +1,5 @@
 package org.jmqtt.store;
 
-import org.jmqtt.common.config.StoreConfig;
-
 public abstract class AbstractMqttStore {
 
     protected FlowMessageStore flowMessageStore;
@@ -13,7 +11,7 @@ public abstract class AbstractMqttStore {
 
     public abstract void init() throws Exception;
 
-    public abstract void close();
+    public abstract void shutdown();
 
     public FlowMessageStore getFlowMessageStore() {
         return flowMessageStore;

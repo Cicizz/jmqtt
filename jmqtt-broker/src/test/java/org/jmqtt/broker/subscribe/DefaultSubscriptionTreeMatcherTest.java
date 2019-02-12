@@ -26,7 +26,7 @@ public class DefaultSubscriptionTreeMatcherTest {
         String topic = "MQTT_TEST/2/+/E/#";
         String clientId = "clientid_test";
         Subscription subscription = new Subscription(clientId,topic,1);
-        Assert.assertTrue(this.subscriptionMatcher.subscribe(topic,subscription) != 0);
+        Assert.assertTrue(this.subscriptionMatcher.subscribe(subscription));
     }
 
     @Test
@@ -40,7 +40,7 @@ public class DefaultSubscriptionTreeMatcherTest {
             clientIds[i] = "C_clientId_" + i;
             String topic = topics[i%4];
             Subscription subscription = new Subscription(clientIds[i],topic,1);
-            subscriptionMatcher.subscribe(topic,subscription);
+            subscriptionMatcher.subscribe(subscription);
         }
         Set<Subscription> subscriptions = new HashSet<>();
         for(int i = 0; i < 4; i++){

@@ -3,7 +3,7 @@ package org.jmqtt.broker.dispatcher;
 
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
-import org.jmqtt.common.bean.ClientSession;
+import org.jmqtt.remoting.session.ClientSession;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.bean.MessageHeader;
 import org.jmqtt.common.bean.Subscription;
@@ -43,7 +43,6 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
         this.subscriptionMatcher = subscriptionMatcher;
         this.flowMessageStore = flowMessageStore;
         this.offlineMessageStore = offlineMessageStore;
-        this.start();
     }
 
     @Override
@@ -110,25 +109,29 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
         @Override
         public void run() {
             if(Objects.nonNull(messages)){
-                for(Message message : messages){
-                    Set<Subscription> subscriptions = subscriptionMatcher.match((String)message.getHeader(MessageHeader.TOPIC));
-                    for(Subscription subscription : subscriptions){
-                        String clientId = subscription.getClientId();
-                        ClientSession clientSession = ConnectManager.getInstance().getClient(subscription.getClientId());
-                        if(ConnectManager.getInstance().containClient(clientId)){
-                            int qos = MessageUtil.getMinQos((int)message.getHeader(MessageHeader.QOS),subscription.getQos());
-                            int messageId = clientSession.generateMessageId();
-                            message.putHeader(MessageHeader.QOS,qos);
-                            message.setMsgId(messageId);
-                            if(qos > 0){
-                                flowMessageStore.cacheSendMsg(clientId,message);
+                try{
+                    for(Message message : messages){
+                        Set<Subscription> subscriptions = subscriptionMatcher.match((String)message.getHeader(MessageHeader.TOPIC));
+                        for(Subscription subscription : subscriptions){
+                            String clientId = subscription.getClientId();
+                            ClientSession clientSession = ConnectManager.getInstance().getClient(subscription.getClientId());
+                            if(ConnectManager.getInstance().containClient(clientId)){
+                                int qos = MessageUtil.getMinQos((int)message.getHeader(MessageHeader.QOS),subscription.getQos());
+                                int messageId = clientSession.generateMessageId();
+                                message.putHeader(MessageHeader.QOS,qos);
+                                message.setMsgId(messageId);
+                                if(qos > 0){
+                                    flowMessageStore.cacheSendMsg(clientId,message);
+                                }
+                                MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message,false,qos,messageId);
+                                clientSession.getCtx().writeAndFlush(publishMessage);
+                            }else{
+                                offlineMessageStore.addOfflineMessage(clientId,message);
                             }
-                            MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message,false,qos,messageId);
-                            clientSession.getCtx().writeAndFlush(publishMessage);
-                        }else{
-                            offlineMessageStore.addOfflineMessage(clientId,message);
                         }
                     }
+                }catch(Exception ex){
+                    log.warn("Dispatcher message failure,cause={}",ex);
                 }
             }
         }
