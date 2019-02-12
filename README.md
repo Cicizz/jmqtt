@@ -1,73 +1,73 @@
-[English](./README_EN.md) | **中文**
+**English** | [中文](README_CN.md)
 ##  Jmqtt
 
-**注意**：`master` 分支在开发时可能不稳定，导致打包的文件不能运行甚至不能打包，请使用 [releases](https://github.com/Cicizz/jmqtt/releases) 版本
+**Note**：The `master` branch may be unstable during development, causing the packaged files to not run or even package. Please use the [releases](https://github.com/Cicizz/jmqtt/releases)  version. 
 
 ![Jmqtt logo](jmqtt.png)
 
-## 功能特性
+## Features
 
-* 基于Java及Netty开发，插件化模式，高性能，高扩展性
-* 支持mqtt协议qos0，qos1，qos2消息质量服务
-* 支持mqtt协议cleansession，retain，will等消息服务
-* 完整支持mqtt Topic匹配过滤
-* 支持websocket协议
-* 支持RocksDB进行数据本地存储，数据高可靠
+* Developed in Java and Netty, it supports plug-in mode with high performance and high scalability.
+* Support mqtt protocol qos0, qos1, qos2 message quality service.
+* Supports cleansession, retain, will and other message services in the mqtt protocol.
+* Full support for mqtt Topic match filtering.
+* Support websocket protocol.
+* Support RocksDB for data local storage to make data highly reliable.
 
-## 快速开始
+## Quick Start
 
-在线测试环境：`120.24.69.113`，TCP端口：`1883`；Websocket端口：`1884`，欢迎使用！
+Online test environment：`120.24.69.113`，TCP port ：`1883`；Websocket port：`1884`.
 
-1. 下载 [release](https://github.com/Cicizz/jmqtt/releases) 或`clone`本项目
-2. 在根目录执行：`mvn -Ppackage-all -DskipTests clean install -U`
-3. 在 `jmqtt-distrubution/target/jmqtt/bin` 目录下直接运行 `jmqttstart`脚本即可
+1. Download the [release](https://github.com/Cicizz/jmqtt/releases) version or `clone` this project.
+2. Execute in the root directory：`mvn -Ppackage-all -DskipTests clean install -U`
+3. Run the jmqttstart script directly in the `jmqtt-distrubution/target/jmqtt/bin` directory.
+4. Local launch: find the BrokerStartup class and configure the startup environment variable: The key is `JMQTT_HOME`, and the value is the absolute address where `jmqtt-distribution` is located. The purpose of the configuration is to specify the address where the jmqtt configuration file and log configuration file are located.
 
-4. 本地启动：找到BrokerStartup类，配置启动环境变量：key是`JMQTT_HOME`，value是`jmqtt-distribution`所在的绝对地址，配置的目的是指定jmqtt配置文件和日志配置文件所在的地址。
 
-
-## 架构设计图
+## Architecture Design
 
 ![架构图](jmqtt%20design.jpg)
-## 模块简介及本地环境
+## Module introduction and local environment
 
-* **broker**：mqtt协议层，逻辑处理，BrokerStartup为启动类，BrokerController为初始化类，初始化所有的必备环境，其中acl，store的插件配置也必须在这里初始化
-* **common**：公共层，存放工具类，bean类等
-* **remoting**：通信层，连接管理，协议解析，心跳等
-* **distribution**：配置模块，主要是配置文件，启停命令等存放
-* **example**：客户端示例，目前只有java以及websocket
-* **group**：集群管理模块：消息传输，集群管理，以及相关运维功能实现
-* **store**：存储模块，提供了mqtt协议数据的几个接口，支持基于内存的和Rocksdb的本地存储
+* **broker**：Mqtt protocol layer. logical processing. BrokerStartup is the startup class, BrokerController is the initialization class, initialize all the necessary environment, where the plugin configuration of acl, store must also be initialized here.
+* **common**：Common layer. Used to store tool classes, bean classes, etc.
+* **remoting**：Communication layer. Used for connection management, protocol analysis, heartbeat, etc.
+* **distribution**：Configuration module. Used for configuration files, start and stop commands, etc.
+* **example**：Client example. Only java and websocket examples are supported currently.
+* **group**：Cluster management module. Used for message transmission, cluster management, and related operation and maintenance functions.
+* **store**：Storage module. Provides several interfaces for mqtt protocol data, supports memory-based and Rocksdb local storage.
 
 ## RoadMap
 
 ### Version 3.x
 
-1. 支持简单运维功能
-2. 支持RocketMQ Bridge
-3. 支持Kafka Bridge
-4. 支持$SYS Topic监控
+1. Support simple operation and maintenance functions.
+2. Support RocketMQ Bridge.
+3. Support Kafka Bridge.
+4. Support $SYS Topic Monitoring.
 
-### Version 2.x（开发中）
+### Version 2.x
 
-1. 支持集群化，多主机横向扩展，实现高可用
-2. 支持SSL/TLS
-3. 支持安全认证
+1. Support clustering, multi-host scale-out, high availability.
+2. Support SSL/TLS.
+3. Support safety certificate.
+
 ### Version 1.1.0
 
-1. 添加connect，publish，subsribe权限认证接口，可插件化
-2. 移除Redis存储
-3. 优化Rocksdb本地存储，现在性能提高了很多，并且容易管理
-4. 修复订阅的bug
-5. 修复离线消息不能接收的bug
-6. 修复retain消息偶尔接收不到的bug
-7. 添加storeLog，remotingLog，messageTraceLog，clientTraceLog记录日志
+1. Add connect, publish, subsribe permission authentication interface and make it pluggable.
+2. Remove Redis storage.
+3. Optimize Rocksdb local storage.
+4. Fix bugs in the subscription module.
+5. Fix bugs that offline messages can't receive.
+6. Fix bugs that occasionally do not receive retain messages.
+7. Add storeLog, remotingLog messageTraceLog, clientTraceLog.
 
 ### Version 1.0.0
 
-1. 完整支持mqtt协议
-2. 支持Websocket协议
-3. 支持数据本地持久化
+1. Full support for the mqtt protocol.
+2. Support Websocket protocol.
+3. Support for data local persistence
 
-## 欢迎关注公众号进行交流
+## Welcome to WeChat Subscription to communicate
 
 ![开发大小事](zze.jpg)
