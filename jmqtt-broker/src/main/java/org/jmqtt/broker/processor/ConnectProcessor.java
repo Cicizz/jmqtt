@@ -1,6 +1,7 @@
 package org.jmqtt.broker.processor;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.internal.ChannelUtils;
 import io.netty.handler.codec.mqtt.*;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.jmqtt.broker.BrokerController;
@@ -110,6 +111,11 @@ public class ConnectProcessor implements RequestProcessor {
             }
             MqttConnAckMessage ackMessage = MessageUtil.getConnectAckMessage(returnCode,sessionPresent);
             ctx.writeAndFlush(ackMessage);
+            if(returnCode != MqttConnectReturnCode.CONNECTION_ACCEPTED){
+                ctx.close();
+                log.warn("[CONNECT] -> {} connect failure,returnCode={}",clientId,returnCode);
+                return;
+            }
             log.info("[CONNECT] -> {} connect to this mqtt server",clientId);
             reConnect2SendMessage(clientId);
         }catch(Exception ex){
@@ -117,6 +123,7 @@ public class ConnectProcessor implements RequestProcessor {
             returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE;
             MqttConnAckMessage ackMessage = MessageUtil.getConnectAckMessage(returnCode,sessionPresent);
             ctx.writeAndFlush(ackMessage);
+            ctx.close();
         }
     }
 

@@ -1,4 +1,4 @@
-package org.jmqtt.group;
+package org.jmqtt.group.common;
 
 import java.util.HashMap;
 
@@ -8,7 +8,7 @@ import java.util.HashMap;
 public class ClusterRemotingCommand {
 
     /**
-     * message command
+     * cluster request code
      */
     private int code;
     private HashMap<String,String> extField;
