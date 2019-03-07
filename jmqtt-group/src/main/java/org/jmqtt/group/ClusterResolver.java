@@ -2,7 +2,7 @@ package org.jmqtt.group;
 
 import org.jmqtt.common.bean.Message;
 
-public interface ClusterMessageResolver {
+public interface ClusterResolver {
 
     /**
      * 启动集群消息处理器
@@ -17,10 +17,10 @@ public interface ClusterMessageResolver {
     /**
      * 发送消息到集群
      */
-    void send(Message message);
+    void send(ClusterRemotingCommand message);
 
     /**
-     * 从集群中接收消息
+     * 从集群中接收到消息
      */
-    Message receive();
+    ClusterRemotingCommand receive();
 }

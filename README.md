@@ -67,7 +67,3 @@ Online test environment：`120.24.69.113`，TCP port ：`1883`；Websocket port�
 1. Full support for the mqtt protocol.
 2. Support Websocket protocol.
 3. Support for data local persistence
-
-## Welcome to WeChat Subscription to communicate
-
-![开发大小事](zze.jpg)
