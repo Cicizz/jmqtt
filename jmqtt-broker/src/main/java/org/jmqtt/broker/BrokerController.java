@@ -13,6 +13,7 @@ import org.jmqtt.broker.recover.ReSendMessageService;
 import org.jmqtt.broker.subscribe.DefaultSubscriptionTreeMatcher;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.jmqtt.common.config.BrokerConfig;
+import org.jmqtt.common.config.ClusterConfig;
 import org.jmqtt.common.config.NettyConfig;
 import org.jmqtt.common.config.StoreConfig;
 import org.jmqtt.common.helper.MixAll;
@@ -40,6 +41,7 @@ public class BrokerController {
     private BrokerConfig brokerConfig;
     private NettyConfig nettyConfig;
     private StoreConfig storeConfig;
+    private ClusterConfig clusterConfig;
     private ExecutorService connectExecutor;
     private ExecutorService pubExecutor;
     private ExecutorService subExecutor;
@@ -65,10 +67,11 @@ public class BrokerController {
 
 
 
-    public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig,StoreConfig storeConfig){
+    public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig, StoreConfig storeConfig, ClusterConfig clusterConfig){
         this.brokerConfig = brokerConfig;
         this.nettyConfig = nettyConfig;
         this.storeConfig = storeConfig;
+        this.clusterConfig = clusterConfig;
 
         this.connectQueue = new LinkedBlockingQueue(100000);
         this.pubQueue = new LinkedBlockingQueue(100000);
@@ -148,6 +151,7 @@ public class BrokerController {
         MixAll.printProperties(log,brokerConfig);
         MixAll.printProperties(log,nettyConfig);
         MixAll.printProperties(log,storeConfig);
+        MixAll.printProperties(log, clusterConfig);
 
         {//init and register processor
             RequestProcessor connectProcessor = new ConnectProcessor(this);
