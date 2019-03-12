@@ -58,6 +58,6 @@ public class ClientLifeCycleHookService implements ChannelEventListener {
     public void onChannelException(String remoteAddr, Channel channel) {
     	String clientId = NettyUtil.getClientId(channel);
 		ConnectManager.getInstance().removeClient(clientId);
-		log.warn("[ClientLifeCycleHook] -> {} channelException,close channel and remove ConnectCache",clientId);
+		log.warn("[ClientLifeCycleHook] -> {} channelException,close channel and remove ConnectCache!",clientId);
     }
 }
