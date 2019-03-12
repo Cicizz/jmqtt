@@ -48,8 +48,6 @@ public class ClientLifeCycleHookService implements ChannelEventListener {
 
     @Override
     public void onChannelIdle(String remoteAddr, Channel channel) {
-    	String clientId = NettyUtil.getClientId(channel);
-    	log.warn("[ClientIdle] -> {} keepAlive timeout ",clientId);
     }
 
     /**
