@@ -12,12 +12,16 @@ import io.netty.handler.timeout.IdleStateHandler;
 import org.jmqtt.common.config.ClusterConfig;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
+import org.jmqtt.group.ClusterClient;
+import org.jmqtt.group.common.ClusterRemotingCommand;
+import org.jmqtt.group.remoting.codec.NettyClusterDecoder;
+import org.jmqtt.group.remoting.codec.NettyClusterEncoder;
 import org.jmqtt.remoting.netty.NettyConnectHandler;
 import org.jmqtt.remoting.netty.NettyEventExcutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NettyClusterClient extends AbstractNettyClusterClient {
+public class NettyClusterClient extends AbstractNettyClusterClient implements ClusterClient {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CLUSTER);
 
@@ -57,10 +61,10 @@ public class NettyClusterClient extends AbstractNettyClusterClient {
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
                         pipeline.addLast("groupIdleStateHandler", new IdleStateHandler(0, 0, 60))
-                                .addLast("groupEncoder",null)
-                                .addLast("groupDecoder",null)
+                                .addLast("groupEncoder",new NettyClusterEncoder())
+                                .addLast("groupDecoder",new NettyClusterDecoder())
                                 .addLast("nettyConnectionManager", new NettyConnectHandler(nettyEventExcutor))
-                                .addLast("groupHandler", null);
+                                .addLast("groupHandler", new NettyClientHandler());
                     }
                 });
         if(clusterConfig.isGroupPooledByteBufAllocatorEnable()){
@@ -77,9 +81,15 @@ public class NettyClusterClient extends AbstractNettyClusterClient {
         log.info("shutdown cluster client success");
     }
 
-
     @Override
     public Bootstrap getBootstrap() {
         return this.bootstrap;
+    }
+
+    private class NettyClientHandler extends SimpleChannelInboundHandler<ClusterRemotingCommand>{
+        @Override
+        protected void channelRead0(ChannelHandlerContext channelHandlerContext, ClusterRemotingCommand cmd) throws Exception {
+            processMessageReceived(channelHandlerContext,cmd);
+        }
     }
 }

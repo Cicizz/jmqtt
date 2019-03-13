@@ -13,12 +13,14 @@ import org.jmqtt.common.config.ClusterConfig;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.group.ClusterServer;
+import org.jmqtt.group.remoting.codec.NettyClusterDecoder;
+import org.jmqtt.group.remoting.codec.NettyClusterEncoder;
 import org.jmqtt.remoting.netty.NettyConnectHandler;
 import org.jmqtt.remoting.netty.NettyEventExcutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NettyClusterServer implements ClusterServer {
+public class NettyClusterServer extends AbstractNettyClusterServer implements ClusterServer {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CLUSTER);
 
@@ -63,8 +65,8 @@ public class NettyClusterServer implements ClusterServer {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast("groupEncoder",null)
-                                .addLast("groupDecoder",null)
+                        pipeline.addLast("groupEncoder",new NettyClusterEncoder())
+                                .addLast("groupDecoder",new NettyClusterDecoder())
                                 .addLast("groupIdleStateHandler", new IdleStateHandler(0, 0, 60))
                                 .addLast("nettyConnectionManager", new NettyConnectHandler(nettyEventExcutor))
                                 .addLast("groupServerHandler", null);
