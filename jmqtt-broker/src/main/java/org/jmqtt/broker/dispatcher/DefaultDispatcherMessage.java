@@ -62,7 +62,7 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
             	int waitTime = 1000;
                 while(!stoped){
                     try {
-                    	// 第一个消息采用阻塞获取，如何没有后续消息，则立即发送，防止当消息较少时，反而会有0.1秒延迟，IoT项目中通常会要求消息延迟在毫秒级别
+                    	// 第一个消息采用阻塞获取，如没有后续消息，则立即发送，防止当消息较少时，反而会有0.1秒延迟，IoT项目中通常会要求消息延迟在毫秒级别
                     	// 之所以不用messageQueue.take，会导致take阻塞时，while(!stoped)无法跳出循环，导致程序无法正常退出
                         List<Message> messageList = new ArrayList(32);
                         Message message;
