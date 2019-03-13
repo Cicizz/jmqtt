@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -58,27 +59,36 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                int waitTime = 100;
+            	int waitTime = 1000;
                 while(!stoped){
                     try {
+                    	// 第一个消息采用阻塞获取，如何没有后续消息，则立即发送，防止当消息较少时，反而会有0.1秒延迟，IoT项目中通常会要求消息延迟在毫秒级别
+                    	// 之所以不用messageQueue.take，会导致take阻塞时，while(!stoped)无法跳出循环，导致程序无法正常退出
                         List<Message> messageList = new ArrayList(32);
+                        Message message;
                         for(int i = 0; i < 32; i++){
-                            Message message = messageQueue.poll(waitTime, TimeUnit.MILLISECONDS);
+                        	if (i == 0) {
+                        		message = messageQueue.poll(waitTime, TimeUnit.MILLISECONDS);
+                        	} else {
+                        		message = messageQueue.poll();
+                        	}
                             if(Objects.nonNull(message)){
                                 messageList.add(message);
-                                waitTime = 100;
                             }else{
-                                waitTime = 3000;
                                 break;
                             }
                         }
+                        // 异步发送，无法保证消息的有序性，因增加writeAndFlush是异步发送，增加.get()理论上不会降低消息发送性能
+                        // 当压测消息发送延迟较高时，可尝试回滚
                         if(messageList.size() > 0){
                             AsyncDispatcher dispatcher = new AsyncDispatcher(messageList);
-                            pollThread.submit(dispatcher);
+                            pollThread.submit(dispatcher).get();
                         }
                     } catch (InterruptedException e) {
                         log.warn("poll message wrong.");
-                    }
+                    } catch (ExecutionException e) {
+                    	log.warn("AsyncDispatcher get() wrong.");
+					}
                 }
             }
         }).start();
