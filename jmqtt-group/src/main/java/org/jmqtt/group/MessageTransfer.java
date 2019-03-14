@@ -1,6 +1,6 @@
 package org.jmqtt.group;
 
-import org.jmqtt.group.common.ClusterRemotingCommand;
+import org.jmqtt.group.protocol.ClusterRemotingCommand;
 
 /**
  * cluster message transfer

@@ -39,7 +39,7 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
     private FlowMessageStore flowMessageStore;
     private OfflineMessageStore offlineMessageStore;
 
-    public DefaultDispatcherMessage(int pollThreadNum, SubscriptionMatcher subscriptionMatcher, FlowMessageStore flowMessageStore, OfflineMessageStore offlineMessageStore){
+    public DefaultDispatcherMessage(int pollThreadNum, SubscriptionMatcher subscriptionMatcher, FlowMessageStore flowMessageStore, OfflineMessageStore offlineMessageStore) {
         this.pollThreadNum = pollThreadNum;
         this.subscriptionMatcher = subscriptionMatcher;
         this.flowMessageStore = flowMessageStore;
@@ -50,45 +50,41 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
     public void start() {
         this.pollThread = new ThreadPoolExecutor(pollThreadNum,
                 pollThreadNum,
-                60*1000,
+                60 * 1000,
                 TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>(100000),
                 new ThreadFactoryImpl("pollMessage2Subscriber"),
-                new RejectHandler("pollMessage",100000));
+                new RejectHandler("pollMessage", 100000));
 
         new Thread(new Runnable() {
             @Override
             public void run() {
-            	int waitTime = 1000;
-                while(!stoped){
+                int waitTime = 1000;
+                while (!stoped) {
                     try {
-                    	// 第一个消息采用阻塞获取，如没有后续消息，则立即发送，防止当消息较少时，反而会有0.1秒延迟，IoT项目中通常会要求消息延迟在毫秒级别
-                    	// 之所以不用messageQueue.take，会导致take阻塞时，while(!stoped)无法跳出循环，导致程序无法正常退出
                         List<Message> messageList = new ArrayList(32);
                         Message message;
-                        for(int i = 0; i < 32; i++){
-                        	if (i == 0) {
-                        		message = messageQueue.poll(waitTime, TimeUnit.MILLISECONDS);
-                        	} else {
-                        		message = messageQueue.poll();
-                        	}
-                            if(Objects.nonNull(message)){
+                        for (int i = 0; i < 32; i++) {
+                            if (i == 0) {
+                                message = messageQueue.poll(waitTime, TimeUnit.MILLISECONDS);
+                            } else {
+                                message = messageQueue.poll();
+                            }
+                            if (Objects.nonNull(message)) {
                                 messageList.add(message);
-                            }else{
+                            } else {
                                 break;
                             }
                         }
-                        // 异步发送，无法保证消息的有序性，因增加writeAndFlush是异步发送，增加.get()理论上不会降低消息发送性能
-                        // 当压测消息发送延迟较高时，可尝试回滚
-                        if(messageList.size() > 0){
+                        if (messageList.size() > 0) {
                             AsyncDispatcher dispatcher = new AsyncDispatcher(messageList);
                             pollThread.submit(dispatcher).get();
                         }
                     } catch (InterruptedException e) {
                         log.warn("poll message wrong.");
                     } catch (ExecutionException e) {
-                    	log.warn("AsyncDispatcher get() wrong.");
-					}
+                        log.warn("AsyncDispatcher get() wrong.");
+                    }
                 }
             }
         }).start();
@@ -97,51 +93,54 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
     @Override
     public boolean appendMessage(Message message) {
         boolean isNotFull = messageQueue.offer(message);
-        if(!isNotFull){
+        if (!isNotFull) {
             log.warn("[PubMessage] -> the buffer queue is full");
         }
         return isNotFull;
     }
 
     @Override
-    public void shutdown(){
+    public void shutdown() {
         this.stoped = true;
         this.pollThread.shutdown();
-    };
+    }
 
-    class AsyncDispatcher implements Runnable{
+    ;
+
+    class AsyncDispatcher implements Runnable {
 
         private List<Message> messages;
-        AsyncDispatcher(List<Message> messages){
+
+        AsyncDispatcher(List<Message> messages) {
             this.messages = messages;
         }
 
         @Override
         public void run() {
-            if(Objects.nonNull(messages)){
-                try{
-                    for(Message message : messages){
-                        Set<Subscription> subscriptions = subscriptionMatcher.match((String)message.getHeader(MessageHeader.TOPIC));
-                        for(Subscription subscription : subscriptions){
+            if (Objects.nonNull(messages)) {
+                try {
+                    for (Message message : messages) {
+                        Set<Subscription> subscriptions = subscriptionMatcher.match((String) message.getHeader(MessageHeader.TOPIC));
+                        for (Subscription subscription : subscriptions) {
                             String clientId = subscription.getClientId();
                             ClientSession clientSession = ConnectManager.getInstance().getClient(subscription.getClientId());
-                            if(ConnectManager.getInstance().containClient(clientId)){
-                                int qos = MessageUtil.getMinQos((int)message.getHeader(MessageHeader.QOS),subscription.getQos());
+                            if (ConnectManager.getInstance().containClient(clientId)) {
+                                int qos = MessageUtil.getMinQos((int) message.getHeader(MessageHeader.QOS), subscription.getQos());
                                 int messageId = clientSession.generateMessageId();
-                                message.putHeader(MessageHeader.QOS,qos);
+                                message.putHeader(MessageHeader.QOS, qos);
                                 message.setMsgId(messageId);
-                                if(qos > 0){
-                                    flowMessageStore.cacheSendMsg(clientId,message);
+                                if (qos > 0) {
+                                    flowMessageStore.cacheSendMsg(clientId, message);
                                 }
-                                MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message,false,qos,messageId);
+                                MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message, false, qos, messageId);
                                 clientSession.getCtx().writeAndFlush(publishMessage);
-                            }else{
-                                offlineMessageStore.addOfflineMessage(clientId,message);
+                            } else {
+                                offlineMessageStore.addOfflineMessage(clientId, message);
                             }
                         }
                     }
-                }catch(Exception ex){
-                    log.warn("Dispatcher message failure,cause={}",ex);
+                } catch (Exception ex) {
+                    log.warn("Dispatcher message failure,cause={}", ex);
                 }
             }
         }

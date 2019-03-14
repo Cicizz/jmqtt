@@ -13,6 +13,7 @@ import org.jmqtt.common.config.ClusterConfig;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.group.ClusterServer;
+import org.jmqtt.group.protocol.ClusterRemotingCommand;
 import org.jmqtt.group.remoting.codec.NettyClusterDecoder;
 import org.jmqtt.group.remoting.codec.NettyClusterEncoder;
 import org.jmqtt.remoting.netty.NettyConnectHandler;
@@ -94,4 +95,11 @@ public class NettyClusterServer extends AbstractNettyClusterServer implements Cl
         log.info("shutdown cluster server success");
     }
 
+    private class NettyServerHandler extends SimpleChannelInboundHandler<ClusterRemotingCommand>{
+
+        @Override
+        protected void channelRead0(ChannelHandlerContext channelHandlerContext, ClusterRemotingCommand clusterRemotingCommand) throws Exception {
+            processMessageReceived(channelHandlerContext,clusterRemotingCommand);
+        }
+    }
 }

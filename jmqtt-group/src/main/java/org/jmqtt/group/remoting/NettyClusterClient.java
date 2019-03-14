@@ -13,7 +13,7 @@ import org.jmqtt.common.config.ClusterConfig;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.group.ClusterClient;
-import org.jmqtt.group.common.ClusterRemotingCommand;
+import org.jmqtt.group.protocol.ClusterRemotingCommand;
 import org.jmqtt.group.remoting.codec.NettyClusterDecoder;
 import org.jmqtt.group.remoting.codec.NettyClusterEncoder;
 import org.jmqtt.remoting.netty.NettyConnectHandler;

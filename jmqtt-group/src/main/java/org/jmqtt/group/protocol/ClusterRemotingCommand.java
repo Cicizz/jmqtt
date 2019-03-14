@@ -1,4 +1,4 @@
-package org.jmqtt.group.common;
+package org.jmqtt.group.protocol;
 
 import org.jmqtt.common.log.LoggerName;
 import org.slf4j.Logger;
@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * cluster remoting command
  */
 public class ClusterRemotingCommand {
-
+    
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CLUSTER);
 
     private AtomicInteger requestId = new AtomicInteger(0);
@@ -20,13 +20,32 @@ public class ClusterRemotingCommand {
      * cluster request code
      */
     private int code;
+    /**
+     * {@link MessageFlag}
+     */
     private int flag;
+    /**
+     * 0:request
+     * 1:response
+     */
+    private int rpcType = 0;
     private int opaque = requestId.incrementAndGet();
     private HashMap<String,String> extField;
     private transient byte[] body;
 
     public ClusterRemotingCommand(int code) {
         this.code = code;
+    }
+
+    public void makeResponseType(){
+        this.rpcType = 1;
+    }
+
+    public RemotingCommandType getType(){
+        if(rpcType == 0){
+            return RemotingCommandType.REQUEST_COMMAND;
+        }
+        return RemotingCommandType.RESPONSE_COMMAND;
     }
 
     public AtomicInteger getRequestId() {
@@ -77,12 +96,21 @@ public class ClusterRemotingCommand {
         this.body = body;
     }
 
+    public int getRpcType() {
+        return rpcType;
+    }
+
+    public void setRpcType(int rpcType) {
+        this.rpcType = rpcType;
+    }
+
     @Override
     public String toString() {
         return "ClusterRemotingCommand{" +
                 "requestId=" + requestId +
                 ", code=" + code +
                 ", flag=" + flag +
+                ", rpcType=" + rpcType +
                 ", opaque=" + opaque +
                 ", extField=" + extField +
                 '}';
