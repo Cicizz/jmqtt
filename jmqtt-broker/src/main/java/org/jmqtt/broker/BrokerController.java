@@ -20,6 +20,8 @@ import org.jmqtt.common.helper.MixAll;
 import org.jmqtt.common.helper.RejectHandler;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
+import org.jmqtt.group.remoting.NettyClusterClient;
+import org.jmqtt.group.remoting.NettyClusterServer;
 import org.jmqtt.remoting.netty.ChannelEventListener;
 import org.jmqtt.remoting.netty.NettyRemotingServer;
 import org.jmqtt.remoting.netty.RequestProcessor;
@@ -64,6 +66,8 @@ public class BrokerController {
     private ConnectPermission connectPermission;
     private PubSubPermission pubSubPermission;
     private ReSendMessageService reSendMessageService;
+    private NettyClusterClient clusterClient;
+    private NettyClusterServer clusterServer;
 
 
 
@@ -112,6 +116,9 @@ public class BrokerController {
         this.channelEventListener = new ClientLifeCycleHookService(willMessageStore,messageDispatcher);
         this.remotingServer = new NettyRemotingServer(nettyConfig,channelEventListener);
         this.reSendMessageService = new ReSendMessageService(offlineMessageStore,flowMessageStore);
+
+        this.clusterClient = new NettyClusterClient(clusterConfig);
+        this.clusterServer = new NettyClusterServer(clusterConfig);
 
         int coreThreadNum = Runtime.getRuntime().availableProcessors();
         this.connectExecutor = new ThreadPoolExecutor(coreThreadNum*2,
@@ -176,6 +183,8 @@ public class BrokerController {
             this.remotingServer.registerProcessor(MqttMessageType.PUBREC,pubRecProcessor,subExecutor);
             this.remotingServer.registerProcessor(MqttMessageType.PUBCOMP,pubCompProcessor,subExecutor);
         }
+        this.clusterServer.start();
+        this.clusterClient.start();
         this.messageDispatcher.start();
         this.reSendMessageService.start();
         this.remotingServer.start();

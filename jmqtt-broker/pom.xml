@@ -34,6 +34,10 @@
             <groupId>org.jmqtt</groupId>
             <artifactId>jmqtt-store</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.jmqtt</groupId>
+            <artifactId>jmqtt-group</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

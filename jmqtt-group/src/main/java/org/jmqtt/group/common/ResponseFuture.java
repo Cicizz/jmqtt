@@ -1,6 +1,7 @@
 package org.jmqtt.group.common;
 
 import io.netty.channel.Channel;
+import org.jmqtt.group.protocol.ClusterRemotingCommand;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

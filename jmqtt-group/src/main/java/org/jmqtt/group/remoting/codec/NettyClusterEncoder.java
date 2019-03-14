@@ -5,7 +5,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import org.jmqtt.common.log.LoggerName;
-import org.jmqtt.group.common.ClusterRemotingCommand;
+import org.jmqtt.group.protocol.ClusterRemotingCommand;
 import org.jmqtt.remoting.util.RemotingHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

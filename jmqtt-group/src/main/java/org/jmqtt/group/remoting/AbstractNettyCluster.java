@@ -4,8 +4,10 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import org.jmqtt.common.helper.Pair;
 import org.jmqtt.common.log.LoggerName;
-import org.jmqtt.group.common.ClusterRemotingCommand;
+import org.jmqtt.group.processor.ClusterRequestProcessor;
+import org.jmqtt.group.protocol.ClusterRemotingCommand;
 import org.jmqtt.group.common.InvokeCallback;
 import org.jmqtt.group.common.ResponseFuture;
 import org.jmqtt.remoting.util.RemotingHelper;
@@ -14,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -21,7 +24,8 @@ public abstract class AbstractNettyCluster {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CLUSTER);
 
-    private Map<Integer /* opaque */, ResponseFuture> responseTable = new ConcurrentHashMap<>();
+    private final Map<Integer /* opaque */, ResponseFuture> responseTable = new ConcurrentHashMap<>();
+    private final Map<Integer /* code */, Pair<ClusterRemotingCommand, ExecutorService>> processorTable = new ConcurrentHashMap<>();
 
     /**
      * Semaphore to limit maximum number of on-going asynchronous requests, which protects system memory footprint.
@@ -59,8 +63,32 @@ public abstract class AbstractNettyCluster {
                 // TODO 获取失败应该放入重试队列进行重试
                 log.warn("Async invoke aquire semaphore failure,waiting threadNums:{},semaphoreAsyncValue:{}",semaphore.getQueueLength(),semaphore.availablePermits());
             }
+            semaphore.release();
         }catch(Exception ex){
         }
+    }
+
+    protected void processMessageReceived(ChannelHandlerContext ctx, ClusterRemotingCommand cmd){
+        if(cmd != null){
+            switch (cmd.getType()){
+                case REQUEST_COMMAND:
+                    processRequest(ctx,cmd);
+                    break;
+                case RESPONSE_COMMAND:
+                    processResponse(ctx,cmd);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    private void processRequest(ChannelHandlerContext ctx,ClusterRemotingCommand cmd){
+
+    }
+
+    private void processResponse(ChannelHandlerContext ctx,ClusterRemotingCommand cmd){
+
     }
 
     private void requestFail(final int opaque){
@@ -68,8 +96,8 @@ public abstract class AbstractNettyCluster {
 
     }
 
-    public void processMessageReceived(ChannelHandlerContext ctx, ClusterRemotingCommand cmd){
-
+    protected void registerProcessor(int requestCode, ClusterRequestProcessor processor,ExecutorService service){
+        this.processorTable.put(requestCode,new Pair(processor,service));
     }
 
 
