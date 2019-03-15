@@ -17,16 +17,18 @@ public class ResponseFuture {
     private volatile Throwable cause;
     private final InvokeCallback invokeCallback;
     private volatile boolean sendRequestOK = false;
+    private final SemaphoreReleaseOnlyOnce semaphoreReleaseOnlyOnce;
     /**
      * callbackFlag is true show that callback has invoked. no longer to excute it
      */
     private AtomicBoolean callbackFlag = new AtomicBoolean(false);
 
-    public ResponseFuture(Channel channel,int opaque,long timeoutMillis,InvokeCallback invokeCallback){
+    public ResponseFuture(Channel channel,int opaque,long timeoutMillis,InvokeCallback invokeCallback,SemaphoreReleaseOnlyOnce semaphoreReleaseOnlyOnce){
         this.channel = channel;
         this.opaque = opaque;
         this.timeoutMillis = timeoutMillis;
         this.invokeCallback = invokeCallback;
+        this.semaphoreReleaseOnlyOnce = semaphoreReleaseOnlyOnce;
     }
 
     public void executeCallback(){
@@ -34,6 +36,12 @@ public class ResponseFuture {
             if(callbackFlag.compareAndSet(false,true)){
                 this.invokeCallback.invokeComplete(this);
             }
+        }
+    }
+
+    public void release(){
+        if(this.semaphoreReleaseOnlyOnce != null){
+            this.semaphoreReleaseOnlyOnce.release();
         }
     }
 

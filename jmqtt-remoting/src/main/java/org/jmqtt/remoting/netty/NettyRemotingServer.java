@@ -21,7 +21,7 @@ import org.jmqtt.common.helper.MixAll;
 import org.jmqtt.common.helper.Pair;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
-import org.jmqtt.remoting.RemotingServer;
+import org.jmqtt.remoting.RemotingService;
 import org.jmqtt.remoting.netty.codec.ByteBuf2WebSocketEncoder;
 import org.jmqtt.remoting.netty.codec.WebSocket2ByteBufDecoder;
 import org.slf4j.Logger;
@@ -33,7 +33,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 
 
-public class NettyRemotingServer implements RemotingServer {
+public class NettyRemotingServer implements RemotingService {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.REMOTING);
     private NettyConfig nettyConfig;
@@ -43,7 +43,7 @@ public class NettyRemotingServer implements RemotingServer {
     private Map<MqttMessageType, Pair<RequestProcessor, ExecutorService>> processorTable;
     private NettyEventExcutor nettyEventExcutor;
 
-    public NettyRemotingServer(NettyConfig nettyConfig,ChannelEventListener listener) {
+    public NettyRemotingServer(NettyConfig nettyConfig, ChannelEventListener listener) {
         this.nettyConfig = nettyConfig;
         this.processorTable = new HashMap();
         this.nettyEventExcutor = new NettyEventExcutor(listener);

@@ -1,6 +1,6 @@
 package org.jmqtt.group.remoting;
 
-import io.netty.bootstrap.Bootstrap;
+import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -12,7 +12,7 @@ import io.netty.handler.timeout.IdleStateHandler;
 import org.jmqtt.common.config.ClusterConfig;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
-import org.jmqtt.group.ClusterClient;
+import org.jmqtt.group.ClusterRemotingServer;
 import org.jmqtt.group.protocol.ClusterRemotingCommand;
 import org.jmqtt.group.remoting.codec.NettyClusterDecoder;
 import org.jmqtt.group.remoting.codec.NettyClusterEncoder;
@@ -21,75 +21,85 @@ import org.jmqtt.remoting.netty.NettyEventExcutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NettyClusterClient extends AbstractNettyClusterClient implements ClusterClient {
+public class NettyClusterRemotingServer extends AbstractNettyCluster implements ClusterRemotingServer {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CLUSTER);
 
     private ClusterConfig clusterConfig;
+    private EventLoopGroup selectorGroup;
     private EventLoopGroup ioGroup;
     private Class<? extends ServerChannel> clazz;
     private NettyEventExcutor nettyEventExcutor;
-    private Bootstrap bootstrap;
+    private ServerBootstrap serverBootstrap;
 
-    public NettyClusterClient(ClusterConfig clusterConfig){
+    public NettyClusterRemotingServer(ClusterConfig clusterConfig){
         this.clusterConfig = clusterConfig;
         if(!clusterConfig.isGroupUseEpoll()){
+            selectorGroup = new NioEventLoopGroup(clusterConfig.getGroupSelectorThreadNum(),
+                    new ThreadFactoryImpl("GroupSelectorEventGroup"));
             ioGroup = new NioEventLoopGroup(clusterConfig.getGroupIoThreadNum(),
-                    new ThreadFactoryImpl("GroupClientWorkEventGroup"));
+                    new ThreadFactoryImpl("GroupIOEventGroup"));
             clazz = NioServerSocketChannel.class;
         }else{
+            selectorGroup = new EpollEventLoopGroup(clusterConfig.getGroupSelectorThreadNum(),
+                    new ThreadFactoryImpl("GroupSelectorEventGroup"));
             ioGroup = new EpollEventLoopGroup(clusterConfig.getGroupIoThreadNum(),
-                    new ThreadFactoryImpl("GroupClientWorkEventGroup"));
+                    new ThreadFactoryImpl("GroupIOEventGroup"));
             clazz = EpollServerSocketChannel.class;
         }
         this.nettyEventExcutor = new NettyEventExcutor(new ClusterServerChannelEventListener());
-        this.bootstrap = new Bootstrap();
+        this.serverBootstrap = new ServerBootstrap();
     }
 
 
     @Override
     public void start() {
-        this.bootstrap.group(ioGroup)
+        this.serverBootstrap.group(selectorGroup,ioGroup)
                 .channel(clazz)
                 .option(ChannelOption.SO_BACKLOG, clusterConfig.getGroupTcpBackLog())
-                .option(ChannelOption.SO_SNDBUF, clusterConfig.getGroupTcpSndBuf())
+                .childOption(ChannelOption.TCP_NODELAY, clusterConfig.isGroupTcpNoDelay())
+                .childOption(ChannelOption.SO_SNDBUF, clusterConfig.getGroupTcpSndBuf())
                 .option(ChannelOption.SO_RCVBUF, clusterConfig.getGroupTcpRcvBuf())
                 .option(ChannelOption.SO_REUSEADDR, clusterConfig.isGroupTcpReuseAddr())
-                .option(ChannelOption.SO_KEEPALIVE, clusterConfig.isGroupTcpKeepAlive())
-                .handler(new ChannelInitializer<SocketChannel>() {
+                .childOption(ChannelOption.SO_KEEPALIVE, clusterConfig.isGroupTcpKeepAlive())
+                .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast("groupIdleStateHandler", new IdleStateHandler(0, 0, 60))
-                                .addLast("groupEncoder",new NettyClusterEncoder())
+                        pipeline.addLast("groupEncoder",new NettyClusterEncoder())
                                 .addLast("groupDecoder",new NettyClusterDecoder())
+                                .addLast("groupIdleStateHandler", new IdleStateHandler(0, 0, 60))
                                 .addLast("nettyConnectionManager", new NettyConnectHandler(nettyEventExcutor))
-                                .addLast("groupHandler", new NettyClientHandler());
+                                .addLast("groupServerHandler", null);
                     }
                 });
         if(clusterConfig.isGroupPooledByteBufAllocatorEnable()){
-            bootstrap.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
+            this.serverBootstrap.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         }
-        log.info("init cluster client success");
+        try {
+            ChannelFuture future = this.serverBootstrap.bind(clusterConfig.getGroupServerPort()).sync();
+            log.info("Start cluster server success,port = {}", clusterConfig.getGroupServerPort());
+        }catch (InterruptedException ex){
+            log.error("Start cluster server failure.cause={}",ex);
+        }
     }
 
     @Override
     public void shutdown() {
+        if(selectorGroup != null){
+            selectorGroup.shutdownGracefully();
+        }
         if(ioGroup != null ){
             ioGroup.shutdownGracefully();
         }
-        log.info("shutdown cluster client success");
+        log.info("shutdown cluster server success");
     }
 
-    @Override
-    public Bootstrap getBootstrap() {
-        return this.bootstrap;
-    }
+    private class NettyServerHandler extends SimpleChannelInboundHandler<ClusterRemotingCommand>{
 
-    private class NettyClientHandler extends SimpleChannelInboundHandler<ClusterRemotingCommand>{
         @Override
-        protected void channelRead0(ChannelHandlerContext channelHandlerContext, ClusterRemotingCommand cmd) throws Exception {
-            processMessageReceived(channelHandlerContext,cmd);
+        protected void channelRead0(ChannelHandlerContext channelHandlerContext, ClusterRemotingCommand clusterRemotingCommand) throws Exception {
+            processMessageReceived(channelHandlerContext,clusterRemotingCommand);
         }
     }
 }

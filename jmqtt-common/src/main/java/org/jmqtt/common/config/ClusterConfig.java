@@ -5,7 +5,19 @@ package org.jmqtt.common.config;
  */
 public class ClusterConfig {
 
+    private String currentNodeIp = "";
+    private String nodeName = "defaultNode:" + (System.currentTimeMillis() & 0xFFFFFF);
     private int groupServerPort = 8880;
+    /**
+     * cluster node : ip1:port1;ip2;port2
+     */
+    private String groupNodes = "";
+    private long timeoutMills = 3000L;
+
+    /**
+     * if cluster transfer message body size > 4069,compress the message body
+     */
+    private long compressMaxSize = 4069;
 
     /* group netty config */
     private int groupSelectorThreadNum = 3;
@@ -107,10 +119,55 @@ public class ClusterConfig {
         this.groupPooledByteBufAllocatorEnable = groupPooledByteBufAllocatorEnable;
     }
 
+    public String getCurrentNodeIp() {
+        return currentNodeIp;
+    }
+
+    public void setCurrentNodeIp(String currentNodeIp) {
+        this.currentNodeIp = currentNodeIp;
+    }
+
+    public String getNodeName() {
+        return nodeName;
+    }
+
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
+    }
+
+
+    public String getGroupNodes() {
+        return groupNodes;
+    }
+
+    public void setGroupNodes(String groupNodes) {
+        this.groupNodes = groupNodes;
+    }
+
+    public long getTimeoutMills() {
+        return timeoutMills;
+    }
+
+    public void setTimeoutMills(long timeoutMills) {
+        this.timeoutMills = timeoutMills;
+    }
+
+    public long getCompressMaxSize() {
+        return compressMaxSize;
+    }
+
+    public void setCompressMaxSize(long compressMaxSize) {
+        this.compressMaxSize = compressMaxSize;
+    }
+
     @Override
     public String toString() {
         return "ClusterConfig{" +
-                "groupServerPort=" + groupServerPort +
+                "currentNodeIp='" + currentNodeIp + '\'' +
+                ", nodeName='" + nodeName + '\'' +
+                ", groupServerPort=" + groupServerPort +
+                ", groupNodes='" + groupNodes + '\'' +
+                ", timeoutMills=" + timeoutMills +
                 ", groupSelectorThreadNum=" + groupSelectorThreadNum +
                 ", groupIoThreadNum=" + groupIoThreadNum +
                 ", groupTcpBackLog=" + groupTcpBackLog +

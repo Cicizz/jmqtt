@@ -14,7 +14,7 @@ public class ClusterRemotingCommand {
     
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CLUSTER);
 
-    private AtomicInteger requestId = new AtomicInteger(0);
+    private static final AtomicInteger requestId = new AtomicInteger(0);
 
     /**
      * cluster request code
@@ -46,14 +46,6 @@ public class ClusterRemotingCommand {
             return RemotingCommandType.REQUEST_COMMAND;
         }
         return RemotingCommandType.RESPONSE_COMMAND;
-    }
-
-    public AtomicInteger getRequestId() {
-        return requestId;
-    }
-
-    public void setRequestId(AtomicInteger requestId) {
-        this.requestId = requestId;
     }
 
     public int getCode() {
@@ -100,8 +92,8 @@ public class ClusterRemotingCommand {
         return rpcType;
     }
 
-    public void setRpcType(int rpcType) {
-        this.rpcType = rpcType;
+    public void markResponseType() {
+        this.rpcType = 1;
     }
 
     @Override

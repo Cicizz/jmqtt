@@ -1,8 +1,5 @@
-package org.jmqtt.group.protocol;
+package org.jmqtt.group.protocol.node;
 
-import io.netty.channel.Channel;
-
-import java.util.Date;
 
 /**
  * save jmqtt server node data
@@ -10,20 +7,18 @@ import java.util.Date;
 public class ServerNode {
 
     private String nodeName;
+    /**
+     * ip:port
+     */
     private String addr;
-    private transient Channel channel;
-    private long lastUpdateTime;
+    private transient long lastUpdateTime;
+    private transient boolean active;
 
-    public ServerNode(String nodeName,String addr){
+    public ServerNode(String nodeName, String addr) {
         this.nodeName = nodeName;
         this.addr = addr;
     }
 
-    public ServerNode(String nodeName,String addr,Channel channel){
-        this.nodeName = nodeName;
-        this.addr = addr;
-        this.channel = channel;
-    }
 
     public String getNodeName() {
         return nodeName;
@@ -41,14 +36,6 @@ public class ServerNode {
         this.addr = addr;
     }
 
-    public Channel getChannel() {
-        return channel;
-    }
-
-    public void setChannel(Channel channel) {
-        this.channel = channel;
-    }
-
     public long getLastUpdateTime() {
         return lastUpdateTime;
     }
@@ -57,13 +44,21 @@ public class ServerNode {
         this.lastUpdateTime = lastUpdateTime;
     }
 
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     @Override
     public String toString() {
         return "ServerNode{" +
                 "nodeName='" + nodeName + '\'' +
                 ", addr='" + addr + '\'' +
-                ", channel=" + channel +
-                ", lastUpdateTime=" + new Date(lastUpdateTime) +
+                ", lastUpdateTime=" + lastUpdateTime +
+                ", active=" + active +
                 '}';
     }
 }
