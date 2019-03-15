@@ -5,5 +5,6 @@ import org.jmqtt.group.protocol.ClusterRemotingCommand;
 
 public interface ClusterRequestProcessor {
 
-    void processRequest(ChannelHandlerContext ctx, ClusterRemotingCommand cmd);
+    ClusterRemotingCommand processRequest(ChannelHandlerContext ctx, ClusterRemotingCommand cmd);
+
 }

@@ -25,4 +25,13 @@ public class ClusterRequestCode {
      * send message to other jmqtt server
      */
     public static final int SEND_MESSAGE = 4;
+
+    /**
+     * response error code
+     */
+    public static final int ERROR_RESPONSE = 100;
+    /**
+     * request code not supported
+     */
+    public static final int REQUEST_CODE_NOT_SUPPORTED = 101;
 }

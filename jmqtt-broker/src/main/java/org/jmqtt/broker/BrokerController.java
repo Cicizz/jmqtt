@@ -20,8 +20,9 @@ import org.jmqtt.common.helper.MixAll;
 import org.jmqtt.common.helper.RejectHandler;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
-import org.jmqtt.group.remoting.NettyClusterClient;
-import org.jmqtt.group.remoting.NettyClusterServer;
+import org.jmqtt.group.ClusterRemotingServer;
+import org.jmqtt.group.remoting.NettyClusterRemotingClient;
+import org.jmqtt.group.remoting.NettyClusterRemotingServer;
 import org.jmqtt.remoting.netty.ChannelEventListener;
 import org.jmqtt.remoting.netty.NettyRemotingServer;
 import org.jmqtt.remoting.netty.RequestProcessor;
@@ -66,8 +67,7 @@ public class BrokerController {
     private ConnectPermission connectPermission;
     private PubSubPermission pubSubPermission;
     private ReSendMessageService reSendMessageService;
-    private NettyClusterClient clusterClient;
-    private NettyClusterServer clusterServer;
+    private ClusterRemotingServer clusterServer;
 
 
 
@@ -117,8 +117,7 @@ public class BrokerController {
         this.remotingServer = new NettyRemotingServer(nettyConfig,channelEventListener);
         this.reSendMessageService = new ReSendMessageService(offlineMessageStore,flowMessageStore);
 
-        this.clusterClient = new NettyClusterClient(clusterConfig);
-        this.clusterServer = new NettyClusterServer(clusterConfig);
+        this.clusterServer = new NettyClusterRemotingServer(clusterConfig);
 
         int coreThreadNum = Runtime.getRuntime().availableProcessors();
         this.connectExecutor = new ThreadPoolExecutor(coreThreadNum*2,
@@ -184,7 +183,6 @@ public class BrokerController {
             this.remotingServer.registerProcessor(MqttMessageType.PUBCOMP,pubCompProcessor,subExecutor);
         }
         this.clusterServer.start();
-        this.clusterClient.start();
         this.messageDispatcher.start();
         this.reSendMessageService.start();
         this.remotingServer.start();
@@ -193,6 +191,7 @@ public class BrokerController {
 
     public void shutdown(){
         this.remotingServer.shutdown();
+        this.clusterServer.shutdown();
         this.connectExecutor.shutdown();
         this.pubExecutor.shutdown();
         this.subExecutor.shutdown();
