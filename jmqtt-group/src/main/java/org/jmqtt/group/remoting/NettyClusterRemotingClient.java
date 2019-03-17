@@ -20,7 +20,6 @@ import org.jmqtt.group.protocol.MessageFlag;
 import org.jmqtt.group.remoting.codec.NettyClusterDecoder;
 import org.jmqtt.group.remoting.codec.NettyClusterEncoder;
 import org.jmqtt.remoting.exception.RemotingConnectException;
-import org.jmqtt.remoting.exception.RemotingException;
 import org.jmqtt.remoting.exception.RemotingSendRequestException;
 import org.jmqtt.remoting.netty.NettyConnectHandler;
 import org.jmqtt.remoting.netty.NettyEventExcutor;
@@ -86,6 +85,7 @@ public class NettyClusterRemotingClient extends AbstractNettyCluster implements 
         if(clusterConfig.isGroupPooledByteBufAllocatorEnable()){
             bootstrap.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         }
+        this.resendService.start();
         log.info("init cluster client success");
     }
 
@@ -94,12 +94,13 @@ public class NettyClusterRemotingClient extends AbstractNettyCluster implements 
         if(ioGroup != null ){
             ioGroup.shutdownGracefully();
         }
+        this.resendService.shutdown();
         log.info("shutdown cluster client success");
     }
 
     @Override
     public void invokeAsync(String addr, ClusterRemotingCommand command, long timeoutMills, InvokeCallback callback) throws RemotingSendRequestException, RemotingConnectException {
-        final Channel channel = getAndCreateChannel(addr);
+        final Channel channel = getOrCreateChannel(addr);
         if(channel != null){
             byte[] body = command.getBody();
             try{
@@ -119,7 +120,7 @@ public class NettyClusterRemotingClient extends AbstractNettyCluster implements 
     }
 
 
-    private Channel getAndCreateChannel(String addr){
+    private Channel getOrCreateChannel(String addr){
         Channel channel = this.channelTable.get(addr);
         if(channel != null && channel.isActive()){
             return channel;
@@ -153,8 +154,8 @@ public class NettyClusterRemotingClient extends AbstractNettyCluster implements 
 
     private class NettyClientHandler extends SimpleChannelInboundHandler<ClusterRemotingCommand>{
         @Override
-        protected void channelRead0(ChannelHandlerContext channelHandlerContext, ClusterRemotingCommand cmd) throws Exception {
-            processMessageReceived(channelHandlerContext,cmd);
+        protected void channelRead0(ChannelHandlerContext channelHandlerContext, ClusterRemotingCommand clusterRemotingCommand) throws Exception {
+            processMessageReceived(channelHandlerContext, clusterRemotingCommand);
         }
     }
 }
