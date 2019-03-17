@@ -76,6 +76,7 @@ public class NettyClusterRemotingServer extends AbstractNettyCluster implements 
         if(clusterConfig.isGroupPooledByteBufAllocatorEnable()){
             this.serverBootstrap.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         }
+        this.resendService.start();
         try {
             ChannelFuture future = this.serverBootstrap.bind(clusterConfig.getGroupServerPort()).sync();
             log.info("Start cluster server success,port = {}", clusterConfig.getGroupServerPort());
@@ -92,6 +93,7 @@ public class NettyClusterRemotingServer extends AbstractNettyCluster implements 
         if(ioGroup != null ){
             ioGroup.shutdownGracefully();
         }
+        this.resendService.shutdown();
         log.info("shutdown cluster server success");
     }
 
