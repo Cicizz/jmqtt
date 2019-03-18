@@ -39,6 +39,10 @@ public class ClusterNodeManager {
         return currentNode;
     }
 
+    public ServerNode removeNode(String nodeName){
+        return this.nodeTable.remove(nodeName);
+    }
+
     public void setCurrentNode(ServerNode currentNode) {
         this.currentNode = currentNode;
     }

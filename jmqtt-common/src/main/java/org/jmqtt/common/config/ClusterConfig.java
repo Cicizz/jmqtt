@@ -19,7 +19,7 @@ public class ClusterConfig {
      */
     private long compressMaxSize = 4069;
 
-    /* group netty config */
+    /** group netty config */
     private int groupSelectorThreadNum = 3;
     private int groupIoThreadNum = 8;
     private int groupTcpBackLog = 1024;
@@ -30,6 +30,10 @@ public class ClusterConfig {
     private int groupTcpRcvBuf = 65536;
     private boolean groupUseEpoll = false;
     private boolean groupPooledByteBufAllocatorEnable = false;
+
+    /** message transfer */
+    private boolean clusterCommunicationUsingMessageTransfer;
+
 
     public int getGroupServerPort() {
         return groupServerPort;
@@ -160,6 +164,14 @@ public class ClusterConfig {
         this.compressMaxSize = compressMaxSize;
     }
 
+    public boolean isClusterCommunicationUsingMessageTransfer() {
+        return clusterCommunicationUsingMessageTransfer;
+    }
+
+    public void setClusterCommunicationUsingMessageTransfer(boolean clusterCommunicationUsingMessageTransfer) {
+        this.clusterCommunicationUsingMessageTransfer = clusterCommunicationUsingMessageTransfer;
+    }
+
     @Override
     public String toString() {
         return "ClusterConfig{" +
@@ -168,6 +180,7 @@ public class ClusterConfig {
                 ", groupServerPort=" + groupServerPort +
                 ", groupNodes='" + groupNodes + '\'' +
                 ", timeoutMills=" + timeoutMills +
+                ", compressMaxSize=" + compressMaxSize +
                 ", groupSelectorThreadNum=" + groupSelectorThreadNum +
                 ", groupIoThreadNum=" + groupIoThreadNum +
                 ", groupTcpBackLog=" + groupTcpBackLog +
@@ -178,6 +191,7 @@ public class ClusterConfig {
                 ", groupTcpRcvBuf=" + groupTcpRcvBuf +
                 ", groupUseEpoll=" + groupUseEpoll +
                 ", groupPooledByteBufAllocatorEnable=" + groupPooledByteBufAllocatorEnable +
+                ", clusterCommunicationUsingMessageTransfer=" + clusterCommunicationUsingMessageTransfer +
                 '}';
     }
 }

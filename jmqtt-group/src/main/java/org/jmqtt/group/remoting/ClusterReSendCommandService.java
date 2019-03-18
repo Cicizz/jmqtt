@@ -22,6 +22,7 @@ public class ClusterReSendCommandService {
     private boolean stoped = false;
     private BlockingQueue<ResendCommand> resendCommandQueue = new LinkedBlockingQueue<>(100000);
     private ThreadPoolExecutor resendExecutor;
+    // TODO 应该使用ClusterOutrAPI统一进行集群消息处理（集群客户端）
     private AbstractNettyCluster nettyCluster;
 
 

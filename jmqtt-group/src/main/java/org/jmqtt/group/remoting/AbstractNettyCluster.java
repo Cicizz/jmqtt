@@ -148,7 +148,6 @@ public abstract class AbstractNettyCluster {
     }
 
     private void requestFail(final int opaque, final ClusterRemotingCommand command) {
-        // 发送失败，从缓存移除该future并放入重试任务队列
         log.debug("command {} enqueue ClusterResendCommandQueue.",command);
         ResponseFuture responseFuture = responseTable.remove(opaque);
         responseFuture.release();
