@@ -1,5 +1,6 @@
 package org.jmqtt.group;
 
+import org.jmqtt.group.message.MessageListener;
 import org.jmqtt.group.protocol.ClusterRemotingCommand;
 
 /**
@@ -13,7 +14,7 @@ public interface MessageTransfer {
     void send(ClusterRemotingCommand message);
 
     /**
-     * receive message from cluster
+     * message listener: receive message from cluster
      */
-    ClusterRemotingCommand receive();
+    void registerListener(MessageListener messageListener);
 }

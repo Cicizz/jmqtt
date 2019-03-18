@@ -13,6 +13,7 @@ import org.jmqtt.common.config.ClusterConfig;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.group.ClusterRemotingServer;
+import org.jmqtt.group.processor.ClusterRequestProcessor;
 import org.jmqtt.group.protocol.ClusterRemotingCommand;
 import org.jmqtt.group.remoting.codec.NettyClusterDecoder;
 import org.jmqtt.group.remoting.codec.NettyClusterEncoder;
@@ -20,6 +21,8 @@ import org.jmqtt.remoting.netty.NettyConnectHandler;
 import org.jmqtt.remoting.netty.NettyEventExcutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ExecutorService;
 
 public class NettyClusterRemotingServer extends AbstractNettyCluster implements ClusterRemotingServer {
 
@@ -97,6 +100,10 @@ public class NettyClusterRemotingServer extends AbstractNettyCluster implements 
         log.info("shutdown cluster server success");
     }
 
+    public void registerClusterProcessor(int code, ClusterRequestProcessor processor, ExecutorService executorService){
+        registerProcessor(code,processor,executorService);
+    }
+
     private class NettyServerHandler extends SimpleChannelInboundHandler<ClusterRemotingCommand>{
 
         @Override
@@ -104,4 +111,5 @@ public class NettyClusterRemotingServer extends AbstractNettyCluster implements 
             processMessageReceived(channelHandlerContext,clusterRemotingCommand);
         }
     }
+
 }
