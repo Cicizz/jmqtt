@@ -31,7 +31,9 @@ public abstract class AbstractNettyCluster {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CLUSTER);
 
     private final Map<Integer /* opaque */, ResponseFuture> responseTable = new ConcurrentHashMap<>();
+    protected final ClusterReSendCommandService resendService = new ClusterReSendCommandService(this);
     protected final Map<Integer /* code */, Pair<ClusterRequestProcessor, ExecutorService>> processorTable = new ConcurrentHashMap<>();
+
     /**
      * Semaphore to limit maximum number of on-going asynchronous requests, which protects system memory footprint.
      */
@@ -44,6 +46,8 @@ public abstract class AbstractNettyCluster {
     public AbstractNettyCluster(int semaphore) {
         this.semaphore = new Semaphore(semaphore, true);
     }
+
+
 
     public void invokeAsyncImpl(final Channel channel, final ClusterRemotingCommand command, final long timeout, InvokeCallback invokeCallback) throws RemotingSendRequestException {
         final int opaque = command.getOpaque();
@@ -61,12 +65,12 @@ public abstract class AbstractNettyCluster {
                             responseFuture.setSendRequestOK(true);
                             return;
                         }
-                        requestFail(opaque);
+                        requestFail(opaque,command);
                         log.warn("send a request command to channel <{}> failed.", remotingAddr);
                     }
                 });
             } else {
-                // TODO 获取失败应该放入重试队列进行重试
+                requestFail(opaque,command);
                 log.warn("Async invoke aquire semaphore failure,waiting threadNums:{},semaphoreAsyncValue:{}", semaphore.getQueueLength(), semaphore.availablePermits());
             }
         } catch (Exception ex) {
@@ -114,7 +118,7 @@ public abstract class AbstractNettyCluster {
                             @Override
                             public void operationComplete(ChannelFuture channelFuture) throws Exception {
                                 if(!channelFuture.isSuccess()){
-                                    log.warn("clister transfer message failure,addr={}",RemotingHelper.getRemoteAddr(ctx.channel()));
+                                    log.warn("cluster transfer message failure,addr={}",RemotingHelper.getRemoteAddr(ctx.channel()));
                                 }
                             }
                         });
@@ -132,11 +136,28 @@ public abstract class AbstractNettyCluster {
     }
 
     private void processResponse(ChannelHandlerContext ctx, ClusterRemotingCommand cmd) {
-        
+        final int opaque = cmd.getOpaque();
+        final ResponseFuture responseFuture = responseTable.get(opaque);
+        if (responseFuture != null){
+            log.debug("receive response future, code={}, opaque={}.",cmd.getCode(), opaque);
+            responseFuture.executeCallback();
+            responseFuture.release();
+        } else {
+            log.warn("cluster receive not exist response future, code={}, opaque={}.",cmd.getCode(),opaque);
+        }
     }
 
-    private void requestFail(final int opaque) {
-        // TODO 发送失败，从缓存移除该future并放入重试任务队列
+    private void requestFail(final int opaque, final ClusterRemotingCommand command) {
+        // 发送失败，从缓存移除该future并放入重试任务队列
+        log.debug("command {} enqueue ClusterResendCommandQueue.",command);
+        ResponseFuture responseFuture = responseTable.remove(opaque);
+        responseFuture.release();
+        resendService.appendMessage(
+                responseFuture.getChannel(),
+                command,
+                responseFuture.getTimeoutMillis(),
+                responseFuture.getInvokeCallback()
+        );
 
     }
 
