@@ -6,6 +6,7 @@ import io.netty.handler.codec.mqtt.*;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.acl.ConnectPermission;
+import org.jmqtt.broker.dispatcher.InnerMessageTransfer;
 import org.jmqtt.broker.recover.ReSendMessageService;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.jmqtt.remoting.session.ClientSession;
@@ -37,6 +38,7 @@ public class ConnectProcessor implements RequestProcessor {
     private ConnectPermission connectPermission;
     private ReSendMessageService reSendMessageService;
     private SubscriptionMatcher subscriptionMatcher;
+    private InnerMessageTransfer messageTransfer;
 
     public ConnectProcessor(BrokerController brokerController){
         this.flowMessageStore = brokerController.getFlowMessageStore();
@@ -47,6 +49,7 @@ public class ConnectProcessor implements RequestProcessor {
         this.connectPermission = brokerController.getConnectPermission();
         this.reSendMessageService = brokerController.getReSendMessageService();
         this.subscriptionMatcher = brokerController.getSubscriptionMatcher();
+        this.messageTransfer = brokerController.getInnerMessageTransfer();
     }
 
     @Override
@@ -77,7 +80,6 @@ public class ConnectProcessor implements RequestProcessor {
                 }
                 Object lastState = sessionStore.getLastSession(clientId);
                 if(Objects.nonNull(lastState) && lastState.equals(true)){
-                    //TODO cluster clear and disconnect previous connect
                     ClientSession previousClient = ConnectManager.getInstance().getClient(clientId);
                     if(previousClient != null){
                         previousClient.getCtx().close();
@@ -118,6 +120,7 @@ public class ConnectProcessor implements RequestProcessor {
             }
             log.info("[CONNECT] -> {} connect to this mqtt server",clientId);
             reConnect2SendMessage(clientId);
+
         }catch(Exception ex){
             log.warn("[CONNECT] -> Service Unavailable: cause={}",ex);
             returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE;
@@ -125,6 +128,11 @@ public class ConnectProcessor implements RequestProcessor {
             ctx.writeAndFlush(ackMessage);
             ctx.close();
         }
+    }
+
+    // TODO
+    private void notifyOtherNode(String clientId){
+
     }
 
     private boolean keepAlive(String clientId,ChannelHandlerContext ctx,int heatbeatSec){

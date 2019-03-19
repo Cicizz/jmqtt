@@ -6,14 +6,21 @@ import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.group.ClusterRemotingClient;
 import org.jmqtt.group.ClusterRemotingServer;
 import org.jmqtt.group.MessageTransfer;
+import org.jmqtt.group.common.ClusterNodeManager;
+import org.jmqtt.group.common.InvokeCallback;
+import org.jmqtt.group.common.ResponseFuture;
 import org.jmqtt.group.message.MessageListener;
 import org.jmqtt.group.processor.ClusterRequestProcessor;
 import org.jmqtt.group.processor.SendMessageProcessor;
 import org.jmqtt.group.protocol.ClusterRemotingCommand;
 import org.jmqtt.group.protocol.ClusterRequestCode;
+import org.jmqtt.group.protocol.node.ServerNode;
+import org.jmqtt.remoting.exception.RemotingConnectException;
+import org.jmqtt.remoting.exception.RemotingSendRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -34,7 +41,27 @@ public class DefaultMessageTransfer implements MessageTransfer {
 
     @Override
     public void send(ClusterRemotingCommand message) {
-
+        Set<ServerNode> activeNodes = ClusterNodeManager.getInstance().getActiveNodes();
+        if(activeNodes == null || activeNodes.size() == 0){
+            log.debug("send message to cluster:there is no other active node");
+            return;
+        }
+        long timeoutMillis = 3000;
+        for (ServerNode node : activeNodes){
+            String addr = node.getAddr();
+            try {
+                this.clusterRemotingClient.invokeAsync(addr, message, timeoutMillis, new InvokeCallback() {
+                    @Override
+                    public void invokeComplete(ResponseFuture responseFuture) {
+                        log.debug("send message success,nodeName={},addr={},code={}",node.getNodeName(),node.getAddr(),message.getCode());
+                    }
+                });
+            } catch (RemotingConnectException e) {
+                log.warn("Send message to cluster connect exception,nodeName={},addr={},code={},ex={}",node.getNodeName(),addr,message.getCode(),e);
+            } catch (RemotingSendRequestException e) {
+                log.warn("Send message to cluster request exception,nodeName={},addr={},code={},ex={}",node.getNodeName(),addr,message.getCode(),e);
+            }
+        }
     }
 
     @Override
@@ -42,7 +69,6 @@ public class DefaultMessageTransfer implements MessageTransfer {
         this.messageListener = messageListener;
         registerProcessorWithDefault();
     }
-
 
     private void registerProcessorWithDefault(){
         this.messageService =  new ThreadPoolExecutor(8,

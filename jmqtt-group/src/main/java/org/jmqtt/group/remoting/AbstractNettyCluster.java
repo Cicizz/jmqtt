@@ -13,6 +13,7 @@ import org.jmqtt.group.common.SemaphoreReleaseOnlyOnce;
 import org.jmqtt.group.processor.ClusterRequestProcessor;
 import org.jmqtt.group.protocol.ClusterRemotingCommand;
 import org.jmqtt.group.protocol.ClusterRequestCode;
+import org.jmqtt.group.protocol.ClusterResponseCode;
 import org.jmqtt.group.protocol.MessageFlag;
 import org.jmqtt.remoting.exception.RemotingSendRequestException;
 import org.jmqtt.remoting.util.RemotingHelper;
@@ -20,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
@@ -47,13 +48,31 @@ public abstract class AbstractNettyCluster {
         this.semaphore = new Semaphore(semaphore, true);
     }
 
+    public void scanResponseTable(){
+        List<ResponseFuture> rsList = new LinkedList<>();
+        Iterator<Map.Entry<Integer, ResponseFuture>> iterable = responseTable.entrySet().iterator();
+        while(iterable.hasNext()){
+            Map.Entry<Integer,ResponseFuture>  next = iterable.next();
+            ResponseFuture responseFuture = next.getValue();
+            if((responseFuture.getBeginTime()+responseFuture.getTimeoutMillis()+1000) <= System.currentTimeMillis()){
+                responseFuture.release();
+                iterable.remove();
+                rsList.add(responseFuture);
+                log.warn("remove time out response future");
+            }
+        }
+        for(ResponseFuture rep : rsList){
+            responseFail(rep);
+        }
 
+    }
 
     public void invokeAsyncImpl(final Channel channel, final ClusterRemotingCommand command, final long timeout, InvokeCallback invokeCallback) throws RemotingSendRequestException {
         final int opaque = command.getOpaque();
         try {
             SemaphoreReleaseOnlyOnce semaphoreReleaseOnlyOnce = new SemaphoreReleaseOnlyOnce(semaphore);
             ResponseFuture responseFuture = new ResponseFuture(channel, opaque, timeout, invokeCallback, semaphoreReleaseOnlyOnce);
+            responseFuture.setClusterRemotingCommand(command);
             boolean tryAquired = semaphore.tryAcquire(timeout, TimeUnit.MILLISECONDS);
             if (tryAquired) {
                 responseTable.put(opaque, responseFuture);
@@ -128,7 +147,7 @@ public abstract class AbstractNettyCluster {
             pair.getObject2().submit(runnable);
         } else {
             log.error("cluster request has no processor,code={}",cmd.getCode());
-            ClusterRemotingCommand responseCommand = new ClusterRemotingCommand(ClusterRequestCode.REQUEST_CODE_NOT_SUPPORTED);
+            ClusterRemotingCommand responseCommand = new ClusterRemotingCommand(ClusterResponseCode.REQUEST_CODE_NOT_SUPPORTED);
             responseCommand.setOpaque(opaque);
             responseCommand.makeResponseType();
             ctx.writeAndFlush(responseCommand);
@@ -137,13 +156,20 @@ public abstract class AbstractNettyCluster {
 
     private void processResponse(ChannelHandlerContext ctx, ClusterRemotingCommand cmd) {
         final int opaque = cmd.getOpaque();
-        final ResponseFuture responseFuture = responseTable.get(opaque);
-        if (responseFuture != null){
-            log.debug("receive response future, code={}, opaque={}.",cmd.getCode(), opaque);
-            responseFuture.executeCallback();
-            responseFuture.release();
-        } else {
-            log.warn("cluster receive not exist response future, code={}, opaque={}.",cmd.getCode(),opaque);
+        final int code = cmd.getCode();
+        // response failure , resend later
+        if(code == ClusterResponseCode.RESPONSE_OK){
+            final ResponseFuture responseFuture = responseTable.get(opaque);
+            if (responseFuture != null){
+                log.debug("receive response future, code={}, opaque={}.",cmd.getCode(), opaque);
+                responseFuture.setClusterRemotingCommand(cmd);
+                responseFuture.executeCallback();
+                responseFuture.release();
+            } else {
+                log.warn("cluster receive not exist response future, code={}, opaque={}.",cmd.getCode(),opaque);
+            }
+        }else{
+            log.warn("receive response is error,code={}",code);
         }
     }
 
@@ -158,6 +184,11 @@ public abstract class AbstractNettyCluster {
                 responseFuture.getInvokeCallback()
         );
 
+    }
+
+    private void responseFail(ResponseFuture responseFuture){
+        ClusterRemotingCommand command = responseFuture.getClusterRemotingCommand();
+        resendService.appendMessage(responseFuture.getChannel(),command,responseFuture.getTimeoutMillis(),responseFuture.getInvokeCallback());
     }
 
     protected void registerProcessor(int requestCode, ClusterRequestProcessor processor, ExecutorService service) {

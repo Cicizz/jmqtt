@@ -16,8 +16,7 @@ import org.jmqtt.remoting.util.RemotingHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -26,13 +25,16 @@ public class ClusterOuterAPI {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CLUSTER);
     private ClusterConfig clusterConfig;
     private ClusterRemotingClient clusterRemotingClient;
-    private ScheduledThreadPoolExecutor schedure;
+    private ScheduledThreadPoolExecutor scheduleRegisterNode;
+    private ScheduledThreadPoolExecutor scheduleScanNode;
     private long timeoutMillis;
+    private static final int NODE_ACTIVE_TIME_MILLIS = 30000;
 
     public ClusterOuterAPI(ClusterConfig clusterConfigs, ClusterRemotingClient clusterRemotingClient) {
         this.clusterConfig = clusterConfig;
         this.clusterRemotingClient = clusterRemotingClient;
-        this.schedure = new ScheduledThreadPoolExecutor(1, new ThreadFactoryImpl("scheduleRegisterNode"));
+        this.scheduleRegisterNode = new ScheduledThreadPoolExecutor(1, new ThreadFactoryImpl("scheduleRegisterNodeThread"));
+        this.scheduleScanNode = new ScheduledThreadPoolExecutor(1, new ThreadFactoryImpl("scheduleScanNodeThread"));
         this.timeoutMillis = clusterConfig.getTimeoutMills();
     }
 
@@ -47,12 +49,35 @@ public class ClusterOuterAPI {
         if (StringUtils.isEmpty(clusterConfig.getGroupNodes())) {
             log.info("there is no other nodes to connect");
         } else {
-            this.schedure.scheduleAtFixedRate(new Runnable() {
+            this.scheduleRegisterNode.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
                     registerNode();
                 }
-            }, 10, 30, TimeUnit.SECONDS);
+            }, 10*1000, NODE_ACTIVE_TIME_MILLIS, TimeUnit.MILLISECONDS);
+            this.scheduleScanNode.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    scanClusterNodes();
+                }
+            },10*1000,(int)(NODE_ACTIVE_TIME_MILLIS * 1.5),TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private void scanClusterNodes(){
+        Set<ServerNode> nodes = ClusterNodeManager.getInstance().getAllNodes();
+        log.info("connect nodes:{}",nodes);
+        for (ServerNode node : nodes){
+            long diff = System.currentTimeMillis() - node.getLastUpdateTime();
+            if(diff < NODE_ACTIVE_TIME_MILLIS * 1.5){
+                continue;
+            }
+            node.setActive(false);
+            log.info("set not active node,nodeName={},nodeAddr={}",node.getNodeName(),node.getAddr());
+            if(diff > NODE_ACTIVE_TIME_MILLIS * 2){
+                ClusterNodeManager.getInstance().removeNode(node.getNodeName());
+                log.info("remove not active node,nodeName={},nodeAddr={}",node.getNodeName(),node.getAddr());
+            }
         }
     }
 
@@ -84,7 +109,10 @@ public class ClusterOuterAPI {
     }
 
     public void shutdown() {
-        this.schedure.shutdown();
+        this.scheduleRegisterNode.shutdown();
+        log.info("scheduleRegisterNodeThread shutdown");
+        this.scheduleScanNode.shutdown();
+        log.info("scheduleScanNode shutdown");
     }
 
     private class FetchNodeCallback implements InvokeCallback {
