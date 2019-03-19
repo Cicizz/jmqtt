@@ -7,6 +7,7 @@ import org.jmqtt.group.message.MessageListener;
 import org.jmqtt.group.message.ReceiveMessageStatus;
 import org.jmqtt.group.protocol.ClusterRemotingCommand;
 import org.jmqtt.group.protocol.ClusterRequestCode;
+import org.jmqtt.group.protocol.ClusterResponseCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,10 +24,10 @@ public class SendMessageProcessor implements ClusterRequestProcessor{
     public ClusterRemotingCommand processRequest(ChannelHandlerContext ctx, ClusterRemotingCommand cmd) {
         ReceiveMessageStatus result = this.messageListener.receive(cmd);
         ClusterRemotingCommand response = null;
-        if(result == ReceiveMessageStatus.CONSUME_OK){
-            response = new ClusterRemotingCommand(ClusterRequestCode.RESPONSE_OK);
+        if(result == ReceiveMessageStatus.OK){
+            response = new ClusterRemotingCommand(ClusterResponseCode.RESPONSE_OK);
         } else {
-            response = new ClusterRemotingCommand(ClusterRequestCode.ERROR_RESPONSE);
+            response = new ClusterRemotingCommand(ClusterResponseCode.ERROR_RESPONSE);
         }
         return response;
     }

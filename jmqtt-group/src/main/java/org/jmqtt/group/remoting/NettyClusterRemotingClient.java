@@ -27,9 +27,7 @@ import org.jmqtt.remoting.util.RemotingHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -43,6 +41,7 @@ public class NettyClusterRemotingClient extends AbstractNettyCluster implements 
     private NettyEventExcutor nettyEventExcutor;
     private Bootstrap bootstrap;
     private Lock lockChannelTable = new ReentrantLock();
+    private ScheduledExecutorService schudure = new ScheduledThreadPoolExecutor(1,new ThreadFactoryImpl("ScanResponseTableThread"));
     private final int LOCK_CHANNEL_TIMEOUT = 3000;
     private final ConcurrentMap<String,Channel> channelTable = new ConcurrentHashMap<>();
 
@@ -87,6 +86,12 @@ public class NettyClusterRemotingClient extends AbstractNettyCluster implements 
         }
         this.resendService.start();
         log.info("init cluster client success");
+        schudure.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                NettyClusterRemotingClient.this.scanResponseTable();
+            }
+        },3000,1000,TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -94,6 +99,7 @@ public class NettyClusterRemotingClient extends AbstractNettyCluster implements 
         if(ioGroup != null ){
             ioGroup.shutdownGracefully();
         }
+        this.schudure.shutdown();
         this.resendService.shutdown();
         log.info("shutdown cluster client success");
     }

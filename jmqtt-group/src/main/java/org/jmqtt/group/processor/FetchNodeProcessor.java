@@ -6,6 +6,7 @@ import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.group.common.ClusterNodeManager;
 import org.jmqtt.group.protocol.ClusterRemotingCommand;
 import org.jmqtt.group.protocol.ClusterRequestCode;
+import org.jmqtt.group.protocol.ClusterResponseCode;
 import org.jmqtt.group.protocol.node.ServerNode;
 import org.jmqtt.remoting.util.RemotingHelper;
 import org.slf4j.Logger;
@@ -39,7 +40,7 @@ public class FetchNodeProcessor implements ClusterRequestProcessor {
         } else {
             log.warn("remote node is null,addr={}", RemotingHelper.getRemoteAddr(ctx.channel()));
         }
-        ClusterRemotingCommand responseCommand = new ClusterRemotingCommand(ClusterRequestCode.ERROR_RESPONSE);
+        ClusterRemotingCommand responseCommand = new ClusterRemotingCommand(ClusterResponseCode.ERROR_RESPONSE);
         return responseCommand;
     }
 }

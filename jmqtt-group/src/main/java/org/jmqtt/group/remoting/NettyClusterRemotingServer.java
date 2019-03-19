@@ -23,6 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class NettyClusterRemotingServer extends AbstractNettyCluster implements ClusterRemotingServer {
 
@@ -34,6 +37,8 @@ public class NettyClusterRemotingServer extends AbstractNettyCluster implements 
     private Class<? extends ServerChannel> clazz;
     private NettyEventExcutor nettyEventExcutor;
     private ServerBootstrap serverBootstrap;
+    private ScheduledExecutorService schudure = new ScheduledThreadPoolExecutor(1,new ThreadFactoryImpl("ScanResponseTableThread"));
+
 
     public NettyClusterRemotingServer(ClusterConfig clusterConfig){
         this.clusterConfig = clusterConfig;
@@ -86,6 +91,13 @@ public class NettyClusterRemotingServer extends AbstractNettyCluster implements 
         }catch (InterruptedException ex){
             log.error("Start cluster server failure.cause={}",ex);
         }
+
+        schudure.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                NettyClusterRemotingServer.this.scanResponseTable();
+            }
+        },3000,1000, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -96,6 +108,7 @@ public class NettyClusterRemotingServer extends AbstractNettyCluster implements 
         if(ioGroup != null ){
             ioGroup.shutdownGracefully();
         }
+        this.schudure.shutdown();
         this.resendService.shutdown();
         log.info("shutdown cluster server success");
     }

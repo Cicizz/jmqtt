@@ -216,7 +216,7 @@ public class BrokerController {
             ClusterRequestProcessor fetchNodeProcessor = new FetchNodeProcessor();
             this.clusterServer.registerClusterProcessor(ClusterRequestCode.FETCH_NODES,fetchNodeProcessor,clusterService);
         }
-
+        this.innerMessageTransfer.init();
         this.clusterClient.start();
         this.clusterServer.start();
         this.clusterOuterAPI.start();
@@ -326,5 +326,41 @@ public class BrokerController {
 
     public ReSendMessageService getReSendMessageService() {
         return reSendMessageService;
+    }
+
+    public StoreConfig getStoreConfig() {
+        return storeConfig;
+    }
+
+    public ClusterConfig getClusterConfig() {
+        return clusterConfig;
+    }
+
+    public ChannelEventListener getChannelEventListener() {
+        return channelEventListener;
+    }
+
+    public AbstractMqttStore getAbstractMqttStore() {
+        return abstractMqttStore;
+    }
+
+    public ClusterRemotingClient getClusterClient() {
+        return clusterClient;
+    }
+
+    public ClusterRemotingServer getClusterServer() {
+        return clusterServer;
+    }
+
+    public ClusterOuterAPI getClusterOuterAPI() {
+        return clusterOuterAPI;
+    }
+
+    public InnerMessageTransfer getInnerMessageTransfer() {
+        return innerMessageTransfer;
+    }
+
+    public ExecutorService getClusterService() {
+        return clusterService;
     }
 }
