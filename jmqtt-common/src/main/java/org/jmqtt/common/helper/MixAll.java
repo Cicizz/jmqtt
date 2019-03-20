@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.Properties;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
@@ -20,6 +21,11 @@ public class MixAll {
 
     public static boolean createIfNotExistsDir(File file){
         return file != null && (file.exists() ? file.isDirectory() : file.mkdirs());
+    }
+
+    public static String dateFormater(long time){
+        SimpleDateFormat dateFormat  = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return dateFormat.format(time);
     }
 
     public static byte[] uncompress(final byte[] src) throws IOException {
