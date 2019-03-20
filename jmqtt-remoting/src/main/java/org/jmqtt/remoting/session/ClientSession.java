@@ -11,7 +11,7 @@ public class ClientSession {
     private boolean cleanSession;
     private transient ChannelHandlerContext ctx;
 
-    private AtomicInteger messageIdCounter = new AtomicInteger(1);
+    private transient AtomicInteger messageIdCounter = new AtomicInteger(1);
 
     public ClientSession(){}
 

@@ -78,7 +78,7 @@ public class NettyClusterRemotingServer extends AbstractNettyCluster implements 
                                 .addLast("groupDecoder",new NettyClusterDecoder())
                                 .addLast("groupIdleStateHandler", new IdleStateHandler(0, 0, 60))
                                 .addLast("nettyConnectionManager", new NettyConnectHandler(nettyEventExcutor))
-                                .addLast("groupServerHandler", null);
+                                .addLast("groupServerHandler", new NettyServerHandler());
                     }
                 });
         if(clusterConfig.isGroupPooledByteBufAllocatorEnable()){

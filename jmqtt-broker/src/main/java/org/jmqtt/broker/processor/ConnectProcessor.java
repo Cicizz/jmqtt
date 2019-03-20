@@ -9,6 +9,12 @@ import org.jmqtt.broker.acl.ConnectPermission;
 import org.jmqtt.broker.dispatcher.InnerMessageTransfer;
 import org.jmqtt.broker.recover.ReSendMessageService;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
+import org.jmqtt.common.helper.SerializeHelper;
+import org.jmqtt.group.common.InvokeCallback;
+import org.jmqtt.group.common.ResponseFuture;
+import org.jmqtt.group.protocol.ClusterRemotingCommand;
+import org.jmqtt.group.protocol.ClusterRequestCode;
+import org.jmqtt.group.protocol.ClusterResponseCode;
 import org.jmqtt.remoting.session.ClientSession;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.bean.MessageHeader;
@@ -120,7 +126,7 @@ public class ConnectProcessor implements RequestProcessor {
             }
             log.info("[CONNECT] -> {} connect to this mqtt server",clientId);
             reConnect2SendMessage(clientId);
-
+            newClientNotify(clientSession);
         }catch(Exception ex){
             log.warn("[CONNECT] -> Service Unavailable: cause={}",ex);
             returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE;
@@ -130,11 +136,12 @@ public class ConnectProcessor implements RequestProcessor {
         }
     }
 
-    // TODO
-    private void notifyOtherNode(String clientId){
-
+    private void newClientNotify(ClientSession clientSession){
+        int code = ClusterRequestCode.NOTICE_NEW_CLIENT;
+        byte[] body = SerializeHelper.serialize(clientSession);
+        this.messageTransfer.send(code, body);
     }
-
+    
     private boolean keepAlive(String clientId,ChannelHandlerContext ctx,int heatbeatSec){
         if(this.connectPermission.verfyHeartbeatTime(clientId,heatbeatSec)){
             int keepAlive = (int)(heatbeatSec * 1.5f);

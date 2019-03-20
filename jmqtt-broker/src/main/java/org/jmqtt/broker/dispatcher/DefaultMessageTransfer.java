@@ -65,6 +65,25 @@ public class DefaultMessageTransfer implements MessageTransfer {
     }
 
     @Override
+    public void send(String nodeName, ClusterRemotingCommand message) {
+        long timeoutMillis = 3000;
+        ServerNode node = ClusterNodeManager.getInstance().getNode(nodeName);
+        String addr = node.getAddr();
+        try {
+            this.clusterRemotingClient.invokeAsync(addr, message, timeoutMillis, new InvokeCallback() {
+                @Override
+                public void invokeComplete(ResponseFuture responseFuture) {
+                    log.debug("send message success,nodeName={},addr={},code={}",nodeName,node.getAddr(),message.getCode());
+                }
+            });
+        } catch (RemotingConnectException e) {
+            log.warn("Send message to cluster connect exception,nodeName={},addr={},code={},ex={}",nodeName,addr,message.getCode(),e);
+        } catch (RemotingSendRequestException e) {
+            log.warn("Send message to cluster request exception,nodeName={},addr={},code={},ex={}",nodeName,addr,message.getCode(),e);
+        }
+    }
+
+    @Override
     public void registerListener(MessageListener messageListener) {
         this.messageListener = messageListener;
         registerProcessorWithDefault();
@@ -79,7 +98,7 @@ public class DefaultMessageTransfer implements MessageTransfer {
                 new ThreadFactoryImpl("ClusterThread"),
                 new RejectHandler("sub", 100000));
         ClusterRequestProcessor sendMessageProcessor = new SendMessageProcessor(messageListener);
-        this.clusterRemotingServer.registerClusterProcessor(ClusterRequestCode.NOTIC_NEW_CLIENT,sendMessageProcessor,messageService);
+        this.clusterRemotingServer.registerClusterProcessor(ClusterRequestCode.NOTICE_NEW_CLIENT,sendMessageProcessor,messageService);
         this.clusterRemotingServer.registerClusterProcessor(ClusterRequestCode.NOTICE_NEW_SUBSCRIPTION,sendMessageProcessor,messageService);
         this.clusterRemotingServer.registerClusterProcessor(ClusterRequestCode.SEND_MESSAGE,sendMessageProcessor,messageService);
     }
