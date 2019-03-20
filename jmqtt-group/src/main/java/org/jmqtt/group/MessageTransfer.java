@@ -9,9 +9,16 @@ import org.jmqtt.group.protocol.ClusterRemotingCommand;
 public interface MessageTransfer {
 
     /**
-     * send message to cluster
+     * broadcast send message to cluster
      */
     void send(ClusterRemotingCommand message);
+
+    /**
+     * send message to the specified node
+     * @param nodeName
+     * @param message
+     */
+    void send(String nodeName,ClusterRemotingCommand message);
 
     /**
      * message listener: receive message from cluster

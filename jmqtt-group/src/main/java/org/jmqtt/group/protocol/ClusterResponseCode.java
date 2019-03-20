@@ -20,4 +20,5 @@ public class ClusterResponseCode {
      * request code not supported
      */
     public static final int REQUEST_CODE_NOT_SUPPORTED = 102;
+
 }
