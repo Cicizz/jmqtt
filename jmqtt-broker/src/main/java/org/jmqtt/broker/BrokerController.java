@@ -167,7 +167,7 @@ public class BrokerController {
         {
             // message transfer is pluginAble
             MessageTransfer messageTransfer = new DefaultMessageTransfer(this.clusterClient,this.clusterServer);
-            this.innerMessageTransfer = new InnerMessageTransfer(messageTransfer);
+            this.innerMessageTransfer = new InnerMessageTransfer(this,messageTransfer);
         }
         this.clusterOuterAPI = new ClusterOuterAPI(clusterConfig, clusterClient);
         this.clusterService = new ThreadPoolExecutor(coreThreadNum * 2,

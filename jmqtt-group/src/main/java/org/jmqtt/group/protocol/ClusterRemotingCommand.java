@@ -30,17 +30,29 @@ public class ClusterRemotingCommand {
      */
     private int rpcType = 0;
     private int opaque = requestId.incrementAndGet();
-    private HashMap<String,String> extField;
+    private HashMap<String,String> extField = new HashMap<>();
     private transient byte[] body;
 
     public ClusterRemotingCommand(int code) {
         this.code = code;
     }
 
+    public ClusterRemotingCommand(int code,byte[] body) {
+        this.code = code;
+        this.body = body;
+    }
+
     public void makeResponseType(){
         this.rpcType = 1;
     }
 
+    public void putExtFiled(String key,String value){
+        this.extField.put(key,value);
+    }
+
+    public String getExtField(String key){
+        return this.extField.get(key);
+    }
     public RemotingCommandType getType(){
         if(rpcType == 0){
             return RemotingCommandType.REQUEST_COMMAND;

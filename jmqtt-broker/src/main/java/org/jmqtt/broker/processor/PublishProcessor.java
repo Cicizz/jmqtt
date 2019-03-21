@@ -31,7 +31,7 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
     private PubSubPermission pubSubPermission;
 
     public PublishProcessor(BrokerController controller){
-        super(controller.getMessageDispatcher(),controller.getRetainMessageStore());
+        super(controller.getMessageDispatcher(),controller.getRetainMessageStore(),controller.getInnerMessageTransfer());
         this.flowMessageStore = controller.getFlowMessageStore();
         this.pubSubPermission = controller.getPubSubPermission();
     }
