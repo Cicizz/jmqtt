@@ -12,7 +12,7 @@ public class NettyEventExcutor implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.REMOTING);
 
     private LinkedBlockingQueue<NettyEvent> eventQueue = new LinkedBlockingQueue<>();
-    private final int maxSize = 1000;
+    private final int maxSize = 100000;
     private ChannelEventListener listener;
     boolean stoped = false;
     private Thread thread;
