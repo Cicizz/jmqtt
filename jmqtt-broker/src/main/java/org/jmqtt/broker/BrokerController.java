@@ -193,7 +193,7 @@ public class BrokerController {
             RequestProcessor disconnectProcessor = new DisconnectProcessor(this);
             RequestProcessor pingProcessor = new PingProcessor();
             RequestProcessor publishProcessor = new PublishProcessor(this);
-            RequestProcessor pubRelProcessor = new PubRelProcessor(messageDispatcher, flowMessageStore, retainMessageStore);
+            RequestProcessor pubRelProcessor = new PubRelProcessor(this);
             RequestProcessor subscribeProcessor = new SubscribeProcessor(this);
             RequestProcessor unSubscribeProcessor = new UnSubscribeProcessor(subscriptionMatcher, subscriptionStore);
             RequestProcessor pubRecProcessor = new PubRecProcessor(flowMessageStore);

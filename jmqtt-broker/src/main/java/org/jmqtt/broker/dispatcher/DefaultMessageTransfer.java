@@ -99,7 +99,6 @@ public class DefaultMessageTransfer implements MessageTransfer {
                 new RejectHandler("sub", 100000));
         ClusterRequestProcessor sendMessageProcessor = new SendMessageProcessor(messageListener);
         this.clusterRemotingServer.registerClusterProcessor(ClusterRequestCode.NOTICE_NEW_CLIENT,sendMessageProcessor,messageService);
-        this.clusterRemotingServer.registerClusterProcessor(ClusterRequestCode.NOTICE_NEW_SUBSCRIPTION,sendMessageProcessor,messageService);
         this.clusterRemotingServer.registerClusterProcessor(ClusterRequestCode.SEND_MESSAGE,sendMessageProcessor,messageService);
     }
 
