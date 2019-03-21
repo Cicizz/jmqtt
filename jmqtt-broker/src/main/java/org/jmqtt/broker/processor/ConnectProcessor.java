@@ -10,11 +10,13 @@ import org.jmqtt.broker.dispatcher.InnerMessageTransfer;
 import org.jmqtt.broker.recover.ReSendMessageService;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.jmqtt.common.helper.SerializeHelper;
+import org.jmqtt.group.common.ClusterNodeManager;
 import org.jmqtt.group.common.InvokeCallback;
 import org.jmqtt.group.common.ResponseFuture;
 import org.jmqtt.group.protocol.ClusterRemotingCommand;
 import org.jmqtt.group.protocol.ClusterRequestCode;
 import org.jmqtt.group.protocol.ClusterResponseCode;
+import org.jmqtt.group.protocol.CommandConstant;
 import org.jmqtt.remoting.session.ClientSession;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.bean.MessageHeader;
@@ -139,7 +141,10 @@ public class ConnectProcessor implements RequestProcessor {
     private void newClientNotify(ClientSession clientSession){
         int code = ClusterRequestCode.NOTICE_NEW_CLIENT;
         byte[] body = SerializeHelper.serialize(clientSession);
-        this.messageTransfer.send(code, body);
+        ClusterRemotingCommand command = new ClusterRemotingCommand(code);
+        command.setBody(body);
+        command.putExtFiled(CommandConstant.NODE_NAME, ClusterNodeManager.getInstance().getCurrentNode().getNodeName());
+        this.messageTransfer.send(command);
     }
     
     private boolean keepAlive(String clientId,ChannelHandlerContext ctx,int heatbeatSec){

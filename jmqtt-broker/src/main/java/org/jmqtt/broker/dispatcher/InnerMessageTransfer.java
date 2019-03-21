@@ -1,7 +1,11 @@
 package org.jmqtt.broker.dispatcher;
 
+import io.netty.handler.codec.mqtt.MqttPublishMessage;
+import org.jmqtt.broker.BrokerController;
+import org.jmqtt.broker.processor.AbstractMessageProcessor;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.jmqtt.common.bean.Message;
+import org.jmqtt.common.bean.MessageHeader;
 import org.jmqtt.common.bean.Subscription;
 import org.jmqtt.common.helper.MixAll;
 import org.jmqtt.common.helper.SerializeHelper;
@@ -17,12 +21,13 @@ import org.jmqtt.group.protocol.CommandConstant;
 import org.jmqtt.group.protocol.node.ServerNode;
 import org.jmqtt.remoting.session.ClientSession;
 import org.jmqtt.remoting.session.ConnectManager;
+import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.store.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.Date;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -30,11 +35,13 @@ import java.util.concurrent.TimeUnit;
 /**
  * transfer message in cluster
  */
-public class InnerMessageTransfer {
+public class InnerMessageTransfer{
     private static final Logger msgLog = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
     private static final Logger connLog = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
     private static final Logger clusterLog = LoggerFactory.getLogger(LoggerName.CLUSTER);
 
+    private MessageDispatcher messageDispatcher;
+    private RetainMessageStore retainMessageStore;
     private MessageTransfer messageTransfer;
     private SessionStore sessionStore;
     private SubscriptionMatcher subscriptionMatcher;
@@ -44,33 +51,35 @@ public class InnerMessageTransfer {
     private OfflineMessageStore offlineMessageStore;
 
 
-    public InnerMessageTransfer() { }
-
-    public InnerMessageTransfer(MessageTransfer messageTransfer) {
+    public InnerMessageTransfer(BrokerController brokerController,MessageTransfer messageTransfer) {
+        this.messageDispatcher = brokerController.getMessageDispatcher();
+        this.retainMessageStore = brokerController.getRetainMessageStore();
         this.messageTransfer = messageTransfer;
+        this.sessionStore = brokerController.getSessionStore();
+        this.subscriptionStore = brokerController.getSubscriptionStore();
+        this.subscriptionMatcher = brokerController.getSubscriptionMatcher();
+        this.flowMessageStore = brokerController.getFlowMessageStore();
+        this.willMessageStore = brokerController.getWillMessageStore();
+        this.offlineMessageStore = brokerController.getOfflineMessageStore();
     }
 
-    public void registerMessageTransfer(MessageTransfer messageTransfer) {
-        this.messageTransfer = messageTransfer;
-    }
+
 
     public void init() {
         MessageListener listener = new InnerMessageListener();
         this.messageTransfer.registerListener(listener);
     }
 
-    public void send(int code, byte[] body) {
+    public void send2AllNodes(ClusterRemotingCommand clusterRemotingCommand) {
         try {
-            ClusterRemotingCommand clusterRemotingCommand = new ClusterRemotingCommand(code);
             this.messageTransfer.send(clusterRemotingCommand);
         } catch (Exception ex) {
             msgLog.warn("send message error", ex);
         }
     }
 
-    public void send(String nodeName, int code, byte[] body) {
+    public void send(String nodeName, ClusterRemotingCommand clusterRemotingCommand) {
         try {
-            ClusterRemotingCommand clusterRemotingCommand = new ClusterRemotingCommand(code);
             this.messageTransfer.send(nodeName, clusterRemotingCommand);
         } catch (Exception ex) {
             msgLog.warn("send message error", ex);
@@ -82,7 +91,7 @@ public class InnerMessageTransfer {
 
         private ThreadPoolExecutor clusterMessageExecutor;
 
-        public InnerMessageListener(){
+        private InnerMessageListener(){
             this.clusterMessageExecutor = new ThreadPoolExecutor(8,
                     8,
                     60000,
@@ -103,17 +112,14 @@ public class InnerMessageTransfer {
                                     .NOTICE_NEW_CLIENT:
                                 newClientOnline(clusterRemotingCommand);
                                 break;
-                            case ClusterRequestCode.NOTICE_NEW_SUBSCRIPTION:
-                                // TODO
-                                break;
                             case ClusterRequestCode.SEND_MESSAGE:
-                                // TODO
+                                dispatcherMessage(clusterRemotingCommand);
                                 break;
                             case ClusterRequestCode.TRANSFER_SESSION:
-
+                                loadRemoteSession(clusterRemotingCommand);
                                 break;
-                            case ClusterRequestCode.TRANSFER_OFFLINE_MESSAGE:
-
+                            case ClusterRequestCode.TRANSFER_SESSION_MESSAGE:
+                                dispatcherSessionMessage(clusterRemotingCommand);
                                 break;
                             default:
                                 msgLog.info("not supported command,code={}", code);
@@ -128,26 +134,117 @@ public class InnerMessageTransfer {
         }
     }
 
+    private void dispatcherSessionMessage(ClusterRemotingCommand command){
+        byte[] body = command.getBody();
+        if(body == null){
+            connLog.warn("transfer session message,message body is null");
+            return;
+        }
+        Message message = SerializeHelper.deserialize(body,Message.class);
+        if(message == null){
+            connLog.warn("transfer session message,message is null");
+            return;
+        }
+        String clientId = message.getClientId();
+        ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
+        if(clientSession == null){
+            connLog.warn("transfer session message,client is null,clientId={}",clientId);
+            if(sessionStore.getLastSession(clientId) == null){
+                connLog.warn("transfer session message,the client has no session in this node,clientId={}",clientId);
+                sessionStore.setSession(clientId,System.currentTimeMillis());
+                this.offlineMessageStore.addOfflineMessage(clientId,message);
+                return;
+            }
+        }
+        dispatcherMessage2Client(clientSession,message);
+    }
+
+    private void dispatcherMessage(ClusterRemotingCommand command){
+        msgLog.debug("process dispatcher message to all client that connected on this nod");
+        byte[] body = command.getBody();
+        if(body == null){
+            msgLog.warn("process dispatcher message error,command body is null");
+            return;
+        }
+        Message message = SerializeHelper.deserialize(body,Message.class);
+        if(message == null){
+            msgLog.warn("process dispatcher message error,message is null");
+            return;
+        }
+        this.messageDispatcher.appendMessage(message);
+        boolean retain = (boolean) message.getHeader(MessageHeader.RETAIN);
+        if(retain){
+            int qos = (int) message.getHeader(MessageHeader.QOS);
+            byte[] payload = message.getPayload();
+            String topic = (String) message.getHeader(MessageHeader.TOPIC);
+            //qos == 0 or payload is none,then clear previous retain message
+            if(qos == 0 || payload == null || payload.length == 0){
+                this.retainMessageStore.removeRetainMessage(topic);
+            }else{
+                this.retainMessageStore.storeRetainMessage(topic,message);
+            }
+        }
+    }
+
+    private void dispatcherMessage2Client(ClientSession clientSession,Message message){
+        connLog.debug("process dispatcher session message,clientId={}",clientSession.getClientId());
+        int qos = (int) message.getHeader(MessageHeader.QOS);
+        if(qos > 0){
+            flowMessageStore.cacheSendMsg(clientSession.getClientId(),message);
+        }
+        MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message,false,qos,clientSession.generateMessageId());
+        clientSession.getCtx().writeAndFlush(publishMessage);
+    }
+
+    private void loadRemoteSession(ClusterRemotingCommand command){
+        byte[] body = command.getBody();
+        if(body == null){
+            connLog.warn("transfer session command is null");
+            return;
+        }
+        List<Subscription> subscriptions = SerializeHelper.deserializeList(body,Subscription.class);
+        if(subscriptions == null){
+            connLog.warn("transfer session,load remote session is null");
+            return;
+        }
+        for(Subscription subscription : subscriptions){
+            String clientId = subscription.getClientId();
+
+            ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
+            if(clientSession == null){
+                connLog.warn("cluster transfer session the client has disconnected,clientId={}",clientId);
+                Object state = sessionStore.getLastSession(clientId);
+                if(state == null){
+                    connLog.warn("cluster transfer session this node has no session of this client,clientId={}",clientId);
+                    return;
+                }
+            }
+            this.subscriptionMatcher.subscribe(subscription);
+            this.subscriptionStore.storeSubscription(clientId,subscription);
+        }
+    }
+
     private void newClientOnline(ClusterRemotingCommand clusterRemotingCommand) {
         byte[] body = clusterRemotingCommand.getBody();
         if (body == null) {
             connLog.warn("cluster new client online command is null");
             return;
         }
-        ClientSession clientSession = SerializeHelper.deserialize(body, ClientSession.class);
-        String clientId = clientSession.getClientId();
-        if (clientSession == null) {
+        ClientSession originSession = SerializeHelper.deserialize(body, ClientSession.class);
+        if (originSession == null) {
             connLog.warn("cluster new client online command is null");
             return;
         }
+        String clientId = originSession.getClientId();
         String originNode = clusterRemotingCommand.getExtField().get(CommandConstant.NODE_NAME);
         ClientSession currentNodeSession = ConnectManager.getInstance().getClient(clientId);
         if (currentNodeSession != null) {
             connLog.debug("this client is connecting to this node,clientId={}", clientId);
-            if (clientSession.isCleanSession()) {
+            if (originSession.isCleanSession()) {
                 clearSession(clientId);
             } else {
                 transferSession(clientId, originNode);
+                transferOfflineMessage(clientId,originNode);
             }
             willMessageStore.removeWillMessage(clientId);
             currentNodeSession.getCtx().close();
@@ -161,13 +258,22 @@ public class InnerMessageTransfer {
         }
         if (connState.equals(true)) {
             connLog.warn("there is a bug of this client in this node,clientId={}", clientId);
-            transferSession(clientId, originNode);
+            if(originSession.isCleanSession()){
+                clearSession(clientId);
+            }else{
+                transferSession(clientId, originNode);
+                transferOfflineMessage(clientId,originNode);
+            }
             return;
         }
         long offlineTime = Long.parseLong(connState.toString());
-        transferSession(clientId, originNode);
+        if(originSession.isCleanSession()){
+            clearSession(clientId);
+        }else{
+            transferSession(clientId, originNode);
+            transferOfflineMessage(clientId,originNode);
+        }
         connLog.debug("the client last offline time,time={}", MixAll.dateFormater(offlineTime));
-        transferOfflineMessage(clientId,originNode);
     }
 
     private void clearSession(String clientId) {
@@ -197,7 +303,9 @@ public class InnerMessageTransfer {
             this.subscriptionMatcher.unSubscribe(subscription.getTopic(), clientId);
         }
         byte[] body = SerializeHelper.serialize(subscriptions);
-        send(originNode, ClusterRequestCode.TRANSFER_SESSION, body);
+        ClusterRemotingCommand remotingCommand = new ClusterRemotingCommand(ClusterRequestCode.TRANSFER_SESSION);
+        remotingCommand.setBody(body);
+        send(originNode,remotingCommand);
         this.subscriptionStore.clearSubscription(clientId);
         this.offlineMessageStore.clearOfflineMsgCache(clientId);
     }
@@ -205,14 +313,18 @@ public class InnerMessageTransfer {
     private void transferOfflineMessage(String clientId, String originNode) {
         Collection<Message> flowSendMessages = this.flowMessageStore.getAllSendMsg(clientId);
         for(Message message : flowSendMessages){
+            message.setClientId(clientId);
             byte[] body = SerializeHelper.serialize(message);
-            send(originNode,ClusterRequestCode.TRANSFER_OFFLINE_MESSAGE,body);
+            ClusterRemotingCommand remotingCommand = new ClusterRemotingCommand(ClusterRequestCode.TRANSFER_SESSION_MESSAGE,body);
+            send(originNode,remotingCommand);
         }
         this.flowMessageStore.clearClientFlowCache(clientId);
         Collection<Message> offlineMessages =  this.offlineMessageStore.getAllOfflineMessage(clientId);
         for(Message message : offlineMessages){
+            message.setClientId(clientId);
             byte[] body = SerializeHelper.serialize(message);
-            send(originNode,ClusterRequestCode.TRANSFER_OFFLINE_MESSAGE,body);
+            ClusterRemotingCommand remotingCommand = new ClusterRemotingCommand(ClusterRequestCode.TRANSFER_SESSION_MESSAGE,body);
+            send(originNode,remotingCommand);
         }
         this.offlineMessageStore.clearOfflineMsgCache(clientId);
     }

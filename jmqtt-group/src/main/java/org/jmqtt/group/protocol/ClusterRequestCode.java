@@ -17,12 +17,6 @@ public class ClusterRequestCode {
     public static final int NOTICE_NEW_CLIENT = 2;
 
     /**
-     * notice other jmqtt server return this topic's retain message
-     * if the subscribe is a new subscription
-     */
-    public static final int NOTICE_NEW_SUBSCRIPTION = 3;
-
-    /**
      * send message to other jmqtt server
      */
     public static final int SEND_MESSAGE = 4;
@@ -35,6 +29,6 @@ public class ClusterRequestCode {
     /**
      * transfer offline message
      */
-    public static final int TRANSFER_OFFLINE_MESSAGE = 6;
+    public static final int TRANSFER_SESSION_MESSAGE = 6;
 
 }
