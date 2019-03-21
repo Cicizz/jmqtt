@@ -8,7 +8,9 @@ import org.jmqtt.common.log.LoggerName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.SocketAddress;
+import java.net.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
 
 public class RemotingHelper {
 
@@ -22,6 +24,63 @@ public class RemotingHelper {
                 log.info("[closeChannel] -> close the connection,addr={},result={}",remoteAddr,channelFuture.isSuccess());
             }
         });
+    }
+
+    public static SocketAddress string2SocketAddress(final String addr){
+        String[] s = addr.split(":");
+        InetSocketAddress isa = new InetSocketAddress(s[0],Integer.parseInt(s[1]));
+        return isa;
+    }
+
+    public static String getLocalAddr(){
+        try {
+            Enumeration<NetworkInterface> enumeration = NetworkInterface.getNetworkInterfaces();
+            ArrayList<String> ipv4Result = new ArrayList<String>();
+            ArrayList<String> ipv6Result = new ArrayList<String>();
+            while (enumeration.hasMoreElements()) {
+                final NetworkInterface networkInterface = enumeration.nextElement();
+                final Enumeration<InetAddress> en = networkInterface.getInetAddresses();
+                while (en.hasMoreElements()) {
+                    final InetAddress address = en.nextElement();
+                    if (!address.isLoopbackAddress()) {
+                        if (address instanceof Inet6Address) {
+                            ipv6Result.add(normalizeHostAddress(address));
+                        } else {
+                            ipv4Result.add(normalizeHostAddress(address));
+                        }
+                    }
+                }
+            }
+
+            // prefer ipv4
+            if (!ipv4Result.isEmpty()) {
+                for (String ip : ipv4Result) {
+                    if (ip.startsWith("127.0") || ip.startsWith("192.168")) {
+                        continue;
+                    }
+
+                    return ip;
+                }
+
+                return ipv4Result.get(ipv4Result.size() - 1);
+            } else if (!ipv6Result.isEmpty()) {
+                return ipv6Result.get(0);
+            }
+            //If failed to find,fall back to localhost
+            final InetAddress localHost = InetAddress.getLocalHost();
+            return normalizeHostAddress(localHost);
+        } catch (Exception e) {
+            log.error("failed to get local addr",e);
+        }
+        return null;
+    }
+
+    private static String normalizeHostAddress(final InetAddress localHost) {
+        if (localHost instanceof Inet6Address) {
+            return "[" + localHost.getHostAddress() + "]";
+        } else {
+            return localHost.getHostAddress();
+        }
     }
 
     public static String getRemoteAddr(Channel channel){

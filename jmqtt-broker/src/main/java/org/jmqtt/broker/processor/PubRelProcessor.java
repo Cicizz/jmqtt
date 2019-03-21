@@ -2,6 +2,7 @@ package org.jmqtt.broker.processor;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttMessage;
+import org.jmqtt.broker.BrokerController;
 import org.jmqtt.store.FlowMessageStore;
 import org.jmqtt.broker.dispatcher.MessageDispatcher;
 import org.jmqtt.common.bean.Message;
@@ -23,9 +24,9 @@ public class PubRelProcessor extends AbstractMessageProcessor implements Request
 
     private FlowMessageStore flowMessageStore;
 
-    public PubRelProcessor(MessageDispatcher messageDispatcher, FlowMessageStore flowMessageStore, RetainMessageStore retainMessageStore) {
-        super(messageDispatcher,retainMessageStore);
-        this.flowMessageStore = flowMessageStore;
+    public PubRelProcessor(BrokerController controller) {
+        super(controller.getMessageDispatcher(),controller.getRetainMessageStore(),controller.getInnerMessageTransfer());
+        this.flowMessageStore = controller.getFlowMessageStore();
     }
 
     @Override

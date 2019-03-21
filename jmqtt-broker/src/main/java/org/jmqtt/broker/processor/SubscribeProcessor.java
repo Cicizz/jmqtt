@@ -112,9 +112,6 @@ public class SubscribeProcessor implements RequestProcessor {
         return topicList;
     }
 
-    /**
-     * 分发retain消息给新订阅者
-     */
     private void dispatcherRetainMessage(ClientSession clientSession,List<Message> messages){
         for(Message message : messages){
             message.putHeader(MessageHeader.RETAIN,true);

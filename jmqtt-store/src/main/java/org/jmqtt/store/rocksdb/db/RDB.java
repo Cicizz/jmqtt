@@ -151,11 +151,8 @@ public class RDB {
                 .setMaxSubcompactions(this.storeConfig.getMaxSubcompactions());
         this.DB_OPTIONS.setBaseBackgroundCompactions(this.storeConfig.getBaseBackGroundCompactions());
         READ_OPTIONS.setPrefixSameAsStart(true);
-        // insert into the memtable and transaction log
         WRITE_OPTIONS_SYNC.setSync(true);
-        // insert into the
         WRITE_OPTIONS_ASYNC.setSync(false);
-
         BLOCK_BASED_TABLE_CONFIG.setFilter(BLOOM_FILTER)
                 .setCacheIndexAndFilterBlocks(true)
                 .setPinL0FilterAndIndexBlocksInCache(true);
