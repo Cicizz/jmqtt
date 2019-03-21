@@ -5,6 +5,8 @@ import org.jmqtt.common.log.LoggerName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 
 public class SerializeHelper {
 
@@ -24,6 +26,17 @@ public class SerializeHelper {
             }
             return JSONObject.parseObject(bytes,clazz);
         }catch(Exception ex){
+            log.warn("Deserialize failure,cause={}",ex);
+        }
+        return null;
+    }
+
+    public static <T> List<T> deserializeList(byte[] bytes, Class<T> clazz){
+        try{
+            String json = JSONObject.toJSONString(bytes);
+            List<T> result = JSONObject.parseArray(json,clazz);
+            return result;
+        }catch (Exception ex){
             log.warn("Deserialize failure,cause={}",ex);
         }
         return null;

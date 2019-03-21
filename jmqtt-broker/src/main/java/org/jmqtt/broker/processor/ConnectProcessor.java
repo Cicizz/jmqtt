@@ -1,12 +1,22 @@
 package org.jmqtt.broker.processor;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.internal.ChannelUtils;
 import io.netty.handler.codec.mqtt.*;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.acl.ConnectPermission;
+import org.jmqtt.broker.dispatcher.InnerMessageTransfer;
 import org.jmqtt.broker.recover.ReSendMessageService;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
+import org.jmqtt.common.helper.SerializeHelper;
+import org.jmqtt.group.common.ClusterNodeManager;
+import org.jmqtt.group.common.InvokeCallback;
+import org.jmqtt.group.common.ResponseFuture;
+import org.jmqtt.group.protocol.ClusterRemotingCommand;
+import org.jmqtt.group.protocol.ClusterRequestCode;
+import org.jmqtt.group.protocol.ClusterResponseCode;
+import org.jmqtt.group.protocol.CommandConstant;
 import org.jmqtt.remoting.session.ClientSession;
 import org.jmqtt.common.bean.Message;
 import org.jmqtt.common.bean.MessageHeader;
@@ -36,6 +46,7 @@ public class ConnectProcessor implements RequestProcessor {
     private ConnectPermission connectPermission;
     private ReSendMessageService reSendMessageService;
     private SubscriptionMatcher subscriptionMatcher;
+    private InnerMessageTransfer messageTransfer;
 
     public ConnectProcessor(BrokerController brokerController){
         this.flowMessageStore = brokerController.getFlowMessageStore();
@@ -46,6 +57,7 @@ public class ConnectProcessor implements RequestProcessor {
         this.connectPermission = brokerController.getConnectPermission();
         this.reSendMessageService = brokerController.getReSendMessageService();
         this.subscriptionMatcher = brokerController.getSubscriptionMatcher();
+        this.messageTransfer = brokerController.getInnerMessageTransfer();
     }
 
     @Override
@@ -76,7 +88,6 @@ public class ConnectProcessor implements RequestProcessor {
                 }
                 Object lastState = sessionStore.getLastSession(clientId);
                 if(Objects.nonNull(lastState) && lastState.equals(true)){
-                    //TODO cluster clear and disconnect previous connect
                     ClientSession previousClient = ConnectManager.getInstance().getClient(clientId);
                     if(previousClient != null){
                         previousClient.getCtx().close();
@@ -110,16 +121,32 @@ public class ConnectProcessor implements RequestProcessor {
             }
             MqttConnAckMessage ackMessage = MessageUtil.getConnectAckMessage(returnCode,sessionPresent);
             ctx.writeAndFlush(ackMessage);
+            if(returnCode != MqttConnectReturnCode.CONNECTION_ACCEPTED){
+                ctx.close();
+                log.warn("[CONNECT] -> {} connect failure,returnCode={}",clientId,returnCode);
+                return;
+            }
             log.info("[CONNECT] -> {} connect to this mqtt server",clientId);
             reConnect2SendMessage(clientId);
+            newClientNotify(clientSession);
         }catch(Exception ex){
             log.warn("[CONNECT] -> Service Unavailable: cause={}",ex);
             returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE;
             MqttConnAckMessage ackMessage = MessageUtil.getConnectAckMessage(returnCode,sessionPresent);
             ctx.writeAndFlush(ackMessage);
+            ctx.close();
         }
     }
 
+    private void newClientNotify(ClientSession clientSession){
+        int code = ClusterRequestCode.NOTICE_NEW_CLIENT;
+        byte[] body = SerializeHelper.serialize(clientSession);
+        ClusterRemotingCommand command = new ClusterRemotingCommand(code);
+        command.setBody(body);
+        command.putExtFiled(CommandConstant.NODE_NAME, ClusterNodeManager.getInstance().getCurrentNode().getNodeName());
+        this.messageTransfer.send(command);
+    }
+    
     private boolean keepAlive(String clientId,ChannelHandlerContext ctx,int heatbeatSec){
         if(this.connectPermission.verfyHeartbeatTime(clientId,heatbeatSec)){
             int keepAlive = (int)(heatbeatSec * 1.5f);
