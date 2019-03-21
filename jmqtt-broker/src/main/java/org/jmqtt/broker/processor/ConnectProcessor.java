@@ -144,7 +144,7 @@ public class ConnectProcessor implements RequestProcessor {
         ClusterRemotingCommand command = new ClusterRemotingCommand(code);
         command.setBody(body);
         command.putExtFiled(CommandConstant.NODE_NAME, ClusterNodeManager.getInstance().getCurrentNode().getNodeName());
-        this.messageTransfer.send(command);
+        this.messageTransfer.send2AllNodes(command);
     }
     
     private boolean keepAlive(String clientId,ChannelHandlerContext ctx,int heatbeatSec){
