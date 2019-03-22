@@ -50,8 +50,7 @@ public class NettyConnectHandler extends ChannelDuplexHandler {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause){
         String remoteAddr = RemotingHelper.getRemoteAddr(ctx.channel());
-        log.warn("Channel caught Exception remotingAddr = {}", remoteAddr);
-        log.warn("Channel caught Exception,cause = {}", cause);
+        log.warn("Channel caught Exception remotingAddr:{},cause:{}", remoteAddr,cause);
         RemotingHelper.closeChannel(ctx.channel());
         this.eventExcutor.putNettyEvent(new NettyEvent(remoteAddr,NettyEventType.EXCEPTION,ctx.channel()));
     }
