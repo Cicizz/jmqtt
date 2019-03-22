@@ -31,10 +31,6 @@ public class ClusterConfig {
     private boolean groupUseEpoll = false;
     private boolean groupPooledByteBufAllocatorEnable = false;
 
-    /** message transfer */
-    private boolean clusterCommunicationUsingMessageTransfer;
-
-
     public int getGroupServerPort() {
         return groupServerPort;
     }
@@ -164,14 +160,6 @@ public class ClusterConfig {
         this.compressMaxSize = compressMaxSize;
     }
 
-    public boolean isClusterCommunicationUsingMessageTransfer() {
-        return clusterCommunicationUsingMessageTransfer;
-    }
-
-    public void setClusterCommunicationUsingMessageTransfer(boolean clusterCommunicationUsingMessageTransfer) {
-        this.clusterCommunicationUsingMessageTransfer = clusterCommunicationUsingMessageTransfer;
-    }
-
     @Override
     public String toString() {
         return "ClusterConfig{" +
@@ -191,7 +179,6 @@ public class ClusterConfig {
                 ", groupTcpRcvBuf=" + groupTcpRcvBuf +
                 ", groupUseEpoll=" + groupUseEpoll +
                 ", groupPooledByteBufAllocatorEnable=" + groupPooledByteBufAllocatorEnable +
-                ", clusterCommunicationUsingMessageTransfer=" + clusterCommunicationUsingMessageTransfer +
                 '}';
     }
 }
