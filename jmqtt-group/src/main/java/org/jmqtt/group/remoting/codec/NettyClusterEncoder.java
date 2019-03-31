@@ -21,30 +21,41 @@ public class NettyClusterEncoder extends MessageToByteEncoder<ClusterRemotingCom
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, ClusterRemotingCommand clusterRemotingCommand, ByteBuf out) throws Exception {
         try{
-            ByteBuffer headerBuffer = encodeHeader(clusterRemotingCommand);
-            out.writeBytes(headerBuffer);
-            byte[] body = clusterRemotingCommand.getBody();
-            if(body != null){
-                out.writeBytes(body);
-            }
+            ByteBuffer buffer = encode(clusterRemotingCommand);
+            out.writeBytes(buffer);
+
         } catch (Exception ex){
             log.error("Encode cluster remoting message error,clusterRemotingCommand = {}",clusterRemotingCommand);
             RemotingHelper.closeChannel(channelHandlerContext.channel());
         }
     }
 
-    private ByteBuffer encodeHeader(ClusterRemotingCommand cmd){
+    private ByteBuffer encode(ClusterRemotingCommand cmd){
+        // header length size
+        int length = 4;
+
+        // header data length
         String json = JSONObject.toJSONString(cmd,false);
         byte[] headerData = null;
         if(json != null){
             headerData = json.getBytes(CHARSET_UTF8);
         }
+        length += headerData.length;
+
+        // body data length
         int bodyLength = cmd.getBody() != null ? cmd.getBody().length : 0;
-        int length = headerData.length;
         length += bodyLength;
-        ByteBuffer result = ByteBuffer.allocate(length - bodyLength);
-        result.putInt(length);
-        result.put(headerData);
+
+        // write data
+        ByteBuffer result = ByteBuffer.allocate(4 + length);
+        result.putInt(length);             // len(4 + headerdata + body)
+        result.putInt(headerData.length);  // len(headerdata)
+        result.put(headerData);            // headerdata
+        if (cmd.getBody() != null){
+            result.put(cmd.getBody());     // bodydata
+        }
+
+        // filp data for network transporting
         result.flip();
         return result;
     }
