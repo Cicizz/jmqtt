@@ -4,7 +4,9 @@ import org.jmqtt.common.log.LoggerName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -33,6 +35,10 @@ public class ClusterRemotingCommand {
     private HashMap<String,String> extField = new HashMap<>();
     private transient byte[] body;
 
+    public ClusterRemotingCommand(){
+
+    }
+
     public ClusterRemotingCommand(int code) {
         this.code = code;
     }
@@ -49,6 +55,7 @@ public class ClusterRemotingCommand {
     public void putExtFiled(String key,String value){
         this.extField.put(key,value);
     }
+
 
     public String getExtField(String key){
         return this.extField.get(key);
@@ -104,8 +111,9 @@ public class ClusterRemotingCommand {
         return rpcType;
     }
 
-    public void markResponseType() {
-        this.rpcType = 1;
+    public void setRpcType(int rpcType)
+    {
+        this.rpcType = rpcType;
     }
 
     @Override
@@ -118,5 +126,18 @@ public class ClusterRemotingCommand {
                 ", opaque=" + opaque +
                 ", extField=" + extField +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ClusterRemotingCommand cmd = (ClusterRemotingCommand) o;
+        return code == cmd.code &&
+                flag == cmd.flag &&
+                rpcType == cmd.rpcType &&
+                opaque == cmd.opaque &&
+                Objects.equals(extField,cmd.extField) &&
+                Arrays.equals(body,cmd.body);
     }
 }

@@ -30,7 +30,7 @@ public class NettyClusterDecoder extends LengthFieldBasedFrameDecoder {
             if(null == frame){
                 return null;
             }
-            ByteBuffer byteBuffer = in.nioBuffer();
+            ByteBuffer byteBuffer = frame.nioBuffer();
             return decode(byteBuffer);
         }catch(Exception ex){
             log.error("Decode exception,ex={}",ex);
@@ -44,18 +44,23 @@ public class NettyClusterDecoder extends LengthFieldBasedFrameDecoder {
     }
 
     private ClusterRemotingCommand decode(ByteBuffer byteBuffer){
-        int length = byteBuffer.limit();
-        int headerLength = byteBuffer.getInt();
+        int allLen = byteBuffer.limit();
 
+        // get header data
+        int headerLength = byteBuffer.getInt();
         byte[] headerData = new byte[headerLength];
         byteBuffer.get(headerData);
         ClusterRemotingCommand cmd = JSONObject.parseObject(headerData,ClusterRemotingCommand.class);
-        int bodyLength = length - headerLength;
+
+        // get body data
+        int bodyLength = allLen - headerLength - 4;
         byte[] bodyData = null;
         if(bodyLength > 0){
             bodyData = new byte[bodyLength];
             byteBuffer.get(bodyData);
         }
+
+        // set body data
         cmd.setBody(bodyData);
         return cmd;
     }

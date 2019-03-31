@@ -74,9 +74,9 @@ public class NettyClusterRemotingServer extends AbstractNettyCluster implements 
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast("groupEncoder",new NettyClusterEncoder())
+                        pipeline.addLast("groupIdleStateHandler", new IdleStateHandler(0, 0, 60))
                                 .addLast("groupDecoder",new NettyClusterDecoder())
-                                .addLast("groupIdleStateHandler", new IdleStateHandler(0, 0, 60))
+                                .addLast("groupEncoder",new NettyClusterEncoder())
                                 .addLast("nettyConnectionManager", new NettyConnectHandler(nettyEventExcutor))
                                 .addLast("groupServerHandler", new NettyServerHandler());
                     }
