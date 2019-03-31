@@ -5,9 +5,11 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
+import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.jmqtt.common.config.ClusterConfig;
 import org.jmqtt.common.helper.MixAll;
@@ -37,7 +39,7 @@ public class NettyClusterRemotingClient extends AbstractNettyCluster implements 
 
     private ClusterConfig clusterConfig;
     private EventLoopGroup ioGroup;
-    private Class<? extends ServerChannel> clazz;
+    private Class<? extends SocketChannel> clazz;
     private NettyEventExcutor nettyEventExcutor;
     private Bootstrap bootstrap;
     private Lock lockChannelTable = new ReentrantLock();
@@ -50,11 +52,11 @@ public class NettyClusterRemotingClient extends AbstractNettyCluster implements 
         if(!clusterConfig.isGroupUseEpoll()){
             ioGroup = new NioEventLoopGroup(clusterConfig.getGroupIoThreadNum(),
                     new ThreadFactoryImpl("GroupClientWorkEventGroup"));
-            clazz = NioServerSocketChannel.class;
+            clazz = NioSocketChannel.class;
         }else{
             ioGroup = new EpollEventLoopGroup(clusterConfig.getGroupIoThreadNum(),
                     new ThreadFactoryImpl("GroupClientWorkEventGroup"));
-            clazz = EpollServerSocketChannel.class;
+            clazz = EpollSocketChannel.class;
         }
         this.nettyEventExcutor = new NettyEventExcutor(new ClusterServerChannelEventListener());
         this.bootstrap = new Bootstrap();
@@ -70,6 +72,7 @@ public class NettyClusterRemotingClient extends AbstractNettyCluster implements 
                 .option(ChannelOption.SO_RCVBUF, clusterConfig.getGroupTcpRcvBuf())
                 .option(ChannelOption.SO_REUSEADDR, clusterConfig.isGroupTcpReuseAddr())
                 .option(ChannelOption.SO_KEEPALIVE, clusterConfig.isGroupTcpKeepAlive())
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000) // connect timeout
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
