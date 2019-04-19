@@ -8,6 +8,7 @@ import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
@@ -91,14 +92,15 @@ public class NettyRemotingServer implements RemotingService {
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
                         pipeline.addLast("idleStateHandler", new IdleStateHandler(0, 0, 60))
-                                .addLast("nettyConnectionManager", new NettyConnectHandler(nettyEventExcutor))
                                 .addLast("httpCodec",new HttpServerCodec())
                                 .addLast("aggregator",new HttpObjectAggregator(65535))
-                                .addLast("webSocketHandler",new WebSocketServerProtocolHandler("/mqtt", MixAll.MQTT_VERSION_SUPPORT))
-                                .addLast("webSocket2ByteBufDecoder",new WebSocket2ByteBufDecoder())
+                                .addLast("compressor ", new HttpContentCompressor())
+                                .addLast("webSocketHandler",new WebSocketServerProtocolHandler("/mqtt", MixAll.MQTT_VERSION_SUPPORT,true))
                                 .addLast("byteBuf2WebSocketEncoder",new ByteBuf2WebSocketEncoder())
-                                .addLast("mqttEncoder", MqttEncoder.INSTANCE)
+                                .addLast("webSocket2ByteBufDecoder",new WebSocket2ByteBufDecoder())
                                 .addLast("mqttDecoder", new MqttDecoder(nettyConfig.getMaxMsgSize()))
+                                .addLast("mqttEncoder", MqttEncoder.INSTANCE)
+                                .addLast("nettyConnectionManager", new NettyConnectHandler(nettyEventExcutor))
                                 .addLast("nettyMqttHandler", new NettyMqttHandler());
                     }
                 });
