@@ -30,7 +30,7 @@ public class ClusterOuterAPI {
     private long timeoutMillis;
     private static final int NODE_ACTIVE_TIME_MILLIS = 30000;
 
-    public ClusterOuterAPI(ClusterConfig clusterConfigs, ClusterRemotingClient clusterRemotingClient) {
+    public ClusterOuterAPI(ClusterConfig clusterConfig, ClusterRemotingClient clusterRemotingClient) {
         this.clusterConfig = clusterConfig;
         this.clusterRemotingClient = clusterRemotingClient;
         this.scheduleRegisterNode = new ScheduledThreadPoolExecutor(1, new ThreadFactoryImpl("scheduleRegisterNodeThread"));
