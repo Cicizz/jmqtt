@@ -43,7 +43,7 @@ public class RDB {
             for(iterator.seek(prefixKey);iterator.isValid();iterator.next()){
                 values.add(iterator.value());
             }
-            log.info("[RocksDB] -> succ while get by prefix,columnFamilyHandle:{}, prefixKey:{}",cfh.toString(),new String(prefixKey));
+            log.debug("[RocksDB] -> succ while get by prefix,columnFamilyHandle:{}, prefixKey:{}",cfh.toString(),new String(prefixKey));
         }catch(Exception e){
             log.error("[RocksDB] ->  error while get by prefix, columnFamilyHandle:{}, prefixKey:{}, err:{}",
                     cfh.toString(), new String(prefixKey), e);
@@ -61,9 +61,9 @@ public class RDB {
                 item++;
             }
             if(item > 0){
-                this.DB.write(WRITE_OPTIONS_SYNC,writeBatch);
+                this.DB.write(WRITE_OPTIONS_ASYNC,writeBatch);
             }
-            log.info("[RocksDB] -> succ while delete by prefix,columnFamilyHandle:{}, prefixKey:{}, nums:{}",cfh.toString(),new String(prefixKey),item);
+            log.debug("[RocksDB] -> succ while delete by prefix,columnFamilyHandle:{}, prefixKey:{}, nums:{}",cfh.toString(),new String(prefixKey),item);
         }catch(RocksDBException e){
             log.error("[RocksDB] ->  error while delete by prefix, columnFamilyHandle:{}, prefixKey:{}, err:{}",
                     cfh.toString(), new String(prefixKey), e);
@@ -115,7 +115,7 @@ public class RDB {
     }
 
     public boolean putSync(final ColumnFamilyHandle cfh,final byte[] key,final byte[] value){
-        return this.put(cfh,WRITE_OPTIONS_SYNC,key,value);
+        return this.put(cfh,WRITE_OPTIONS_ASYNC,key,value);
     }
 
     public boolean delete(final ColumnFamilyHandle cfh, final byte[] key) {
