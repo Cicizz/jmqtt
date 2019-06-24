@@ -30,11 +30,6 @@ public class PubRecProcessor implements RequestProcessor {
             log.warn("[PubRec] -> The message is not cached in Flow,clientId={},msgId={}",clientId,messageId);
         }
         MqttMessage pubRelMessage = MessageUtil.getPubRelMessage(messageId);
-        ctx.writeAndFlush(pubRelMessage).addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                flowMessageStore.releaseSendMsg(clientId,messageId);
-            }
-        });
+        ctx.writeAndFlush(pubRelMessage);
     }
 }
