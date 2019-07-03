@@ -128,7 +128,7 @@ public class BrokerController {
         this.messageDispatcher = new DefaultDispatcherMessage(brokerConfig.getPollThreadNum(), subscriptionMatcher, flowMessageStore, offlineMessageStore);
 
         this.channelEventListener = new ClientLifeCycleHookService(willMessageStore, messageDispatcher);
-        this.remotingServer = new NettyRemotingServer(nettyConfig, channelEventListener);
+        this.remotingServer = new NettyRemotingServer(brokerConfig, nettyConfig, channelEventListener);
         this.reSendMessageService = new ReSendMessageService(offlineMessageStore, flowMessageStore);
 
         int coreThreadNum = Runtime.getRuntime().availableProcessors();
