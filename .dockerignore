@@ -1,0 +1,7 @@
+rocksdb.db
+.git
+.env
+*.jpg
+*.png
+*.md
+**/target
