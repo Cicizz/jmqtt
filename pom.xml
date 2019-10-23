@@ -39,7 +39,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <netty.version>4.1.31.Final</netty.version>
+        <netty.version>4.1.42.Final</netty.version>
         <rocksdb.version>5.17.2</rocksdb.version>
         <fastjson.version>1.2.54</fastjson.version>
         <slf4j.version>1.7.25</slf4j.version>
