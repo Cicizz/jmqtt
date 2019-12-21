@@ -16,14 +16,20 @@
 
 ## 快速开始
 
+### 在线测试
 在线测试环境：`120.24.69.113`，TCP端口：`1883`；Websocket端口：`1884`，欢迎使用！
 
+### 直接本地运行
 1. 下载 [release](https://github.com/Cicizz/jmqtt/releases) 或`clone`本项目
 2. 在根目录执行：`mvn -Ppackage-all -DskipTests clean install -U`
-3. 在 `jmqtt-distrubution/target/jmqtt/bin` 目录下直接运行 `jmqttstart`脚本即可
+3. （v1.1.0的执行脚本存在bug，因此需要手动添加一下）添加系统环境变量：key是`JMQTT_HOME`，value是`YOUR_PATH_TO_JMQTT\jmqtt-distribution\target\jmqtt`，配置的目的是指定jmqtt配置文件和日志配置文件所在的地址。
+4. 在 `jmqtt-distrubution/target/jmqtt/bin` 目录下直接运行 `jmqttstart`脚本即可
 
-4. 本地启动：找到BrokerStartup类，配置启动环境变量：key是`JMQTT_HOME`，value是`jmqtt-distribution`所在的绝对地址，配置的目的是指定jmqtt配置文件和日志配置文件所在的地址。
-
+### 用IDE调试
+以IDEA为例：
+1. 下载 [release](https://github.com/Cicizz/jmqtt/releases) 或`clone`本项目
+2. 用IDEA打开，并选择“Add as a maven project”
+3. 运行`jmqtt-broker`下面的`BrokerStartup`启动类，并添加运行环境变量：key是`JMQTT_HOME`，value是`YOUR_PATH_TO_JMQTT\jmqtt-distribution`,因为需要加载这个目录下的conf配置文件。
 
 ## 架构设计图
 
