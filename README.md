@@ -16,13 +16,20 @@
 
 ## Quick Start
 
+### Online testing
 Online test environment：`120.24.69.113`，TCP port ：`1883`；Websocket port：`1884`.
 
+### Running locally
 1. Download the [release](https://github.com/Cicizz/jmqtt/releases) version or `clone` this project.
 2. Execute in the root directory：`mvn -Ppackage-all -DskipTests clean install -U`
-3. Run the jmqttstart script directly in the `jmqtt-distrubution/target/jmqtt/bin` directory.
-4. Local launch: find the BrokerStartup class and configure the startup environment variable: The key is `JMQTT_HOME`, and the value is the absolute address where `jmqtt-distribution` is located. The purpose of the configuration is to specify the address where the jmqtt configuration file and log configuration file are located.
+3. (there's a bug in v1.1.0 script, so we have to handle it manually) add a system environment variable, key=`JMQTT_HOME`, value=`YOUR_PATH_TO_JMQTT\jmqtt-distribution\target\jmqtt`. The purpose of the configuration is to specify the address where the jmqtt configuration file and log configuration file are located.
+4. Run the jmqttstart script directly in the `jmqtt-distrubution/target/jmqtt/bin` directory.
 
+### Debugging with IDE
+Take IDEA for example:
+1. Download the [release](https://github.com/Cicizz/jmqtt/releases) version or `clone` this project.
+2. Open it with IDEA, and choose "Add as a maven project"
+3. Local launch: find the BrokerStartup class and configure the startup environment variable: The key is `JMQTT_HOME`, and the value is the absolute address where `jmqtt-distribution` is located. The purpose of the configuration is to specify the address where the jmqtt configuration file and log configuration file are located.
 
 ### Running with Docker
 1. Clone this project
