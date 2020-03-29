@@ -74,6 +74,6 @@ public class DefaultFlowMessageStore implements FlowMessageStore {
 
     @Override
     public boolean containSendMsg(String clientId, int msgId) {
-        return this.sendCache.get(clientId).contains(msgId);
+        return this.sendCache.get(clientId).containsKey(msgId);
     }
 }
