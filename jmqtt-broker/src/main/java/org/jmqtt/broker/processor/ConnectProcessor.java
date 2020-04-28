@@ -6,21 +6,13 @@ import io.netty.handler.codec.mqtt.*;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.acl.ConnectPermission;
-import org.jmqtt.broker.dispatcher.InnerMessageTransfer;
 import org.jmqtt.broker.recover.ReSendMessageService;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
-import org.jmqtt.common.helper.SerializeHelper;
-import org.jmqtt.group.common.ClusterNodeManager;
-import org.jmqtt.group.common.InvokeCallback;
-import org.jmqtt.group.common.ResponseFuture;
-import org.jmqtt.group.protocol.ClusterRemotingCommand;
-import org.jmqtt.group.protocol.ClusterRequestCode;
-import org.jmqtt.group.protocol.ClusterResponseCode;
-import org.jmqtt.group.protocol.CommandConstant;
+
+import org.jmqtt.common.model.Message;
+import org.jmqtt.common.model.MessageHeader;
+import org.jmqtt.common.model.Subscription;
 import org.jmqtt.remoting.session.ClientSession;
-import org.jmqtt.common.bean.Message;
-import org.jmqtt.common.bean.MessageHeader;
-import org.jmqtt.common.bean.Subscription;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.netty.RequestProcessor;
 import org.jmqtt.remoting.session.ConnectManager;
@@ -46,7 +38,6 @@ public class ConnectProcessor implements RequestProcessor {
     private ConnectPermission connectPermission;
     private ReSendMessageService reSendMessageService;
     private SubscriptionMatcher subscriptionMatcher;
-    private InnerMessageTransfer messageTransfer;
 
     public ConnectProcessor(BrokerController brokerController){
         this.flowMessageStore = brokerController.getFlowMessageStore();
@@ -57,7 +48,6 @@ public class ConnectProcessor implements RequestProcessor {
         this.connectPermission = brokerController.getConnectPermission();
         this.reSendMessageService = brokerController.getReSendMessageService();
         this.subscriptionMatcher = brokerController.getSubscriptionMatcher();
-        this.messageTransfer = brokerController.getInnerMessageTransfer();
     }
 
     @Override
@@ -139,12 +129,7 @@ public class ConnectProcessor implements RequestProcessor {
     }
 
     private void newClientNotify(ClientSession clientSession){
-        int code = ClusterRequestCode.NOTICE_NEW_CLIENT;
-        byte[] body = SerializeHelper.serialize(clientSession);
-        ClusterRemotingCommand command = new ClusterRemotingCommand(code);
-        command.setBody(body);
-        command.putExtFiled(CommandConstant.NODE_NAME, ClusterNodeManager.getInstance().getCurrentNode().getNodeName());
-        this.messageTransfer.send2AllNodes(command);
+
     }
     
     private boolean keepAlive(String clientId,ChannelHandlerContext ctx,int heatbeatSec){

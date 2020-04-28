@@ -1,6 +1,6 @@
 package org.jmqtt.store.memory;
 
-import org.jmqtt.common.bean.Subscription;
+import org.jmqtt.common.model.Subscription;
 import org.jmqtt.store.SubscriptionStore;
 
 import java.util.*;

@@ -15,7 +15,6 @@
         <module>jmqtt-common</module>
         <module>jmqtt-distribution</module>
         <module>jmqtt-example</module>
-        <module>jmqtt-group</module>
     </modules>
 
     <name>jmqtt</name>
@@ -86,11 +85,6 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
                 <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jgroups</groupId>
-                <artifactId>jgroups</artifactId>
-                <version>${jgroup.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

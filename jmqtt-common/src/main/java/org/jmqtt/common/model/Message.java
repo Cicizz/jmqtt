@@ -1,4 +1,4 @@
-package org.jmqtt.common.bean;
+package org.jmqtt.common.model;
 
 import java.util.HashMap;
 import java.util.Map;
