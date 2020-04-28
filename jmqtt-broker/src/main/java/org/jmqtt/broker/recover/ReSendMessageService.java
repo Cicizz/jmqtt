@@ -1,11 +1,11 @@
 package org.jmqtt.broker.recover;
 
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
-import org.jmqtt.remoting.session.ClientSession;
-import org.jmqtt.common.bean.Message;
-import org.jmqtt.common.bean.MessageHeader;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
+import org.jmqtt.common.model.Message;
+import org.jmqtt.common.model.MessageHeader;
+import org.jmqtt.remoting.session.ClientSession;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.store.FlowMessageStore;
@@ -67,7 +67,7 @@ public class ReSendMessageService {
         }
     }
 
-    public boolean dispatcherMessage(String clientId,Message message){
+    public boolean dispatcherMessage(String clientId, Message message){
         ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
         // client off line again
         if(clientSession == null){

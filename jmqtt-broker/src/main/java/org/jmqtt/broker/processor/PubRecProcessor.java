@@ -1,14 +1,12 @@
 package org.jmqtt.broker.processor;
 
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttMessage;
-import org.jmqtt.store.FlowMessageStore;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.netty.RequestProcessor;
 import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.remoting.util.NettyUtil;
+import org.jmqtt.store.FlowMessageStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

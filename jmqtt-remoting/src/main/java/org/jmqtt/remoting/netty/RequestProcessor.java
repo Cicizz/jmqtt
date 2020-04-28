@@ -2,7 +2,7 @@ package org.jmqtt.remoting.netty;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttMessage;
-import org.jmqtt.common.bean.Message;
+import org.jmqtt.common.model.Message;
 
 public interface RequestProcessor {
 

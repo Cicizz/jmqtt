@@ -1,6 +1,6 @@
 package org.jmqtt.store.memory;
 
-import org.jmqtt.common.bean.Message;
+import org.jmqtt.common.model.Message;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.store.OfflineMessageStore;
 import org.slf4j.Logger;
