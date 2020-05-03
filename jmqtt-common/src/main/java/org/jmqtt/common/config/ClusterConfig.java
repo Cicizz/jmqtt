@@ -5,180 +5,70 @@ package org.jmqtt.common.config;
  */
 public class ClusterConfig {
 
-    private String currentNodeIp = "";
-    private String nodeName = "defaultNode:" + (System.currentTimeMillis() & 0xFFFFFF);
-    private int groupServerPort = 8880;
-    /**
-     * cluster node : ip1:port1;ip2;port2
-     */
-    private String groupNodes = "";
-    private long timeoutMills = 3000L;
+    private String redisIp;
+    private int maxWaitMills = 60*1000;
+    private boolean testOnBorrow = true;
+    private int minIdle = 20;
+    private int maxTotal = 200;
+    private int maxIdle = 50;
 
-    /**
-     * if cluster transfer message body size > 4069,compress the message body
-     */
-    private long compressMaxSize = 4069;
-
-    /** group netty config */
-    private int groupSelectorThreadNum = 3;
-    private int groupIoThreadNum = 8;
-    private int groupTcpBackLog = 1024;
-    private boolean groupTcpNoDelay = false;
-    private boolean groupTcpReuseAddr = true;
-    private boolean groupTcpKeepAlive = false;
-    private int groupTcpSndBuf = 65536;
-    private int groupTcpRcvBuf = 65536;
-    private boolean groupUseEpoll = false;
-    private boolean groupPooledByteBufAllocatorEnable = false;
-
-    public int getGroupServerPort() {
-        return groupServerPort;
+    public String getRedisIp() {
+        return redisIp;
     }
 
-    public void setGroupServerPort(int groupServerPort) {
-        this.groupServerPort = groupServerPort;
+    public void setRedisIp(String redisIp) {
+        this.redisIp = redisIp;
     }
 
-    public int getGroupSelectorThreadNum() {
-        return groupSelectorThreadNum;
+    public int getMaxWaitMills() {
+        return maxWaitMills;
     }
 
-    public void setGroupSelectorThreadNum(int groupSelectorThreadNum) {
-        this.groupSelectorThreadNum = groupSelectorThreadNum;
+    public void setMaxWaitMills(int maxWaitMills) {
+        this.maxWaitMills = maxWaitMills;
     }
 
-    public int getGroupIoThreadNum() {
-        return groupIoThreadNum;
+    public boolean isTestOnBorrow() {
+        return testOnBorrow;
     }
 
-    public void setGroupIoThreadNum(int groupIoThreadNum) {
-        this.groupIoThreadNum = groupIoThreadNum;
+    public void setTestOnBorrow(boolean testOnBorrow) {
+        this.testOnBorrow = testOnBorrow;
     }
 
-    public int getGroupTcpBackLog() {
-        return groupTcpBackLog;
+    public int getMinIdle() {
+        return minIdle;
     }
 
-    public void setGroupTcpBackLog(int groupTcpBackLog) {
-        this.groupTcpBackLog = groupTcpBackLog;
+    public void setMinIdle(int minIdle) {
+        this.minIdle = minIdle;
     }
 
-    public boolean isGroupTcpNoDelay() {
-        return groupTcpNoDelay;
+    public int getMaxTotal() {
+        return maxTotal;
     }
 
-    public void setGroupTcpNoDelay(boolean groupTcpNoDelay) {
-        this.groupTcpNoDelay = groupTcpNoDelay;
+    public void setMaxTotal(int maxTotal) {
+        this.maxTotal = maxTotal;
     }
 
-    public boolean isGroupTcpReuseAddr() {
-        return groupTcpReuseAddr;
+    public int getMaxIdle() {
+        return maxIdle;
     }
 
-    public void setGroupTcpReuseAddr(boolean groupTcpReuseAddr) {
-        this.groupTcpReuseAddr = groupTcpReuseAddr;
-    }
-
-    public boolean isGroupTcpKeepAlive() {
-        return groupTcpKeepAlive;
-    }
-
-    public void setGroupTcpKeepAlive(boolean groupTcpKeepAlive) {
-        this.groupTcpKeepAlive = groupTcpKeepAlive;
-    }
-
-    public int getGroupTcpSndBuf() {
-        return groupTcpSndBuf;
-    }
-
-    public void setGroupTcpSndBuf(int groupTcpSndBuf) {
-        this.groupTcpSndBuf = groupTcpSndBuf;
-    }
-
-    public int getGroupTcpRcvBuf() {
-        return groupTcpRcvBuf;
-    }
-
-    public void setGroupTcpRcvBuf(int groupTcpRcvBuf) {
-        this.groupTcpRcvBuf = groupTcpRcvBuf;
-    }
-
-    public boolean isGroupUseEpoll() {
-        return groupUseEpoll;
-    }
-
-    public void setGroupUseEpoll(boolean groupUseEpoll) {
-        this.groupUseEpoll = groupUseEpoll;
-    }
-
-    public boolean isGroupPooledByteBufAllocatorEnable() {
-        return groupPooledByteBufAllocatorEnable;
-    }
-
-    public void setGroupPooledByteBufAllocatorEnable(boolean groupPooledByteBufAllocatorEnable) {
-        this.groupPooledByteBufAllocatorEnable = groupPooledByteBufAllocatorEnable;
-    }
-
-    public String getCurrentNodeIp() {
-        return currentNodeIp;
-    }
-
-    public void setCurrentNodeIp(String currentNodeIp) {
-        this.currentNodeIp = currentNodeIp;
-    }
-
-    public String getNodeName() {
-        return nodeName;
-    }
-
-    public void setNodeName(String nodeName) {
-        this.nodeName = nodeName;
-    }
-
-
-    public String getGroupNodes() {
-        return groupNodes;
-    }
-
-    public void setGroupNodes(String groupNodes) {
-        this.groupNodes = groupNodes;
-    }
-
-    public long getTimeoutMills() {
-        return timeoutMills;
-    }
-
-    public void setTimeoutMills(long timeoutMills) {
-        this.timeoutMills = timeoutMills;
-    }
-
-    public long getCompressMaxSize() {
-        return compressMaxSize;
-    }
-
-    public void setCompressMaxSize(long compressMaxSize) {
-        this.compressMaxSize = compressMaxSize;
+    public void setMaxIdle(int maxIdle) {
+        this.maxIdle = maxIdle;
     }
 
     @Override
     public String toString() {
         return "ClusterConfig{" +
-                "currentNodeIp='" + currentNodeIp + '\'' +
-                ", nodeName='" + nodeName + '\'' +
-                ", groupServerPort=" + groupServerPort +
-                ", groupNodes='" + groupNodes + '\'' +
-                ", timeoutMills=" + timeoutMills +
-                ", compressMaxSize=" + compressMaxSize +
-                ", groupSelectorThreadNum=" + groupSelectorThreadNum +
-                ", groupIoThreadNum=" + groupIoThreadNum +
-                ", groupTcpBackLog=" + groupTcpBackLog +
-                ", groupTcpNoDelay=" + groupTcpNoDelay +
-                ", groupTcpReuseAddr=" + groupTcpReuseAddr +
-                ", groupTcpKeepAlive=" + groupTcpKeepAlive +
-                ", groupTcpSndBuf=" + groupTcpSndBuf +
-                ", groupTcpRcvBuf=" + groupTcpRcvBuf +
-                ", groupUseEpoll=" + groupUseEpoll +
-                ", groupPooledByteBufAllocatorEnable=" + groupPooledByteBufAllocatorEnable +
+                "redisIp='" + redisIp + '\'' +
+                ", maxWaitMills=" + maxWaitMills +
+                ", testOnBorrow=" + testOnBorrow +
+                ", minIdle=" + minIdle +
+                ", maxTotal=" + maxTotal +
+                ", maxIdle=" + maxIdle +
                 '}';
     }
 }

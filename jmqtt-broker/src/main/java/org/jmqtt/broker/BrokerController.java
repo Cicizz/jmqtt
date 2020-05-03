@@ -6,6 +6,10 @@ import org.jmqtt.broker.acl.PubSubPermission;
 import org.jmqtt.broker.acl.impl.DefaultConnectPermission;
 import org.jmqtt.broker.acl.impl.DefaultPubSubPermission;
 import org.jmqtt.broker.client.ClientLifeCycleHookService;
+import org.jmqtt.broker.cluster.ClusterMessageTransfer;
+import org.jmqtt.broker.cluster.ClusterSessionManager;
+import org.jmqtt.broker.cluster.DefaultClusterMessageTransfer;
+import org.jmqtt.broker.cluster.DefaultClusterSessionManager;
 import org.jmqtt.broker.dispatcher.DefaultDispatcherMessage;
 import org.jmqtt.broker.dispatcher.MessageDispatcher;
 import org.jmqtt.broker.processor.*;
@@ -64,6 +68,8 @@ public class BrokerController {
     private ConnectPermission     connectPermission;
     private PubSubPermission      pubSubPermission;
     private ReSendMessageService  reSendMessageService;
+    private ClusterSessionManager clusterSessionManager;
+    private ClusterMessageTransfer clusterMessageTransfer;
 
 
     public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig, StoreConfig storeConfig, ClusterConfig clusterConfig) {
@@ -81,9 +87,13 @@ public class BrokerController {
             switch (storeConfig.getStoreType()) {
                 case 1:
                     this.abstractMqttStore = new RDBMqttStore(storeConfig);
+                    this.clusterSessionManager = new DefaultClusterSessionManager();
+                    this.clusterMessageTransfer = new DefaultClusterMessageTransfer();
                     break;
                 default:
                     this.abstractMqttStore = new DefaultMqttStore();
+                    this.clusterSessionManager = new DefaultClusterSessionManager();
+                    this.clusterMessageTransfer = new DefaultClusterMessageTransfer();
                     break;
             }
             try {
@@ -294,5 +304,13 @@ public class BrokerController {
 
     public AbstractMqttStore getAbstractMqttStore() {
         return abstractMqttStore;
+    }
+
+    public ClusterSessionManager getClusterSessionManager() {
+        return clusterSessionManager;
+    }
+
+    public ClusterMessageTransfer getClusterMessageTransfer() {
+        return clusterMessageTransfer;
     }
 }
