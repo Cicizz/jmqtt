@@ -1,6 +1,6 @@
 package org.jmqtt.broker.subscribe;
 
-import org.jmqtt.common.bean.Subscription;
+import org.jmqtt.common.model.Subscription;
 
 import java.util.Set;
 

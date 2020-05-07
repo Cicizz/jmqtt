@@ -6,6 +6,10 @@ import org.jmqtt.broker.acl.PubSubPermission;
 import org.jmqtt.broker.acl.impl.DefaultConnectPermission;
 import org.jmqtt.broker.acl.impl.DefaultPubSubPermission;
 import org.jmqtt.broker.client.ClientLifeCycleHookService;
+import org.jmqtt.broker.cluster.ClusterMessageTransfer;
+import org.jmqtt.broker.cluster.ClusterSessionManager;
+import org.jmqtt.broker.cluster.DefaultClusterMessageTransfer;
+import org.jmqtt.broker.cluster.DefaultClusterSessionManager;
 import org.jmqtt.broker.dispatcher.DefaultDispatcherMessage;
 import org.jmqtt.broker.dispatcher.MessageDispatcher;
 import org.jmqtt.broker.processor.*;
@@ -20,17 +24,6 @@ import org.jmqtt.common.helper.MixAll;
 import org.jmqtt.common.helper.RejectHandler;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
-import org.jmqtt.group.ClusterRemotingClient;
-import org.jmqtt.group.ClusterRemotingServer;
-import org.jmqtt.group.MessageTransfer;
-import org.jmqtt.broker.dispatcher.DefaultMessageTransfer;
-import org.jmqtt.broker.dispatcher.InnerMessageTransfer;
-import org.jmqtt.group.processor.ClusterOuterAPI;
-import org.jmqtt.group.processor.ClusterRequestProcessor;
-import org.jmqtt.group.processor.FetchNodeProcessor;
-import org.jmqtt.group.protocol.ClusterRequestCode;
-import org.jmqtt.group.remoting.NettyClusterRemotingClient;
-import org.jmqtt.group.remoting.NettyClusterRemotingServer;
 import org.jmqtt.remoting.netty.ChannelEventListener;
 import org.jmqtt.remoting.netty.NettyRemotingServer;
 import org.jmqtt.remoting.netty.RequestProcessor;
@@ -49,40 +42,34 @@ public class BrokerController {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER);
 
-    private BrokerConfig brokerConfig;
-    private NettyConfig nettyConfig;
+    private BrokerConfig          brokerConfig;
+    private NettyConfig           nettyConfig;
     private StoreConfig storeConfig;
     private ClusterConfig clusterConfig;
-    private ExecutorService connectExecutor;
-    private ExecutorService pubExecutor;
-    private ExecutorService subExecutor;
-    private ExecutorService pingExecutor;
-    private LinkedBlockingQueue connectQueue;
-    private LinkedBlockingQueue pubQueue;
-    private LinkedBlockingQueue subQueue;
-    private LinkedBlockingQueue pingQueue;
-    private ChannelEventListener channelEventListener;
-    private NettyRemotingServer remotingServer;
-    private MessageDispatcher messageDispatcher;
-    private FlowMessageStore flowMessageStore;
-    private SubscriptionMatcher subscriptionMatcher;
-    private WillMessageStore willMessageStore;
-    private RetainMessageStore retainMessageStore;
-    private OfflineMessageStore offlineMessageStore;
-    private SubscriptionStore subscriptionStore;
-    private SessionStore sessionStore;
-    private AbstractMqttStore abstractMqttStore;
-    private ConnectPermission connectPermission;
-    private PubSubPermission pubSubPermission;
-    private ReSendMessageService reSendMessageService;
-    /**
-     * cluster message transfer innerMessageTransfer is pluginable
-     */
-    private ClusterRemotingClient clusterClient;
-    private ClusterRemotingServer clusterServer;
-    private ClusterOuterAPI clusterOuterAPI;
-    private InnerMessageTransfer innerMessageTransfer;
-    private ExecutorService clusterService;
+    private ExecutorService      connectExecutor;
+    private ExecutorService      pubExecutor;
+    private ExecutorService       subExecutor;
+    private ExecutorService       pingExecutor;
+    private LinkedBlockingQueue   connectQueue;
+    private LinkedBlockingQueue   pubQueue;
+    private LinkedBlockingQueue   subQueue;
+    private LinkedBlockingQueue   pingQueue;
+    private ChannelEventListener  channelEventListener;
+    private NettyRemotingServer   remotingServer;
+    private MessageDispatcher     messageDispatcher;
+    private FlowMessageStore      flowMessageStore;
+    private SubscriptionMatcher   subscriptionMatcher;
+    private WillMessageStore      willMessageStore;
+    private RetainMessageStore    retainMessageStore;
+    private OfflineMessageStore   offlineMessageStore;
+    private SubscriptionStore     subscriptionStore;
+    private SessionStore          sessionStore;
+    private AbstractMqttStore     abstractMqttStore;
+    private ConnectPermission     connectPermission;
+    private PubSubPermission      pubSubPermission;
+    private ReSendMessageService  reSendMessageService;
+    private ClusterSessionManager clusterSessionManager;
+    private ClusterMessageTransfer clusterMessageTransfer;
 
 
     public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig, StoreConfig storeConfig, ClusterConfig clusterConfig) {
@@ -100,9 +87,13 @@ public class BrokerController {
             switch (storeConfig.getStoreType()) {
                 case 1:
                     this.abstractMqttStore = new RDBMqttStore(storeConfig);
+                    this.clusterSessionManager = new DefaultClusterSessionManager();
+                    this.clusterMessageTransfer = new DefaultClusterMessageTransfer();
                     break;
                 default:
                     this.abstractMqttStore = new DefaultMqttStore();
+                    this.clusterSessionManager = new DefaultClusterSessionManager();
+                    this.clusterMessageTransfer = new DefaultClusterMessageTransfer();
                     break;
             }
             try {
@@ -160,24 +151,6 @@ public class BrokerController {
                 pingQueue,
                 new ThreadFactoryImpl("PingThread"),
                 new RejectHandler("heartbeat", 100000));
-
-        /* cluster  */
-        this.clusterClient = new NettyClusterRemotingClient(clusterConfig);
-        this.clusterServer = new NettyClusterRemotingServer(clusterConfig);
-        {
-            // message transfer is pluginAble
-            MessageTransfer messageTransfer = new DefaultMessageTransfer(this.clusterClient,this.clusterServer);
-            this.innerMessageTransfer = new InnerMessageTransfer(this,messageTransfer);
-        }
-        this.clusterOuterAPI = new ClusterOuterAPI(clusterConfig, clusterClient);
-        this.clusterService = new ThreadPoolExecutor(coreThreadNum * 2,
-                coreThreadNum * 2,
-                60000,
-                TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<>(10000),
-                new ThreadFactoryImpl("ClusterThread"),
-                new RejectHandler("sub", 100000));
-
     }
 
 
@@ -212,14 +185,6 @@ public class BrokerController {
             this.remotingServer.registerProcessor(MqttMessageType.PUBCOMP, pubCompProcessor, subExecutor);
         }
 
-        {//init and register cluster processor
-            ClusterRequestProcessor fetchNodeProcessor = new FetchNodeProcessor();
-            this.clusterServer.registerClusterProcessor(ClusterRequestCode.FETCH_NODES,fetchNodeProcessor,clusterService);
-        }
-        this.innerMessageTransfer.init();
-        this.clusterClient.start();
-        this.clusterServer.start();
-        this.clusterOuterAPI.start();
         this.messageDispatcher.start();
         this.reSendMessageService.start();
         this.remotingServer.start();
@@ -228,9 +193,6 @@ public class BrokerController {
 
     public void shutdown() {
         this.remotingServer.shutdown();
-        this.clusterOuterAPI.shutdown();
-        this.clusterClient.shutdown();
-        this.clusterServer.shutdown();
         this.connectExecutor.shutdown();
         this.pubExecutor.shutdown();
         this.subExecutor.shutdown();
@@ -344,23 +306,11 @@ public class BrokerController {
         return abstractMqttStore;
     }
 
-    public ClusterRemotingClient getClusterClient() {
-        return clusterClient;
+    public ClusterSessionManager getClusterSessionManager() {
+        return clusterSessionManager;
     }
 
-    public ClusterRemotingServer getClusterServer() {
-        return clusterServer;
-    }
-
-    public ClusterOuterAPI getClusterOuterAPI() {
-        return clusterOuterAPI;
-    }
-
-    public InnerMessageTransfer getInnerMessageTransfer() {
-        return innerMessageTransfer;
-    }
-
-    public ExecutorService getClusterService() {
-        return clusterService;
+    public ClusterMessageTransfer getClusterMessageTransfer() {
+        return clusterMessageTransfer;
     }
 }

@@ -1,12 +1,11 @@
 package org.jmqtt.store.memory;
 
-import org.jmqtt.common.bean.Message;
+import org.jmqtt.common.model.Message;
 import org.jmqtt.store.FlowMessageStore;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DefaultFlowMessageStore implements FlowMessageStore {

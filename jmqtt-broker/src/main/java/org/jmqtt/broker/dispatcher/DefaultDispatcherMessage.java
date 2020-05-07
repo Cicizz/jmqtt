@@ -1,15 +1,14 @@
 package org.jmqtt.broker.dispatcher;
 
-
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
-import org.jmqtt.remoting.session.ClientSession;
-import org.jmqtt.common.bean.Message;
-import org.jmqtt.common.bean.MessageHeader;
-import org.jmqtt.common.bean.Subscription;
 import org.jmqtt.common.helper.RejectHandler;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
+import org.jmqtt.common.model.Message;
+import org.jmqtt.common.model.MessageHeader;
+import org.jmqtt.common.model.Subscription;
+import org.jmqtt.remoting.session.ClientSession;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.store.FlowMessageStore;
@@ -21,23 +20,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
+import java.util.concurrent.*;
 
 public class DefaultDispatcherMessage implements MessageDispatcher {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
-    private boolean stoped = false;
+    private static final Logger                 log          = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
+    private boolean                             stoped       = false;
     private static final BlockingQueue<Message> messageQueue = new LinkedBlockingQueue<>(100000);
-    private ThreadPoolExecutor pollThread;
-    private int pollThreadNum;
-    private SubscriptionMatcher subscriptionMatcher;
-    private FlowMessageStore flowMessageStore;
-    private OfflineMessageStore offlineMessageStore;
+    private ThreadPoolExecutor                  pollThread;
+    private int                                 pollThreadNum;
+    private SubscriptionMatcher                 subscriptionMatcher;
+    private FlowMessageStore                    flowMessageStore;
+    private OfflineMessageStore                 offlineMessageStore;
 
     public DefaultDispatcherMessage(int pollThreadNum, SubscriptionMatcher subscriptionMatcher, FlowMessageStore flowMessageStore, OfflineMessageStore offlineMessageStore) {
         this.pollThreadNum = pollThreadNum;
@@ -104,8 +98,6 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
         this.stoped = true;
         this.pollThread.shutdown();
     }
-
-    ;
 
     class AsyncDispatcher implements Runnable {
 

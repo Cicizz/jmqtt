@@ -1,28 +1,25 @@
 package org.jmqtt.broker.processor;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.internal.ChannelUtils;
-import io.netty.handler.codec.mqtt.*;
+import io.netty.handler.codec.mqtt.MqttConnAckMessage;
+import io.netty.handler.codec.mqtt.MqttConnectMessage;
+import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
+import io.netty.handler.codec.mqtt.MqttMessage;
 import io.netty.handler.timeout.IdleStateHandler;
+import org.apache.commons.lang3.BooleanUtils;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.acl.ConnectPermission;
-import org.jmqtt.broker.dispatcher.InnerMessageTransfer;
+import org.jmqtt.broker.cluster.ClusterSessionManager;
+import org.jmqtt.broker.cluster.command.CommandCode;
+import org.jmqtt.broker.cluster.command.CommandReqOrResp;
 import org.jmqtt.broker.recover.ReSendMessageService;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
-import org.jmqtt.common.helper.SerializeHelper;
-import org.jmqtt.group.common.ClusterNodeManager;
-import org.jmqtt.group.common.InvokeCallback;
-import org.jmqtt.group.common.ResponseFuture;
-import org.jmqtt.group.protocol.ClusterRemotingCommand;
-import org.jmqtt.group.protocol.ClusterRequestCode;
-import org.jmqtt.group.protocol.ClusterResponseCode;
-import org.jmqtt.group.protocol.CommandConstant;
-import org.jmqtt.remoting.session.ClientSession;
-import org.jmqtt.common.bean.Message;
-import org.jmqtt.common.bean.MessageHeader;
-import org.jmqtt.common.bean.Subscription;
 import org.jmqtt.common.log.LoggerName;
+import org.jmqtt.common.model.Message;
+import org.jmqtt.common.model.MessageHeader;
+import org.jmqtt.common.model.Subscription;
 import org.jmqtt.remoting.netty.RequestProcessor;
+import org.jmqtt.remoting.session.ClientSession;
 import org.jmqtt.remoting.session.ConnectManager;
 import org.jmqtt.remoting.util.MessageUtil;
 import org.jmqtt.remoting.util.NettyUtil;
@@ -31,7 +28,10 @@ import org.jmqtt.store.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 
 public class ConnectProcessor implements RequestProcessor {
@@ -46,7 +46,8 @@ public class ConnectProcessor implements RequestProcessor {
     private ConnectPermission connectPermission;
     private ReSendMessageService reSendMessageService;
     private SubscriptionMatcher subscriptionMatcher;
-    private InnerMessageTransfer messageTransfer;
+    private ClusterSessionManager clusterSessionManager;
+
 
     public ConnectProcessor(BrokerController brokerController){
         this.flowMessageStore = brokerController.getFlowMessageStore();
@@ -57,7 +58,7 @@ public class ConnectProcessor implements RequestProcessor {
         this.connectPermission = brokerController.getConnectPermission();
         this.reSendMessageService = brokerController.getReSendMessageService();
         this.subscriptionMatcher = brokerController.getSubscriptionMatcher();
-        this.messageTransfer = brokerController.getInnerMessageTransfer();
+        this.clusterSessionManager = brokerController.getClusterSessionManager();
     }
 
     @Override
@@ -86,8 +87,8 @@ public class ConnectProcessor implements RequestProcessor {
                     log.warn("[CONNECT] -> set heartbeat failure,clientId:{},heartbeatSec:{}",clientId,heartbeatSec);
                     throw new Exception("set heartbeat failure");
                 }
-                Object lastState = sessionStore.getLastSession(clientId);
-                if(Objects.nonNull(lastState) && lastState.equals(true)){
+                CommandReqOrResp response = clusterSessionManager.process(new CommandReqOrResp(CommandCode.CONNECT_QUERY_LAST_STATE));
+                if(Objects.nonNull(response.getBody()) && BooleanUtils.toBoolean(response.getBody().toString())){
                     ClientSession previousClient = ConnectManager.getInstance().getClient(clientId);
                     if(previousClient != null){
                         previousClient.getCtx().close();
@@ -98,7 +99,7 @@ public class ConnectProcessor implements RequestProcessor {
                     clientSession = createNewClientSession(clientId,ctx);
                     sessionPresent = false;
                 }else{
-                    if(Objects.nonNull(lastState)){
+                    if(Objects.nonNull(response.getBody())){
                         clientSession = reloadClientSession(ctx,clientId);
                         sessionPresent = true;
                     }else{
@@ -139,12 +140,7 @@ public class ConnectProcessor implements RequestProcessor {
     }
 
     private void newClientNotify(ClientSession clientSession){
-        int code = ClusterRequestCode.NOTICE_NEW_CLIENT;
-        byte[] body = SerializeHelper.serialize(clientSession);
-        ClusterRemotingCommand command = new ClusterRemotingCommand(code);
-        command.setBody(body);
-        command.putExtFiled(CommandConstant.NODE_NAME, ClusterNodeManager.getInstance().getCurrentNode().getNodeName());
-        this.messageTransfer.send2AllNodes(command);
+
     }
     
     private boolean keepAlive(String clientId,ChannelHandlerContext ctx,int heatbeatSec){
@@ -188,7 +184,8 @@ public class ConnectProcessor implements RequestProcessor {
     private ClientSession reloadClientSession(ChannelHandlerContext ctx,String clientId){
             ClientSession clientSession = new ClientSession(clientId,false);
             clientSession.setCtx(ctx);
-            Collection<Subscription> subscriptions = subscriptionStore.getSubscriptions(clientId);
+            CommandReqOrResp response = clusterSessionManager.process(new CommandReqOrResp(CommandCode.CONNECT_GET_SUBSCRIPTIONS,clientId));
+            Collection<Subscription> subscriptions = (Collection<Subscription>) response.getBody();
             for(Subscription subscription : subscriptions){
                 this.subscriptionMatcher.subscribe(subscription);
             }

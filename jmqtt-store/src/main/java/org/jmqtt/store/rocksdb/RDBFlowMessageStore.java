@@ -1,6 +1,6 @@
 package org.jmqtt.store.rocksdb;
 
-import org.jmqtt.common.bean.Message;
+import org.jmqtt.common.model.Message;
 import org.jmqtt.common.helper.SerializeHelper;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.store.FlowMessageStore;
