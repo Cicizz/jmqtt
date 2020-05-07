@@ -1,6 +1,7 @@
 package org.jmqtt.store;
 
-import org.jmqtt.common.bean.Subscription;
+
+import org.jmqtt.common.model.Subscription;
 
 import java.util.Collection;
 

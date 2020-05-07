@@ -15,7 +15,6 @@
         <module>jmqtt-common</module>
         <module>jmqtt-distribution</module>
         <module>jmqtt-example</module>
-        <module>jmqtt-group</module>
     </modules>
 
     <name>jmqtt</name>
@@ -47,16 +46,11 @@
         <commons-cli.version>1.4</commons-cli.version>
         <commons-lang3.version>3.7</commons-lang3.version>
         <junit.version>4.11</junit.version>
-        <jgroup.version>4.0.17.Final</jgroup.version>
+        <jedis.version>2.9.0</jedis.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>org.jmqtt</groupId>
-                <artifactId>jmqtt-group</artifactId>
-                <version>${version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.jmqtt</groupId>
                 <artifactId>jmqtt-common</artifactId>
@@ -87,16 +81,15 @@
                 <artifactId>netty-all</artifactId>
                 <version>${netty.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.jgroups</groupId>
-                <artifactId>jgroups</artifactId>
-                <version>${jgroup.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>${jedis.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
@@ -147,4 +140,32 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>alibaba</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <repositories>
+                <repository>
+                    <id>alimaven</id>
+                    <name>aliyun maven</name>
+                    <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+                    <layout>default</layout>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </repository>
+                <repository>
+                    <id>spring-milestones</id>
+                    <name>Spring Milestones</name>
+                    <url>https://repo.spring.io/libs-milestone</url>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
 </project>

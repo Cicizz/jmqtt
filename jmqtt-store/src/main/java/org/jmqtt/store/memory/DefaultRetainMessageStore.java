@@ -1,6 +1,6 @@
 package org.jmqtt.store.memory;
 
-import org.jmqtt.common.bean.Message;
+import org.jmqtt.common.model.Message;
 import org.jmqtt.store.RetainMessageStore;
 
 import java.util.Collection;

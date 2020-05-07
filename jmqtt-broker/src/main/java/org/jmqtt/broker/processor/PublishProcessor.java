@@ -8,10 +8,10 @@ import io.netty.handler.codec.mqtt.MqttQoS;
 import io.netty.util.ReferenceCountUtil;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.acl.PubSubPermission;
+import org.jmqtt.common.model.Message;
+import org.jmqtt.common.model.MessageHeader;
 import org.jmqtt.store.FlowMessageStore;
 import org.jmqtt.remoting.session.ClientSession;
-import org.jmqtt.common.bean.Message;
-import org.jmqtt.common.bean.MessageHeader;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.netty.RequestProcessor;
 import org.jmqtt.remoting.session.ConnectManager;
@@ -31,7 +31,7 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
     private PubSubPermission pubSubPermission;
 
     public PublishProcessor(BrokerController controller){
-        super(controller.getMessageDispatcher(),controller.getRetainMessageStore(),controller.getInnerMessageTransfer());
+        super(controller.getMessageDispatcher(),controller.getRetainMessageStore(),controller.getClusterMessageTransfer());
         this.flowMessageStore = controller.getFlowMessageStore();
         this.pubSubPermission = controller.getPubSubPermission();
     }

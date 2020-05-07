@@ -17,6 +17,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jmqtt</groupId>
             <artifactId>jmqtt-common</artifactId>
         </dependency>

@@ -2,7 +2,6 @@ package org.jmqtt.broker.processor;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttMessage;
-import org.jmqtt.common.bean.Message;
 import org.jmqtt.remoting.netty.RequestProcessor;
 import org.jmqtt.remoting.util.MessageUtil;
 

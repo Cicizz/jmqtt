@@ -1,48 +1,45 @@
 package org.jmqtt.broker.processor;
 
-import org.jmqtt.broker.dispatcher.InnerMessageTransfer;
+import org.jmqtt.broker.cluster.ClusterMessageTransfer;
+import org.jmqtt.broker.cluster.command.CommandCode;
+import org.jmqtt.broker.cluster.command.CommandReqOrResp;
 import org.jmqtt.broker.dispatcher.MessageDispatcher;
-import org.jmqtt.common.bean.Message;
-import org.jmqtt.common.bean.MessageHeader;
-import org.jmqtt.common.helper.SerializeHelper;
-import org.jmqtt.group.protocol.ClusterRemotingCommand;
-import org.jmqtt.group.protocol.ClusterRequestCode;
+import org.jmqtt.common.model.Message;
+import org.jmqtt.common.model.MessageHeader;
 import org.jmqtt.store.RetainMessageStore;
 
 public abstract class AbstractMessageProcessor {
 
-    private MessageDispatcher messageDispatcher;
-    private InnerMessageTransfer messageTransfer;
-    private RetainMessageStore retainMessageStore;
+    private MessageDispatcher    messageDispatcher;
+    private RetainMessageStore   retainMessageStore;
+    private ClusterMessageTransfer clusterMessageTransfer;
 
-    public AbstractMessageProcessor(MessageDispatcher messageDispatcher,RetainMessageStore retainMessageStore,InnerMessageTransfer messageTransfer){
+    public AbstractMessageProcessor(MessageDispatcher messageDispatcher, RetainMessageStore retainMessageStore,ClusterMessageTransfer clusterMessageTransfer) {
         this.messageDispatcher = messageDispatcher;
         this.retainMessageStore = retainMessageStore;
-        this.messageTransfer = messageTransfer;
+        this.clusterMessageTransfer = clusterMessageTransfer;
     }
 
-    protected void  processMessage(Message message){
+    protected void processMessage(Message message) {
         this.messageDispatcher.appendMessage(message);
         boolean retain = (boolean) message.getHeader(MessageHeader.RETAIN);
-        if(retain){
+        if (retain) {
             int qos = (int) message.getHeader(MessageHeader.QOS);
             byte[] payload = message.getPayload();
             String topic = (String) message.getHeader(MessageHeader.TOPIC);
             //qos == 0 or payload is none,then clear previous retain message
-            if(qos == 0 || payload == null || payload.length == 0){
+            if (qos == 0 || payload == null || payload.length == 0) {
                 this.retainMessageStore.removeRetainMessage(topic);
-            }else{
-                this.retainMessageStore.storeRetainMessage(topic,message);
+            } else {
+                this.retainMessageStore.storeRetainMessage(topic, message);
             }
         }
         dispatcherMessage2Cluster(message);
     }
 
-    private void dispatcherMessage2Cluster(Message message){
-        ClusterRemotingCommand remotingCommand = new ClusterRemotingCommand(ClusterRequestCode.SEND_MESSAGE);
-        byte[] body = SerializeHelper.serialize(message);
-        remotingCommand.setBody(body);
-        this.messageTransfer.send2AllNodes(remotingCommand);
+    private void dispatcherMessage2Cluster(Message message) {
+        CommandReqOrResp commandReqOrResp = new CommandReqOrResp(CommandCode.MESSAGE_CLUSTER_TRANSFER,message);
+        clusterMessageTransfer.sendMessage(commandReqOrResp);
     }
 
 }

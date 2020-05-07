@@ -4,8 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledHeapByteBuf;
 import io.netty.handler.codec.mqtt.*;
-import org.jmqtt.common.bean.Message;
-import org.jmqtt.common.bean.MessageHeader;
+import org.jmqtt.common.model.Message;
+import org.jmqtt.common.model.MessageHeader;
 
 import java.util.List;
 
@@ -45,7 +45,7 @@ public class MessageUtil {
         return new MqttMessage(fixedHeader,idVariableHeader);
     }
 
-    public static MqttPublishMessage getPubMessage(Message message,boolean dup,int qos,int messageId){
+    public static MqttPublishMessage getPubMessage(Message message, boolean dup, int qos, int messageId){
         MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH,dup,MqttQoS.valueOf(qos),false,0);
         MqttPublishVariableHeader publishVariableHeader = new MqttPublishVariableHeader((String) message.getHeader(MessageHeader.TOPIC),messageId);
         ByteBuf heapBuf;
