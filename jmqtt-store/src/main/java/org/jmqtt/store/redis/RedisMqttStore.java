@@ -14,8 +14,8 @@ public class RedisMqttStore extends AbstractMqttStore {
 
     @Override
     public void init() throws Exception {
-        redisTemplate = new RedisTemplate(clusterConfig);
-        redisTemplate.init();
+        this.redisTemplate = new RedisTemplate(clusterConfig);
+        this.redisTemplate.init();
 
         this.flowMessageStore = new RedisFlowMessageStore(redisTemplate);
         this.willMessageStore = new RedisWillMessageStore(redisTemplate);
@@ -30,4 +30,7 @@ public class RedisMqttStore extends AbstractMqttStore {
         redisTemplate.close();
     }
 
+    public RedisTemplate getRedisTemplate() {
+        return redisTemplate;
+    }
 }

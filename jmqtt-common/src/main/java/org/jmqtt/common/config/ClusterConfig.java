@@ -5,19 +5,37 @@ package org.jmqtt.common.config;
  */
 public class ClusterConfig {
 
-    private String redisIp;
+    private String redisHost = "127.0.0.1";
+    private int redisPort = 6379;
+    private String redisPassword = "";
     private int maxWaitMills = 60*1000;
     private boolean testOnBorrow = true;
     private int minIdle = 20;
     private int maxTotal = 200;
     private int maxIdle = 50;
 
-    public String getRedisIp() {
-        return redisIp;
+    public String getRedisHost() {
+        return redisHost;
     }
 
-    public void setRedisIp(String redisIp) {
-        this.redisIp = redisIp;
+    public void setRedisHost(String redisHost) {
+        this.redisHost = redisHost;
+    }
+
+    public int getRedisPort() {
+        return redisPort;
+    }
+
+    public void setRedisPort(int redisPort) {
+        this.redisPort = redisPort;
+    }
+
+    public String getRedisPassword() {
+        return redisPassword;
+    }
+
+    public void setRedisPassword(String redisPassword) {
+        this.redisPassword = redisPassword;
     }
 
     public int getMaxWaitMills() {
@@ -60,15 +78,5 @@ public class ClusterConfig {
         this.maxIdle = maxIdle;
     }
 
-    @Override
-    public String toString() {
-        return "ClusterConfig{" +
-                "redisIp='" + redisIp + '\'' +
-                ", maxWaitMills=" + maxWaitMills +
-                ", testOnBorrow=" + testOnBorrow +
-                ", minIdle=" + minIdle +
-                ", maxTotal=" + maxTotal +
-                ", maxIdle=" + maxIdle +
-                '}';
-    }
+
 }

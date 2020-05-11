@@ -10,6 +10,7 @@ import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.common.model.Message;
 import org.jmqtt.store.redis.RedisCallBack;
+import org.jmqtt.store.redis.RedisMqttStore;
 import org.jmqtt.store.redis.RedisTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,14 +30,14 @@ public class RedisClusterMessageTransfer extends ClusterMessageTransfer {
 
     private ExecutorService executorService = Executors.newSingleThreadExecutor(new ThreadFactoryImpl("REDIS_CLUSTER_CONSUME_THREAD"));
 
-    public RedisClusterMessageTransfer(MessageDispatcher messageDispatcher,RedisTemplate redisTemplate) {
+    public RedisClusterMessageTransfer(MessageDispatcher messageDispatcher, RedisMqttStore redisMqttStore) {
         super(messageDispatcher);
-        this.redisTemplate = redisTemplate;
+        this.redisTemplate = redisMqttStore.getRedisTemplate();
     }
 
     @Override
     public CommandReqOrResp sendMessage(CommandReqOrResp commandReqOrResp) {
-        redisTemplate.operate(new RedisCallBack() {
+        this.redisTemplate.operate(new RedisCallBack() {
             @Override
             public Object operate(Jedis jedis) {
                 return jedis.publish(T_REDIS, JSONObject.toJSONString(commandReqOrResp.getBody()));
@@ -47,7 +48,7 @@ public class RedisClusterMessageTransfer extends ClusterMessageTransfer {
     }
 
     private void subscribe(){
-        redisTemplate.operate(new RedisCallBack() {
+        this.redisTemplate.operate(new RedisCallBack() {
             @Override
             public Object operate(Jedis jedis) {
                 jedis.subscribe(new JedisPubSub() {
