@@ -10,6 +10,8 @@ import org.jmqtt.broker.cluster.ClusterMessageTransfer;
 import org.jmqtt.broker.cluster.ClusterSessionManager;
 import org.jmqtt.broker.cluster.DefaultClusterMessageTransfer;
 import org.jmqtt.broker.cluster.DefaultClusterSessionManager;
+import org.jmqtt.broker.cluster.redis.RedisClusterMessageTransfer;
+import org.jmqtt.broker.cluster.redis.RedisClusterSessionManager;
 import org.jmqtt.broker.dispatcher.DefaultDispatcherMessage;
 import org.jmqtt.broker.dispatcher.MessageDispatcher;
 import org.jmqtt.broker.processor.*;
@@ -29,6 +31,7 @@ import org.jmqtt.remoting.netty.NettyRemotingServer;
 import org.jmqtt.remoting.netty.RequestProcessor;
 import org.jmqtt.store.*;
 import org.jmqtt.store.memory.DefaultMqttStore;
+import org.jmqtt.store.redis.RedisMqttStore;
 import org.jmqtt.store.rocksdb.RDBMqttStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,13 +90,18 @@ public class BrokerController {
             switch (storeConfig.getStoreType()) {
                 case 1:
                     this.abstractMqttStore = new RDBMqttStore(storeConfig);
-                    this.clusterSessionManager = new DefaultClusterSessionManager();
-                    this.clusterMessageTransfer = new DefaultClusterMessageTransfer();
+                    this.clusterSessionManager = new DefaultClusterSessionManager(sessionStore,subscriptionStore);
+                    this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher);
+                    break;
+                case 2:
+                    this.abstractMqttStore = new RedisMqttStore(clusterConfig);
+                    this.clusterSessionManager = new RedisClusterSessionManager(sessionStore,subscriptionStore);
+                    this.clusterMessageTransfer = new RedisClusterMessageTransfer(messageDispatcher, (RedisMqttStore) abstractMqttStore);
                     break;
                 default:
                     this.abstractMqttStore = new DefaultMqttStore();
-                    this.clusterSessionManager = new DefaultClusterSessionManager();
-                    this.clusterMessageTransfer = new DefaultClusterMessageTransfer();
+                    this.clusterSessionManager = new DefaultClusterSessionManager(sessionStore,subscriptionStore);
+                    this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher);
                     break;
             }
             try {
@@ -151,6 +159,23 @@ public class BrokerController {
                 pingQueue,
                 new ThreadFactoryImpl("PingThread"),
                 new RejectHandler("heartbeat", 100000));
+
+        // cluster
+        switch (storeConfig.getStoreType()) {
+            case 1:
+                this.clusterSessionManager = new DefaultClusterSessionManager(sessionStore,subscriptionStore);
+                this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher);
+                break;
+            case 2:
+                this.clusterSessionManager = new RedisClusterSessionManager(sessionStore,subscriptionStore);
+                this.clusterMessageTransfer = new RedisClusterMessageTransfer(messageDispatcher, (RedisMqttStore) abstractMqttStore);
+                break;
+            default:
+                this.clusterSessionManager = new DefaultClusterSessionManager(sessionStore,subscriptionStore);
+                this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher);
+                break;
+        }
+
     }
 
 
@@ -188,6 +213,8 @@ public class BrokerController {
         this.messageDispatcher.start();
         this.reSendMessageService.start();
         this.remotingServer.start();
+        this.clusterSessionManager.startup();
+        this.clusterMessageTransfer.startup();
         log.info("JMqtt Server start success and version = {}", brokerConfig.getVersion());
     }
 
@@ -200,6 +227,8 @@ public class BrokerController {
         this.messageDispatcher.shutdown();
         this.reSendMessageService.shutdown();
         this.abstractMqttStore.shutdown();
+        this.clusterMessageTransfer.shutdown();
+        this.clusterSessionManager.shutdown();
     }
 
     public BrokerConfig getBrokerConfig() {

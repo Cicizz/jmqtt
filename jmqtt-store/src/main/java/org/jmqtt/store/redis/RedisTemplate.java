@@ -1,6 +1,7 @@
 
 package org.jmqtt.store.redis;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jmqtt.common.config.ClusterConfig;
 import org.jmqtt.common.log.LoggerName;
 import org.slf4j.Logger;
@@ -30,7 +31,11 @@ public class RedisTemplate {
             jedisPoolConfig.setTestOnBorrow(clusterConfig.isTestOnBorrow());
             jedisPoolConfig.setMaxTotal(jedisPoolConfig.getMaxIdle());
             jedisPoolConfig.setMaxWaitMillis(jedisPoolConfig.getMaxWaitMillis());
-            jedisPool = new JedisPool(jedisPoolConfig,clusterConfig.getRedisIp());
+            if (StringUtils.isEmpty(clusterConfig.getRedisPassword())) {
+                jedisPool = new JedisPool(jedisPoolConfig,clusterConfig.getRedisHost(),clusterConfig.getRedisPort());
+            } else {
+                jedisPool = new JedisPool(jedisPoolConfig,clusterConfig.getRedisHost(),clusterConfig.getRedisPort(),10000,clusterConfig.getRedisPassword());
+            }
         } catch (Exception ex) {
             log.error("[Redis handle error],ex:{}",ex);
         }
