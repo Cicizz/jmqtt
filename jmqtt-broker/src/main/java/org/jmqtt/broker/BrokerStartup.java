@@ -11,10 +11,7 @@ import org.jmqtt.common.config.StoreConfig;
 import org.jmqtt.common.helper.MixAll;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -45,15 +42,17 @@ public class BrokerStartup {
             jmqttHome = commandLine.getOptionValue("h");
             jmqttConfigPath = commandLine.getOptionValue("c");
         }
-        if(StringUtils.isNotEmpty(jmqttConfigPath)){
-            initConfig(jmqttConfigPath,brokerConfig,nettyConfig,storeConfig, clusterConfig);
-        }
         if(StringUtils.isEmpty(jmqttHome)){
             jmqttHome = brokerConfig.getJmqttHome();
         }
         if(StringUtils.isEmpty(jmqttHome)){
             throw new Exception("please set JMQTT_HOME.");
         }
+        if(StringUtils.isEmpty(jmqttConfigPath)){
+            jmqttConfigPath = jmqttHome + File.separator + "conf" + File.separator + "jmqtt.properties";
+        }
+        initConfig(jmqttConfigPath,brokerConfig,nettyConfig,storeConfig, clusterConfig);
+
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         JoranConfigurator configurator = new JoranConfigurator();
         configurator.setContext(lc);
