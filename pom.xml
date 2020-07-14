@@ -54,22 +54,22 @@
             <dependency>
                 <groupId>org.jmqtt</groupId>
                 <artifactId>jmqtt-common</artifactId>
-                <version>${version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jmqtt</groupId>
                 <artifactId>jmqtt-remoting</artifactId>
-                <version>${version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jmqtt</groupId>
                 <artifactId>jmqtt-store</artifactId>
-                <version>${version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jmqtt</groupId>
                 <artifactId>jmqtt-broker</artifactId>
-                <version>${version}</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.rocksdb</groupId>
