@@ -45,32 +45,32 @@ public class BrokerController {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER);
 
-    private BrokerConfig          brokerConfig;
-    private NettyConfig           nettyConfig;
+    private BrokerConfig brokerConfig;
+    private NettyConfig nettyConfig;
     private StoreConfig storeConfig;
     private ClusterConfig clusterConfig;
-    private ExecutorService      connectExecutor;
-    private ExecutorService      pubExecutor;
-    private ExecutorService       subExecutor;
-    private ExecutorService       pingExecutor;
-    private LinkedBlockingQueue   connectQueue;
-    private LinkedBlockingQueue   pubQueue;
-    private LinkedBlockingQueue   subQueue;
-    private LinkedBlockingQueue   pingQueue;
-    private ChannelEventListener  channelEventListener;
-    private NettyRemotingServer   remotingServer;
-    private MessageDispatcher     messageDispatcher;
-    private FlowMessageStore      flowMessageStore;
-    private SubscriptionMatcher   subscriptionMatcher;
-    private WillMessageStore      willMessageStore;
-    private RetainMessageStore    retainMessageStore;
-    private OfflineMessageStore   offlineMessageStore;
-    private SubscriptionStore     subscriptionStore;
-    private SessionStore          sessionStore;
-    private AbstractMqttStore     abstractMqttStore;
-    private ConnectPermission     connectPermission;
-    private PubSubPermission      pubSubPermission;
-    private ReSendMessageService  reSendMessageService;
+    private ExecutorService connectExecutor;
+    private ExecutorService pubExecutor;
+    private ExecutorService subExecutor;
+    private ExecutorService pingExecutor;
+    private LinkedBlockingQueue<Runnable> connectQueue;
+    private LinkedBlockingQueue<Runnable> pubQueue;
+    private LinkedBlockingQueue<Runnable> subQueue;
+    private LinkedBlockingQueue<Runnable> pingQueue;
+    private ChannelEventListener channelEventListener;
+    private NettyRemotingServer remotingServer;
+    private MessageDispatcher messageDispatcher;
+    private FlowMessageStore flowMessageStore;
+    private SubscriptionMatcher subscriptionMatcher;
+    private WillMessageStore willMessageStore;
+    private RetainMessageStore retainMessageStore;
+    private OfflineMessageStore offlineMessageStore;
+    private SubscriptionStore subscriptionStore;
+    private SessionStore sessionStore;
+    private AbstractMqttStore abstractMqttStore;
+    private ConnectPermission connectPermission;
+    private PubSubPermission pubSubPermission;
+    private ReSendMessageService reSendMessageService;
     private ClusterSessionManager clusterSessionManager;
     private ClusterMessageTransfer clusterMessageTransfer;
 
@@ -81,27 +81,22 @@ public class BrokerController {
         this.storeConfig = storeConfig;
         this.clusterConfig = clusterConfig;
 
-        this.connectQueue = new LinkedBlockingQueue(100000);
-        this.pubQueue = new LinkedBlockingQueue(100000);
-        this.subQueue = new LinkedBlockingQueue(100000);
-        this.pingQueue = new LinkedBlockingQueue(10000);
+        this.connectQueue = new LinkedBlockingQueue<>(100000);
+        this.pubQueue = new LinkedBlockingQueue<>(100000);
+        this.subQueue = new LinkedBlockingQueue<>(100000);
+        this.pingQueue = new LinkedBlockingQueue<>(10000);
 
-        {//store pluggable
+        {
+            //store pluggable
             switch (storeConfig.getStoreType()) {
                 case 1:
                     this.abstractMqttStore = new RDBMqttStore(storeConfig);
-                    this.clusterSessionManager = new DefaultClusterSessionManager(sessionStore,subscriptionStore);
-                    this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher);
                     break;
                 case 2:
                     this.abstractMqttStore = new RedisMqttStore(clusterConfig);
-                    this.clusterSessionManager = new RedisClusterSessionManager(sessionStore,subscriptionStore);
-                    this.clusterMessageTransfer = new RedisClusterMessageTransfer(messageDispatcher, (RedisMqttStore) abstractMqttStore);
                     break;
                 default:
                     this.abstractMqttStore = new DefaultMqttStore();
-                    this.clusterSessionManager = new DefaultClusterSessionManager(sessionStore,subscriptionStore);
-                    this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher);
                     break;
             }
             try {
@@ -118,7 +113,8 @@ public class BrokerController {
             this.sessionStore = this.abstractMqttStore.getSessionStore();
         }
 
-        {// permission pluggable
+        {
+            // permission pluggable
             this.connectPermission = new DefaultConnectPermission();
             this.pubSubPermission = new DefaultPubSubPermission();
         }
@@ -160,22 +156,39 @@ public class BrokerController {
                 new ThreadFactoryImpl("PingThread"),
                 new RejectHandler("heartbeat", 100000));
 
-        // cluster
-        switch (storeConfig.getStoreType()) {
-            case 1:
-                this.clusterSessionManager = new DefaultClusterSessionManager(sessionStore,subscriptionStore);
-                this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher);
-                break;
-            case 2:
-                this.clusterSessionManager = new RedisClusterSessionManager(sessionStore,subscriptionStore);
-                this.clusterMessageTransfer = new RedisClusterMessageTransfer(messageDispatcher, (RedisMqttStore) abstractMqttStore);
-                break;
-            default:
-                this.clusterSessionManager = new DefaultClusterSessionManager(sessionStore,subscriptionStore);
-                this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher);
-                break;
+
+        {
+            if (checkClusterMode()) {
+                // cluster
+                switch (storeConfig.getStoreType()) {
+                    case 1:
+                        this.clusterSessionManager = new DefaultClusterSessionManager(sessionStore, subscriptionStore);
+                        this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher);
+                        break;
+                    case 2:
+                        this.clusterSessionManager = new RedisClusterSessionManager(sessionStore, subscriptionStore);
+                        this.clusterMessageTransfer = new RedisClusterMessageTransfer(messageDispatcher, (RedisMqttStore) abstractMqttStore);
+                        break;
+                    default:
+                        this.clusterSessionManager = new DefaultClusterSessionManager(sessionStore, subscriptionStore);
+                        this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher);
+                        break;
+                }
+            }
         }
 
+    }
+
+    /**
+     * 校验集群模式
+     *
+     * @return
+     */
+    private boolean checkClusterMode() {
+        if (clusterConfig != null) {
+            return "cluster".equals(clusterConfig.getMode());
+        }
+        return false;
     }
 
 
@@ -210,11 +223,21 @@ public class BrokerController {
             this.remotingServer.registerProcessor(MqttMessageType.PUBCOMP, pubCompProcessor, subExecutor);
         }
 
-        this.messageDispatcher.start();
-        this.reSendMessageService.start();
-        this.remotingServer.start();
-        this.clusterSessionManager.startup();
-        this.clusterMessageTransfer.startup();
+        if (this.messageDispatcher != null) {
+            this.messageDispatcher.start();
+        }
+        if (this.reSendMessageService != null) {
+            this.reSendMessageService.start();
+        }
+        if (this.remotingServer != null) {
+            this.remotingServer.start();
+        }
+        if (this.clusterSessionManager != null) {
+            this.clusterSessionManager.startup();
+        }
+        if (this.clusterMessageTransfer != null) {
+            this.clusterMessageTransfer.startup();
+        }
         log.info("JMqtt Server start success and version = {}", brokerConfig.getVersion());
     }
 
@@ -255,19 +278,19 @@ public class BrokerController {
         return pingExecutor;
     }
 
-    public LinkedBlockingQueue getConnectQueue() {
+    public LinkedBlockingQueue<Runnable> getConnectQueue() {
         return connectQueue;
     }
 
-    public LinkedBlockingQueue getPubQueue() {
+    public LinkedBlockingQueue<Runnable> getPubQueue() {
         return pubQueue;
     }
 
-    public LinkedBlockingQueue getSubQueue() {
+    public LinkedBlockingQueue<Runnable> getSubQueue() {
         return subQueue;
     }
 
-    public LinkedBlockingQueue getPingQueue() {
+    public LinkedBlockingQueue<Runnable> getPingQueue() {
         return pingQueue;
     }
 
