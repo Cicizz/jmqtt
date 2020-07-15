@@ -7,6 +7,7 @@ import org.jmqtt.store.rocksdb.db.RDB;
 public class RDBMqttStore extends AbstractMqttStore {
 
     private StoreConfig storeConfig;
+
     private RDB rdb;
 
 
@@ -16,7 +17,7 @@ public class RDBMqttStore extends AbstractMqttStore {
     }
 
     @Override
-    public void init() throws Exception {
+    public void init() {
         this.rdb.init();
         this.flowMessageStore = new RDBFlowMessageStore(rdb);
         this.willMessageStore = new RDBWillMessageStore(rdb);

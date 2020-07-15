@@ -5,10 +5,15 @@ package org.jmqtt.common.config;
  */
 public class ClusterConfig {
 
+    /**
+     * 其实就是一个集群开关
+     * 模式:single 单机模式;cluster 集群模式
+     */
+    private String mode = "single";
     private String redisHost = "127.0.0.1";
     private int redisPort = 6379;
     private String redisPassword = "";
-    private int maxWaitMills = 60*1000;
+    private int maxWaitMills = 60 * 1000;
     private boolean testOnBorrow = true;
     private int minIdle = 20;
     private int maxTotal = 200;
@@ -78,5 +83,11 @@ public class ClusterConfig {
         this.maxIdle = maxIdle;
     }
 
+    public String getMode() {
+        return mode;
+    }
 
+    public void setMode(String mode) {
+        this.mode = mode;
+    }
 }
