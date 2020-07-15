@@ -242,16 +242,36 @@ public class BrokerController {
     }
 
     public void shutdown() {
-        this.remotingServer.shutdown();
-        this.connectExecutor.shutdown();
-        this.pubExecutor.shutdown();
-        this.subExecutor.shutdown();
-        this.pingExecutor.shutdown();
-        this.messageDispatcher.shutdown();
-        this.reSendMessageService.shutdown();
-        this.abstractMqttStore.shutdown();
-        this.clusterMessageTransfer.shutdown();
-        this.clusterSessionManager.shutdown();
+        if (this.remotingServer != null) {
+            this.remotingServer.shutdown();
+        }
+        if (this.connectExecutor != null) {
+            this.connectExecutor.shutdown();
+        }
+        if (this.pubExecutor != null) {
+            this.pubExecutor.shutdown();
+        }
+        if (this.subExecutor != null) {
+            this.subExecutor.shutdown();
+        }
+        if (this.pingExecutor != null) {
+            this.pingExecutor.shutdown();
+        }
+        if (this.messageDispatcher != null) {
+            this.messageDispatcher.shutdown();
+        }
+        if (this.reSendMessageService != null) {
+            this.reSendMessageService.shutdown();
+        }
+        if (this.abstractMqttStore != null) {
+            this.abstractMqttStore.shutdown();
+        }
+        if (this.clusterMessageTransfer != null) {
+            this.clusterMessageTransfer.shutdown();
+        }
+        if (this.clusterSessionManager != null) {
+            this.clusterSessionManager.shutdown();
+        }
     }
 
     public BrokerConfig getBrokerConfig() {
