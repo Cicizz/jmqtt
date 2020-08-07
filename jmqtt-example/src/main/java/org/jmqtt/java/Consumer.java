@@ -5,7 +5,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 public class Consumer {
     private static final String broker = "tcp://127.0.0.1:1883";
-    private static final String topic = "MQTT/+";
+    private static final String topic = "MQTT/TOPIC";
     private static final String clientId = "MQTT_SUB_CLIENT";
 
     public static void main(String[] args) throws MqttException, InterruptedException {
@@ -31,11 +31,11 @@ public class Consumer {
     }
 
 
-    private static MqttClient getMqttClient(){
+    private static MqttClient getMqttClient() {
         try {
-            MqttClient pubClient = new MqttClient(broker,clientId,new MemoryPersistence());
+            MqttClient pubClient = new MqttClient(broker, clientId, new MemoryPersistence());
             MqttConnectOptions connectOptions = new MqttConnectOptions();
-            connectOptions.setCleanSession(true);
+            connectOptions.setCleanSession(false);
             System.out.println("Connecting to broker: " + broker);
             pubClient.connect(connectOptions);
             return pubClient;
