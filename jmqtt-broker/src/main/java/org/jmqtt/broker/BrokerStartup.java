@@ -28,7 +28,6 @@ public class BrokerStartup {
     }
 
     public static BrokerController start(String[] args) throws Exception {
-
         Options options = buildOptions();
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = parser.parse(options,args);

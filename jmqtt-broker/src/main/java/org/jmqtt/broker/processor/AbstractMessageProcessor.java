@@ -47,7 +47,9 @@ public abstract class AbstractMessageProcessor {
 
     private void dispatcherMessage2Cluster(Message message) {
         CommandReqOrResp commandReqOrResp = new CommandReqOrResp(CommandCode.MESSAGE_CLUSTER_TRANSFER, message);
-        clusterMessageTransfer.sendMessage(commandReqOrResp);
+        if (clusterMessageTransfer != null) {
+            clusterMessageTransfer.sendMessage(commandReqOrResp);
+        }
     }
 
 }
