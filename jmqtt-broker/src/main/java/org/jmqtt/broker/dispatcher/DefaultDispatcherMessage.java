@@ -24,14 +24,14 @@ import java.util.concurrent.*;
 
 public class DefaultDispatcherMessage implements MessageDispatcher {
 
-    private static final Logger                 log          = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
-    private boolean                             stoped       = false;
+    private static final Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
+    private boolean stoped = false;
     private static final BlockingQueue<Message> messageQueue = new LinkedBlockingQueue<>(100000);
-    private ThreadPoolExecutor                  pollThread;
-    private int                                 pollThreadNum;
-    private SubscriptionMatcher                 subscriptionMatcher;
-    private FlowMessageStore                    flowMessageStore;
-    private OfflineMessageStore                 offlineMessageStore;
+    private ThreadPoolExecutor pollThread;
+    private int pollThreadNum;
+    private SubscriptionMatcher subscriptionMatcher;
+    private FlowMessageStore flowMessageStore;
+    private OfflineMessageStore offlineMessageStore;
 
     public DefaultDispatcherMessage(int pollThreadNum, SubscriptionMatcher subscriptionMatcher, FlowMessageStore flowMessageStore, OfflineMessageStore offlineMessageStore) {
         this.pollThreadNum = pollThreadNum;
@@ -50,35 +50,32 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
                 new ThreadFactoryImpl("pollMessage2Subscriber"),
                 new RejectHandler("pollMessage", 100000));
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                int waitTime = 1000;
-                while (!stoped) {
-                    try {
-                        List<Message> messageList = new ArrayList(32);
-                        Message message;
-                        for (int i = 0; i < 32; i++) {
-                            if (i == 0) {
-                                message = messageQueue.poll(waitTime, TimeUnit.MILLISECONDS);
-                            } else {
-                                message = messageQueue.poll();
-                            }
-                            if (Objects.nonNull(message)) {
-                                messageList.add(message);
-                            } else {
-                                break;
-                            }
+        new Thread(() -> {
+            int waitTime = 1000;
+            while (!stoped) {
+                try {
+                    List<Message> messageList = new ArrayList(32);
+                    Message message;
+                    for (int i = 0; i < 32; i++) {
+                        if (i == 0) {
+                            message = messageQueue.poll(waitTime, TimeUnit.MILLISECONDS);
+                        } else {
+                            message = messageQueue.poll();
                         }
-                        if (messageList.size() > 0) {
-                            AsyncDispatcher dispatcher = new AsyncDispatcher(messageList);
-                            pollThread.submit(dispatcher).get();
+                        if (Objects.nonNull(message)) {
+                            messageList.add(message);
+                        } else {
+                            break;
                         }
-                    } catch (InterruptedException e) {
-                        log.warn("poll message wrong.");
-                    } catch (ExecutionException e) {
-                        log.warn("AsyncDispatcher get() wrong.");
                     }
+                    if (messageList.size() > 0) {
+                        AsyncDispatcher dispatcher = new AsyncDispatcher(messageList);
+                        pollThread.submit(dispatcher).get();
+                    }
+                } catch (InterruptedException e) {
+                    log.warn("poll message wrong.");
+                } catch (ExecutionException e) {
+                    log.warn("AsyncDispatcher get() wrong.");
                 }
             }
         }).start();

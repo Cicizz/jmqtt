@@ -30,7 +30,7 @@ public class DefaultFlowMessageStore implements FlowMessageStore {
         if(!recCache.containsKey(clientId)){
             synchronized (recCache){
                 if(!recCache.containsKey(clientId)){
-                    recCache.put(clientId,new ConcurrentHashMap<Integer,Message>());
+                    recCache.put(clientId, new ConcurrentHashMap<>());
                 }
             }
         }
