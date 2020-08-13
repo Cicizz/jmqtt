@@ -199,7 +199,8 @@ public class BrokerController {
         MixAll.printProperties(log, storeConfig);
         MixAll.printProperties(log, clusterConfig);
 
-        {//init and register mqtt remoting processor
+        {
+            //init and register mqtt remoting processor
             RequestProcessor connectProcessor = new ConnectProcessor(this);
             RequestProcessor disconnectProcessor = new DisconnectProcessor(this);
             RequestProcessor pingProcessor = new PingProcessor();

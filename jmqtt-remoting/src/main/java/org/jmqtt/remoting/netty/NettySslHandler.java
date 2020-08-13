@@ -24,7 +24,8 @@ public class NettySslHandler {
                 channel.alloc(),
                 channel.remoteAddress().getHostString(),
                 channel.remoteAddress().getPort());
-        sslEngine.setUseClientMode(false); // server mode
+        // server mode
+        sslEngine.setUseClientMode(false);
         if (useClientCA) {
             sslEngine.setNeedClientAuth(true);
         }
