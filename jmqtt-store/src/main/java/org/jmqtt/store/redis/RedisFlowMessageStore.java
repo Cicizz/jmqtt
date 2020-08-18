@@ -33,7 +33,7 @@ public class RedisFlowMessageStore implements FlowMessageStore {
             @Override
             public Object operate(Jedis jedis) {
                 jedis.del(SEND_FLOW_MESSAGE + clientId);
-                jedis.del(SEND_FLOW_MESSAGE + clientId);
+                jedis.del(REC_FLOW_MESSAGE + clientId);
                 return null;
             };
         });
