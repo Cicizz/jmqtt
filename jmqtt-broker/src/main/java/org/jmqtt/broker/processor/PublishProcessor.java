@@ -45,7 +45,7 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
             String clientId = NettyUtil.getClientId(ctx.channel());
             ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
             String topic = publishMessage.variableHeader().topicName();
-            if(!this.pubSubPermission.publishVerfy(clientId,topic)){
+            if(!this.pubSubPermission.publishVerify(clientId,topic)){
                 log.warn("[PubMessage] permission is not allowed");
                 clientSession.getCtx().close();
                 return;
