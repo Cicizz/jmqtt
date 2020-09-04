@@ -43,14 +43,14 @@ public class NettyRemotingServer implements RemotingService {
     private EventLoopGroup ioGroup;
     private Class<? extends ServerChannel> clazz;
     private Map<MqttMessageType, Pair<RequestProcessor, ExecutorService>> processorTable;
-    private NettyEventExcutor nettyEventExcutor;
+    private NettyEventExecutor nettyEventExecutor;
     private BrokerConfig brokerConfig;
 
     public NettyRemotingServer(BrokerConfig brokerConfig, NettyConfig nettyConfig, ChannelEventListener listener) {
         this.nettyConfig = nettyConfig;
         this.processorTable = new HashMap();
         this.brokerConfig = brokerConfig;
-        this.nettyEventExcutor = new NettyEventExcutor(listener);
+        this.nettyEventExecutor = new NettyEventExecutor(listener);
 
         if(!nettyConfig.isUseEpoll()){
             selectorGroup = new NioEventLoopGroup(nettyConfig.getSelectorThreadNum(),
@@ -71,7 +71,7 @@ public class NettyRemotingServer implements RemotingService {
     @Override
     public void start() {
         //Netty event excutor start
-        this.nettyEventExcutor.start();
+        this.nettyEventExecutor.start();
         // start TCP server
         if (nettyConfig.isStartTcp()) {
             startTcpServer(false, nettyConfig.getTcpPort());
@@ -124,7 +124,8 @@ public class NettyRemotingServer implements RemotingService {
                                 .addLast("webSocket2ByteBufDecoder",new WebSocket2ByteBufDecoder())
                                 .addLast("mqttDecoder", new MqttDecoder(nettyConfig.getMaxMsgSize()))
                                 .addLast("mqttEncoder", MqttEncoder.INSTANCE)
-                                .addLast("nettyConnectionManager", new NettyConnectHandler(nettyEventExcutor))
+                                .addLast("nettyConnectionManager", new NettyConnectHandler(
+                                    nettyEventExecutor))
                                 .addLast("nettyMqttHandler", new NettyMqttHandler());
                     }
                 });
@@ -166,7 +167,8 @@ public class NettyRemotingServer implements RemotingService {
                         pipeline.addLast("idleStateHandler", new IdleStateHandler(60, 0, 0))
                                 .addLast("mqttEncoder", MqttEncoder.INSTANCE)
                                 .addLast("mqttDecoder", new MqttDecoder(nettyConfig.getMaxMsgSize()))
-                                .addLast("nettyConnectionManager", new NettyConnectHandler(nettyEventExcutor))
+                                .addLast("nettyConnectionManager", new NettyConnectHandler(
+                                    nettyEventExecutor))
                                 .addLast("nettyMqttHandler", new NettyMqttHandler());
                     }
                 });

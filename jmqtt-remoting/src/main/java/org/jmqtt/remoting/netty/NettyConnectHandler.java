@@ -4,7 +4,6 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import io.netty.handler.timeout.IdleStateHandler;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.util.RemotingHelper;
 import org.slf4j.Logger;
@@ -14,10 +13,10 @@ public class NettyConnectHandler extends ChannelDuplexHandler {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.REMOTING);
 
-    private NettyEventExcutor eventExcutor;
+    private NettyEventExecutor eventExcutor;
 
-    public NettyConnectHandler(NettyEventExcutor nettyEventExcutor){
-        this.eventExcutor = nettyEventExcutor;
+    public NettyConnectHandler(NettyEventExecutor nettyEventExecutor){
+        this.eventExcutor = nettyEventExecutor;
     }
 
     @Override

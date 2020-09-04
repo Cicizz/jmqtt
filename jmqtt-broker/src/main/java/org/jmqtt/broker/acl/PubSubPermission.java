@@ -8,11 +8,11 @@ public interface PubSubPermission {
     /**
      * verfy the clientId whether can publish message to the topic
      */
-    boolean publishVerfy(String clientId,String topic);
+    boolean publishVerify(String clientId,String topic);
 
     /**
      * verfy the clientId whether can subscribe the topic
      */
-    boolean subscribeVerfy(String clientId,String topic);
+    boolean subscribeVerify(String clientId,String topic);
 
 }
