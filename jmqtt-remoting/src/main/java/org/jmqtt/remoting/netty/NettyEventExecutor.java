@@ -7,17 +7,17 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-public class NettyEventExcutor implements Runnable {
+public class NettyEventExecutor implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.REMOTING);
 
     private LinkedBlockingQueue<NettyEvent> eventQueue = new LinkedBlockingQueue<>();
     private final int maxSize = 100000;
     private ChannelEventListener listener;
-    boolean stoped = false;
+    boolean stopped = false;
     private Thread thread;
 
-    public NettyEventExcutor(ChannelEventListener channelEventListener){
+    public NettyEventExecutor(ChannelEventListener channelEventListener){
         this.listener = channelEventListener;
     }
 
@@ -31,7 +31,7 @@ public class NettyEventExcutor implements Runnable {
 
     @Override
     public void run() {
-        while(!this.stoped){
+        while(!this.stopped){
             try{
                 NettyEvent nettyEvent = this.eventQueue.poll(3000, TimeUnit.MILLISECONDS);
                 if(nettyEvent != null && listener != null){
@@ -56,7 +56,7 @@ public class NettyEventExcutor implements Runnable {
                 log.warn("[NettyEvent] -> service has exception. ", t);
             }
         }
-        log.info("[NettyEvent] -> NettyEventExcutor service end");
+        log.info("[NettyEvent] -> NettyEventExecutor service end");
     }
 
     public void start(){
@@ -65,6 +65,6 @@ public class NettyEventExcutor implements Runnable {
     }
 
     public void shutdown(){
-        this.stoped = true;
+        this.stopped = true;
     }
 }

@@ -67,7 +67,7 @@ public class ConnectProcessor implements RequestProcessor {
         MqttConnectReturnCode returnCode = null;
         int mqttVersion = connectMessage.variableHeader().version();
         String clientId = connectMessage.payload().clientIdentifier();
-        boolean cleansession = connectMessage.variableHeader().isCleanSession();
+        boolean cleanSession = connectMessage.variableHeader().isCleanSession();
         String userName = connectMessage.payload().userName();
         byte[] password = connectMessage.payload().passwordInBytes();
         ClientSession clientSession = null;
@@ -75,7 +75,7 @@ public class ConnectProcessor implements RequestProcessor {
         try {
             if (!versionValid(mqttVersion)) {
                 returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION;
-            } else if (!clientIdVerfy(clientId)) {
+            } else if (!clientIdVerify(clientId)) {
                 returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED;
             } else if (onBlackList(RemotingHelper.getRemoteAddr(ctx.channel()), clientId)) {
                 returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_NOT_AUTHORIZED;
@@ -98,7 +98,7 @@ public class ConnectProcessor implements RequestProcessor {
                         ConnectManager.getInstance().removeClient(clientId);
                     }
                 }
-                if (cleansession) {
+                if (cleanSession) {
                     clientSession = createNewClientSession(clientId, ctx);
                     sessionPresent = false;
                 } else {
@@ -147,7 +147,7 @@ public class ConnectProcessor implements RequestProcessor {
     }
 
     private boolean keepAlive(String clientId, ChannelHandlerContext ctx, int heatbeatSec) {
-        if (this.connectPermission.verfyHeartbeatTime(clientId, heatbeatSec)) {
+        if (this.connectPermission.verifyHeartbeatTime(clientId, heatbeatSec)) {
             int keepAlive = (int) (heatbeatSec * 1.5f);
             if (ctx.pipeline().names().contains("idleStateHandler")) {
                 ctx.pipeline().remove("idleStateHandler");
@@ -208,8 +208,8 @@ public class ConnectProcessor implements RequestProcessor {
         return this.connectPermission.onBlacklist(remoteAddr, clientId);
     }
 
-    private boolean clientIdVerfy(String clientId) {
-        return this.connectPermission.clientIdVerfy(clientId);
+    private boolean clientIdVerify(String clientId) {
+        return this.connectPermission.clientIdVerify(clientId);
     }
 
     private boolean versionValid(int mqttVersion) {
