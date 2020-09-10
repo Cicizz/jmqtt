@@ -24,7 +24,7 @@ public class PubCompProcessor implements RequestProcessor {
         String clientId = NettyUtil.getClientId(ctx.channel());
         int messageId = MessageUtil.getMessageId(mqttMessage);
         boolean isContain = flowMessageStore.releaseSendMsg(clientId,messageId);
-        log.debug("[PubComp] -> Recieve PubCom and remove the flow message,clientId={},msgId={}",clientId,messageId);
+        log.debug("[PubComp] -> Receive PubCom and remove the flow message,clientId={},msgId={}",clientId,messageId);
         if(!isContain){
             log.warn("[PubComp] -> The message is not in Flow cache,clientId={},msgId={}",clientId,messageId);
         }

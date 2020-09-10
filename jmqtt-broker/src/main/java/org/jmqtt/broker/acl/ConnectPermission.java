@@ -6,9 +6,9 @@ package org.jmqtt.broker.acl;
 public interface ConnectPermission {
 
     /**
-     * Verfy the clientId whether it meets the requirements or not
+     * verify the clientId whether it meets the requirements or not
      */
-    boolean clientIdVerfy(String clientId);
+    boolean clientIdVerify(String clientId);
 
     /**
      * if the client is on blacklist,is not allowed to connect
@@ -16,12 +16,12 @@ public interface ConnectPermission {
     boolean onBlacklist(String remoteAddr,String clientId);
 
     /**
-     * verfy the clientId,username,password whether true or not
+     * verify the clientId,username,password whether true or not
      */
     boolean authentication(String clientId,String userName,byte[] password);
 
     /**
-     * verfy the client's heartbeat time whether the compliance
+     * verify the client's heartbeat time whether the compliance
      */
-    boolean verfyHeartbeatTime(String clientId,int time);
+    boolean verifyHeartbeatTime(String clientId,int time);
 }

@@ -23,7 +23,7 @@ public class PubRecProcessor implements RequestProcessor {
     public void processRequest(ChannelHandlerContext ctx, MqttMessage mqttMessage) {
         String clientId = NettyUtil.getClientId(ctx.channel());
         int messageId = MessageUtil.getMessageId(mqttMessage);
-        log.debug("[PubRec] -> Recieve PubRec message,clientId={},msgId={}",clientId,messageId);
+        log.debug("[PubRec] -> Receive PubRec message,clientId={},msgId={}",clientId,messageId);
         if(!flowMessageStore.containSendMsg(clientId,messageId)){
             log.warn("[PubRec] -> The message is not cached in Flow,clientId={},msgId={}",clientId,messageId);
         }
