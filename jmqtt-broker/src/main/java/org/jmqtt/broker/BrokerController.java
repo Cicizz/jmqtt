@@ -169,10 +169,6 @@ public class BrokerController {
                         this.clusterSessionManager = new RedisClusterSessionManager(sessionStore, subscriptionStore);
                         this.clusterMessageTransfer = new RedisClusterMessageTransfer(messageDispatcher, (RedisMqttStore) abstractMqttStore);
                         break;
-                    default:
-                        this.clusterSessionManager = new DefaultClusterSessionManager(sessionStore, subscriptionStore);
-                        this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher);
-                        break;
                 }
             }
         }

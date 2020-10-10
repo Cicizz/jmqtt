@@ -30,13 +30,13 @@ public class NettyConfig {
      * tcp port with ssl default 8883
      */
     private boolean startSslTcp = true;
-    private int SslTcpPort = 8883;
+    private int sslTcpPort = 8883;
 
     /**
      * websocket port with ssl default 8884
      */
     private boolean startSslWebsocket = true;
-    private int SslWebsocketPort = 8884;
+    private int sslWebsocketPort = 8884;
 
     /**
      * SSL setting
@@ -184,11 +184,11 @@ public class NettyConfig {
 
 
     public int getSslTcpPort() {
-        return SslTcpPort;
+        return sslTcpPort;
     }
 
     public void setSslTcpPort(int sslTcpPort) {
-        SslTcpPort = sslTcpPort;
+        this.sslTcpPort = sslTcpPort;
     }
 
     public boolean isStartSslWebsocket() {
@@ -200,11 +200,11 @@ public class NettyConfig {
     }
 
     public int getSslWebsocketPort() {
-        return SslWebsocketPort;
+        return sslWebsocketPort;
     }
 
     public void setSslWebsocketPort(int sslWebsocketPort) {
-        SslWebsocketPort = sslWebsocketPort;
+        this.sslWebsocketPort = sslWebsocketPort;
     }
 
     public boolean isUseClientCA() {

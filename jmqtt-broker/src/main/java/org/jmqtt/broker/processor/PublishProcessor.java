@@ -74,7 +74,7 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
                     log.warn("[PubMessage] -> Wrong mqtt message,clientId={}", clientId);
             }
         } catch (Throwable tr) {
-            log.warn("[PubMessage] -> Solve mqtt pub message exception:{}", tr);
+            log.warn("[PubMessage] -> Solve mqtt pub message exception:{}", tr.getMessage());
         } finally {
             ReferenceCountUtil.release(mqttMessage.payload());
         }

@@ -23,11 +23,11 @@ public abstract class AbstractMessageProcessor {
 
     protected void processMessage(Message message) {
         /**
-         * TODO Bug说明:生产者生产一条消息,消费者会收到两条消息
-         *  暂时解决办法：新增一个集群类型的判断，用于解决redis集群时，这里不在向队列中放入数据,
-         *  在各broker收到订阅的Topic消息时再存入数据，发送到客户端。
+         * @author yance
+         * @date 2020.10.10
+         * <p> 生产者生产一条消息,消费者会收到两条消息,解决方法,如果是集群模式,不需要向本地增加当前消息 <p/>
          */
-        if (!(clusterMessageTransfer instanceof RedisClusterMessageTransfer)) {
+        if (null == clusterMessageTransfer) {
             this.messageDispatcher.appendMessage(message);
         }
         boolean retain = (boolean) message.getHeader(MessageHeader.RETAIN);
