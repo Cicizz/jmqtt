@@ -95,7 +95,7 @@ public class BrokerController {
                 case 2:
                     this.abstractMqttStore = new RedisMqttStore(clusterConfig);
                     break;
-                default:
+                case 3:
                     this.abstractMqttStore = new DefaultMqttStore();
                     break;
             }
@@ -160,12 +160,12 @@ public class BrokerController {
         {
             if (checkClusterMode()) {
                 // cluster
-                switch (storeConfig.getStoreType()) {
-                    case 1:
+                switch (clusterConfig.getClusterComponentName()) {
+                    case "local":
                         this.clusterSessionManager = new DefaultClusterSessionManager(sessionStore, subscriptionStore);
                         this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher);
                         break;
-                    case 2:
+                    case "redis":
                         this.clusterSessionManager = new RedisClusterSessionManager(sessionStore, subscriptionStore);
                         this.clusterMessageTransfer = new RedisClusterMessageTransfer(messageDispatcher, (RedisMqttStore) abstractMqttStore);
                         break;
