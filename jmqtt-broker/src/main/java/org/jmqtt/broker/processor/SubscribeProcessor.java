@@ -104,7 +104,7 @@ public class SubscribeProcessor implements RequestProcessor {
     private List<Topic> validTopics(ClientSession clientSession,List<MqttTopicSubscription> topics){
         List<Topic> topicList = new ArrayList<>();
         for(MqttTopicSubscription subscription : topics){
-            if(!pubSubPermission.subscribeVerfy(clientSession.getClientId(),subscription.topicName())){
+            if(!pubSubPermission.subscribeVerify(clientSession.getClientId(),subscription.topicName())){
                 log.warn("[SubPermission] this clientId:{} have no permission to subscribe this topic:{}",clientSession.getClientId(),subscription.topicName());
                 clientSession.getCtx().close();
                 return null;
