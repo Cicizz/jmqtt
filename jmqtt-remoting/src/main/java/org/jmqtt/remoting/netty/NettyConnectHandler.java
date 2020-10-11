@@ -4,7 +4,6 @@ import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import io.netty.handler.timeout.IdleStateHandler;
 import org.jmqtt.common.log.LoggerName;
 import org.jmqtt.remoting.util.RemotingHelper;
 import org.slf4j.Logger;
@@ -14,24 +13,24 @@ public class NettyConnectHandler extends ChannelDuplexHandler {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.REMOTING);
 
-    private NettyEventExcutor eventExcutor;
+    private NettyEventExecutor eventExecutor;
 
-    public NettyConnectHandler(NettyEventExcutor nettyEventExcutor){
-        this.eventExcutor = nettyEventExcutor;
+    public NettyConnectHandler(NettyEventExecutor nettyEventExecutor){
+        this.eventExecutor = nettyEventExecutor;
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx){
         final String remoteAddr = RemotingHelper.getRemoteAddr(ctx.channel());
         log.debug("[ChannelActive] -> addr = {}",remoteAddr);
-        this.eventExcutor.putNettyEvent(new NettyEvent(remoteAddr,NettyEventType.CONNECT,ctx.channel()));
+        this.eventExecutor.putNettyEvent(new NettyEvent(remoteAddr,NettyEventType.CONNECT,ctx.channel()));
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx){
         final String remoteAddr = RemotingHelper.getRemoteAddr(ctx.channel());
         log.debug("[ChannelInactive] -> addr = {}",remoteAddr);
-        this.eventExcutor.putNettyEvent(new NettyEvent(remoteAddr,NettyEventType.CLOSE,ctx.channel()));
+        this.eventExecutor.putNettyEvent(new NettyEvent(remoteAddr,NettyEventType.CLOSE,ctx.channel()));
     }
 
     @Override
@@ -42,7 +41,7 @@ public class NettyConnectHandler extends ChannelDuplexHandler {
                 final String remoteAddr = RemotingHelper.getRemoteAddr(ctx.channel());
                 log.warn("[HEART_BEAT] -> IDLE exception, addr = {}",remoteAddr);
                 RemotingHelper.closeChannel(ctx.channel());
-                this.eventExcutor.putNettyEvent(new NettyEvent(remoteAddr,NettyEventType.IDLE,ctx.channel()));
+                this.eventExecutor.putNettyEvent(new NettyEvent(remoteAddr,NettyEventType.IDLE,ctx.channel()));
             }
         }
     }
@@ -52,6 +51,6 @@ public class NettyConnectHandler extends ChannelDuplexHandler {
         String remoteAddr = RemotingHelper.getRemoteAddr(ctx.channel());
         log.warn("Channel caught Exception remotingAddr:{},cause:{}", remoteAddr,cause);
         RemotingHelper.closeChannel(ctx.channel());
-        this.eventExcutor.putNettyEvent(new NettyEvent(remoteAddr,NettyEventType.EXCEPTION,ctx.channel()));
+        this.eventExecutor.putNettyEvent(new NettyEvent(remoteAddr,NettyEventType.EXCEPTION,ctx.channel()));
     }
 }

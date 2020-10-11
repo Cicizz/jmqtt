@@ -7,7 +7,7 @@ public class DefaultConnectPermission implements ConnectPermission {
 
 
     @Override
-    public boolean clientIdVerfy(String clientId) {
+    public boolean clientIdVerify(String clientId) {
         return true;
     }
 
@@ -22,7 +22,7 @@ public class DefaultConnectPermission implements ConnectPermission {
     }
 
     @Override
-    public boolean verfyHeartbeatTime(String clientId, int time) {
+    public boolean verifyHeartbeatTime(String clientId, int time) {
         return true;
     }
 }
