@@ -13,7 +13,8 @@ public class ClusterConfig {
     /**
      * 集群组件名称
      */
-    private String clusterComponentName = "redis";
+    private String clusterComponentName = "local";
+    private String clusterMember;
     private String redisHost = "127.0.0.1";
     private int redisPort = 6379;
     private String redisPassword = "";
@@ -101,5 +102,13 @@ public class ClusterConfig {
 
     public void setClusterComponentName(String clusterComponentName) {
         this.clusterComponentName = clusterComponentName;
+    }
+
+    public String getClusterMember() {
+        return clusterMember;
+    }
+
+    public void setClusterMember(String clusterMember) {
+        this.clusterMember = clusterMember;
     }
 }

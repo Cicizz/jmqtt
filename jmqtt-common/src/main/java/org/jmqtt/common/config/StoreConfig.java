@@ -11,7 +11,6 @@ public class StoreConfig {
      */
     private int storeType = 3;
 
-
     /* rocksdb store configuration start */
     private String rocksDbPath = System.getProperty("user.home",System.getenv("user.home"))+ File.separator + "rocksdb";
     private int maxBackgroundFlushes = 10;
