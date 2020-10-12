@@ -8,7 +8,7 @@ public class Consumer {
     private static final String topic = "MQTT/TOPIC";
     private static final String clientId = "MQTT_SUB_CLIENT";
 
-    public static void main(String[] args) throws MqttException, InterruptedException {
+    public static void main(String[] args) throws MqttException {
         MqttClient subClient = getMqttClient();
         subClient.setCallback(new MqttCallback() {
             @Override
@@ -17,15 +17,16 @@ public class Consumer {
             }
 
             @Override
-            public void messageArrived(String s, MqttMessage mqttMessage) throws Exception {
+            public void messageArrived(String s, MqttMessage mqttMessage) {
                 System.out.println("From topic: " + s);
                 System.out.println("Message content: " + new String(mqttMessage.getPayload()));
             }
 
             @Override
             public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
-
+                System.out.println("deliveryComplete");
             }
+
         });
         subClient.subscribe(topic);
     }

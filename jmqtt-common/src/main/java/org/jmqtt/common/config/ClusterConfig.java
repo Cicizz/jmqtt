@@ -10,6 +10,10 @@ public class ClusterConfig {
      * 模式:single 单机模式;cluster 集群模式
      */
     private String mode = "single";
+    /**
+     * 集群组件名称
+     */
+    private String clusterComponentName = "redis";
     private String redisHost = "127.0.0.1";
     private int redisPort = 6379;
     private String redisPassword = "";
@@ -89,5 +93,13 @@ public class ClusterConfig {
 
     public void setMode(String mode) {
         this.mode = mode;
+    }
+
+    public String getClusterComponentName() {
+        return clusterComponentName;
+    }
+
+    public void setClusterComponentName(String clusterComponentName) {
+        this.clusterComponentName = clusterComponentName;
     }
 }
