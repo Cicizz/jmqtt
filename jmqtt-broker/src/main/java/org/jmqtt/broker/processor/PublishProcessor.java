@@ -73,27 +73,29 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
                 default:
                     log.warn("[PubMessage] -> Wrong mqtt message,clientId={}", clientId);
             }
-        }catch (Throwable tr){
-            log.warn("[PubMessage] -> Solve mqtt pub message exception:{}",tr);
-        }finally {
+        } catch (Throwable tr) {
+            log.warn("[PubMessage] -> Solve mqtt pub message exception:{}", tr.getMessage());
+        } finally {
             ReferenceCountUtil.release(mqttMessage.payload());
         }
     }
 
-    private void processQos2(ChannelHandlerContext ctx,Message innerMsg){
-        log.debug("[PubMessage] -> Process qos2 message,clientId={}",innerMsg.getClientId());
-        boolean flag = flowMessageStore.cacheRecMsg(innerMsg.getClientId(),innerMsg);
-        if(!flag){
-            log.warn("[PubMessage] -> cache qos2 pub message failure,clientId={}",innerMsg.getClientId());
+    private void processQos2(ChannelHandlerContext ctx, Message innerMsg) {
+        int originMessageId = innerMsg.getMsgId();
+        log.debug("[PubMessage] -> Process qos2 message,clientId={}", innerMsg.getClientId());
+        boolean flag = flowMessageStore.cacheRecMsg(innerMsg.getClientId(), innerMsg);
+        if (!flag) {
+            log.warn("[PubMessage] -> cache qos2 pub message failure,clientId={}", innerMsg.getClientId());
         }
-        MqttMessage pubRecMessage = MessageUtil.getPubRecMessage(innerMsg.getMsgId());
+        MqttMessage pubRecMessage = MessageUtil.getPubRecMessage(originMessageId);
         ctx.writeAndFlush(pubRecMessage);
     }
 
-    private void processQos1(ChannelHandlerContext ctx,Message innerMsg){
+    private void processQos1(ChannelHandlerContext ctx, Message innerMsg) {
+        int originMessageId = innerMsg.getMsgId();
         processMessage(innerMsg);
-        log.debug("[PubMessage] -> Process qos1 message,clientId={}",innerMsg.getClientId());
-        MqttPubAckMessage pubAckMessage = MessageUtil.getPubAckMessage(innerMsg.getMsgId());
+        log.info("[PubMessage] -> Process qos1 message,clientId={}", innerMsg.getClientId());
+        MqttPubAckMessage pubAckMessage = MessageUtil.getPubAckMessage(originMessageId);
         ctx.writeAndFlush(pubAckMessage);
     }
 
