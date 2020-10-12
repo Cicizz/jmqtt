@@ -21,11 +21,10 @@ public abstract class ClusterMessageTransfer implements ClusterHandler {
     protected boolean consumeClusterMessage(CommandReqOrResp commandReqOrResp) {
         String commandCode = commandReqOrResp.getCommandCode();
         switch (commandCode) {
-            case CommandCode
-                    .MESSAGE_CLUSTER_TRANSFER:
+            case CommandCode.MESSAGE_CLUSTER_TRANSFER:
                 return dispatcheMessage(commandReqOrResp);
             default:
-                log.error("Dispatch cluster message error,commandRequest:{}",commandReqOrResp);
+                log.error("Dispatch cluster message error,commandRequest:{}", commandReqOrResp);
         }
         return false;
     }
@@ -36,7 +35,7 @@ public abstract class ClusterMessageTransfer implements ClusterHandler {
             Message message = (Message) msgObj;
             return messageDispatcher.appendMessage(message);
         } catch (Exception ex) {
-            log.error("Consume cluster message error,ex:{}",ex);
+            log.error("Consume cluster message error,ex:{}", ex.getMessage());
         }
         return false;
     }

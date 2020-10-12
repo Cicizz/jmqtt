@@ -163,7 +163,7 @@ public class BrokerController {
                 switch (clusterConfig.getClusterComponentName()) {
                     case "local":
                         this.clusterSessionManager = new DefaultClusterSessionManager(sessionStore, subscriptionStore);
-                        this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher);
+                        this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher,clusterConfig);
                         break;
                     case "redis":
                         this.clusterSessionManager = new RedisClusterSessionManager(sessionStore, subscriptionStore);
