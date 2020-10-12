@@ -14,9 +14,6 @@ import org.jmqtt.broker.cluster.command.CommandReqOrResp;
 import org.jmqtt.broker.dispatcher.MessageDispatcher;
 import org.jmqtt.common.config.ClusterConfig;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
-import org.jmqtt.store.redis.RedisCallBack;
-import redis.clients.jedis.Jedis;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
