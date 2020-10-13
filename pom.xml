@@ -45,7 +45,7 @@
         <logback.version>1.2.3</logback.version>
         <commons-cli.version>1.4</commons-cli.version>
         <commons-lang3.version>3.7</commons-lang3.version>
-        <junit.version>4.11</junit.version>
+        <junit.version>4.13.1</junit.version>
         <jedis.version>2.9.0</jedis.version>
         <hazelcast.version>4.0.3</hazelcast.version>
     </properties>
