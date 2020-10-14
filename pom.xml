@@ -7,7 +7,7 @@
     <groupId>org.jmqtt</groupId>
     <artifactId>jmqtt</artifactId>
     <packaging>pom</packaging>
-    <version>1.1.0</version>
+    <version>2.1.0</version>
     <modules>
         <module>jmqtt-broker</module>
         <module>jmqtt-remoting</module>
@@ -48,6 +48,7 @@
         <junit.version>4.13.1</junit.version>
         <jedis.version>2.9.0</jedis.version>
         <hazelcast.version>4.0.3</hazelcast.version>
+        <HServer.version>2.9.46</HServer.version>
     </properties>
 
     <dependencyManagement>
@@ -81,6 +82,17 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
                 <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>top.hserver</groupId>
+                <artifactId>HServer</artifactId>
+                <version>${HServer.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty-all</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
         </dependencies>
     </dependencyManagement>

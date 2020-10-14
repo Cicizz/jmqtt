@@ -186,7 +186,7 @@ public class RDB {
             long end = System.currentTimeMillis();
             log.info("[RocksDB] -> start RocksDB success,consumeTime:{}",(end-start));
         } catch (RocksDBException e) {
-            log.error("[RocksDB] -> init RocksDB error,ex:{}",e);
+            log.error("[RocksDB] -> init RocksDB error,ex:{}",e.getMessage());
             System.exit(-1);
         }
 

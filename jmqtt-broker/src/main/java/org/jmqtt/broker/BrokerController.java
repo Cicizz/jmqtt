@@ -14,6 +14,7 @@ import org.jmqtt.broker.cluster.redis.RedisClusterMessageTransfer;
 import org.jmqtt.broker.cluster.redis.RedisClusterSessionManager;
 import org.jmqtt.broker.dispatcher.DefaultDispatcherMessage;
 import org.jmqtt.broker.dispatcher.MessageDispatcher;
+import org.jmqtt.broker.manage.HttpServer;
 import org.jmqtt.broker.processor.*;
 import org.jmqtt.broker.recover.ReSendMessageService;
 import org.jmqtt.broker.subscribe.DefaultSubscriptionTreeMatcher;
@@ -73,6 +74,7 @@ public class BrokerController {
     private ReSendMessageService reSendMessageService;
     private ClusterSessionManager clusterSessionManager;
     private ClusterMessageTransfer clusterMessageTransfer;
+    private HttpServer httpServer;
 
 
     public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig, StoreConfig storeConfig, ClusterConfig clusterConfig) {
@@ -124,6 +126,7 @@ public class BrokerController {
 
         this.channelEventListener = new ClientLifeCycleHookService(willMessageStore, messageDispatcher);
         this.remotingServer = new NettyRemotingServer(brokerConfig, nettyConfig, channelEventListener);
+        this.httpServer = new HttpServer(this);
         this.reSendMessageService = new ReSendMessageService(offlineMessageStore, flowMessageStore);
 
         int coreThreadNum = Runtime.getRuntime().availableProcessors();
@@ -163,7 +166,7 @@ public class BrokerController {
                 switch (clusterConfig.getClusterComponentName()) {
                     case "local":
                         this.clusterSessionManager = new DefaultClusterSessionManager(sessionStore, subscriptionStore);
-                        this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher,clusterConfig);
+                        this.clusterMessageTransfer = new DefaultClusterMessageTransfer(messageDispatcher, clusterConfig);
                         break;
                     case "redis":
                         this.clusterSessionManager = new RedisClusterSessionManager(sessionStore, subscriptionStore);
@@ -234,6 +237,9 @@ public class BrokerController {
         }
         if (this.clusterMessageTransfer != null) {
             this.clusterMessageTransfer.startup();
+        }
+        if (this.httpServer != null) {
+            this.httpServer.start();
         }
         log.info("JMqtt Server start success and version = {}", brokerConfig.getVersion());
     }

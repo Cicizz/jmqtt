@@ -37,7 +37,7 @@ public class BrokerConfig {
         this.version = version;
     }
 
-    public boolean isAnonymousEnable() {
+    public boolean getAnonymousEnable() {
         return anonymousEnable;
     }
 
