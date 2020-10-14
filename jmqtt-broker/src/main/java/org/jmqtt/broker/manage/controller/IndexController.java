@@ -8,6 +8,6 @@ import top.hserver.core.ioc.annotation.GET;
 public class IndexController {
     @GET("/")
     public void index(HttpResponse response) {
-        response.sendTemplate("jmqttindex.ftl");
+        response.sendTemplate("index.ftl");
     }
 }
