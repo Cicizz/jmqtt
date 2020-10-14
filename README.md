@@ -47,12 +47,11 @@ Take IDEA for example:
 * **remoting**：Communication layer. Used for connection management, protocol analysis, heartbeat, etc.
 * **distribution**：Configuration module. Used for configuration files, start and stop commands, etc.
 * **example**：Client example. Only java and websocket examples are supported currently.
-* **group**：Cluster management module. Used for message transmission, cluster management, and related operation and maintenance functions.
 * **store**：Storage module. Provides several interfaces for mqtt protocol data, supports memory-based and Rocksdb local storage.
 
 ## RoadMap
 
-### Version 3.x
+### Version 3.x(developing......)
 
 1. Support simple operation and maintenance functions.
 2. Support RocketMQ Bridge.
