@@ -1,9 +1,6 @@
 package org.jmqtt.common.config;
 
 public class NettyConfig {
-
-    private int selectorThreadNum = 3;
-    private int ioThreadNum = 8;
     private int tcpBackLog = 1024;
     private boolean tcpNoDelay = false;
     private boolean tcpReuseAddr = true;
@@ -12,7 +9,6 @@ public class NettyConfig {
     private int tcpRcvBuf = 65536;
     private boolean useEpoll = false;
     private boolean pooledByteBufAllocatorEnable = false;
-
 
     /**
      * tcp port default 1883
@@ -25,6 +21,12 @@ public class NettyConfig {
      */
     private boolean startWebsocket = true;
     private int websocketPort = 1884;
+
+    /**
+     * http port default 1881
+     */
+    private boolean startHttp = true;
+    private int httpPort = 1881;
 
     /**
      * tcp port with ssl default 8883
@@ -46,28 +48,10 @@ public class NettyConfig {
     private String sslKeyFilePath = "/conf/server.pfx";
     private String sslManagerPwd = "654321";
     private String sslStorePwd = "654321";
-
-
     /**
      * max mqtt message size
      */
-    private int maxMsgSize = 512*1024;
-
-    public int getSelectorThreadNum() {
-        return selectorThreadNum;
-    }
-
-    public void setSelectorThreadNum(int selectorThreadNum) {
-        this.selectorThreadNum = selectorThreadNum;
-    }
-
-    public int getIoThreadNum() {
-        return ioThreadNum;
-    }
-
-    public void setIoThreadNum(int ioThreadNum) {
-        this.ioThreadNum = ioThreadNum;
-    }
+    private int maxMsgSize = 512 * 1024;
 
     public int getTcpBackLog() {
         return tcpBackLog;
@@ -77,7 +61,7 @@ public class NettyConfig {
         this.tcpBackLog = tcpBackLog;
     }
 
-    public boolean isTcpNoDelay() {
+    public boolean getTcpNoDelay() {
         return tcpNoDelay;
     }
 
@@ -85,7 +69,7 @@ public class NettyConfig {
         this.tcpNoDelay = tcpNoDelay;
     }
 
-    public boolean isTcpReuseAddr() {
+    public boolean getTcpReuseAddr() {
         return tcpReuseAddr;
     }
 
@@ -93,7 +77,7 @@ public class NettyConfig {
         this.tcpReuseAddr = tcpReuseAddr;
     }
 
-    public boolean isTcpKeepAlive() {
+    public boolean getTcpKeepAlive() {
         return tcpKeepAlive;
     }
 
@@ -133,7 +117,7 @@ public class NettyConfig {
         this.maxMsgSize = maxMsgSize;
     }
 
-    public boolean isUseEpoll() {
+    public boolean getUseEpoll() {
         return useEpoll;
     }
 
@@ -141,7 +125,7 @@ public class NettyConfig {
         this.useEpoll = useEpoll;
     }
 
-    public boolean isPooledByteBufAllocatorEnable() {
+    public boolean getPooledByteBufAllocatorEnable() {
         return pooledByteBufAllocatorEnable;
     }
 
@@ -149,7 +133,7 @@ public class NettyConfig {
         this.pooledByteBufAllocatorEnable = pooledByteBufAllocatorEnable;
     }
 
-    public boolean isStartWebsocket() {
+    public boolean getStartWebsocket() {
         return startWebsocket;
     }
 
@@ -165,7 +149,7 @@ public class NettyConfig {
         this.websocketPort = websocketPort;
     }
 
-    public boolean isStartTcp() {
+    public boolean getStartTcp() {
         return startTcp;
     }
 
@@ -174,7 +158,7 @@ public class NettyConfig {
     }
 
 
-    public boolean isStartSslTcp() {
+    public boolean getStartSslTcp() {
         return startSslTcp;
     }
 
@@ -191,7 +175,7 @@ public class NettyConfig {
         this.sslTcpPort = sslTcpPort;
     }
 
-    public boolean isStartSslWebsocket() {
+    public boolean getStartSslWebsocket() {
         return startSslWebsocket;
     }
 
@@ -207,7 +191,7 @@ public class NettyConfig {
         this.sslWebsocketPort = sslWebsocketPort;
     }
 
-    public boolean isUseClientCA() {
+    public boolean getUseClientCA() {
         return useClientCA;
     }
 
@@ -245,5 +229,21 @@ public class NettyConfig {
 
     public void setSslStorePwd(String sslStorePwd) {
         this.sslStorePwd = sslStorePwd;
+    }
+
+    public boolean getStartHttp() {
+        return startHttp;
+    }
+
+    public void setStartHttp(boolean startHttp) {
+        this.startHttp = startHttp;
+    }
+
+    public int getHttpPort() {
+        return httpPort;
+    }
+
+    public void setHttpPort(int httpPort) {
+        this.httpPort = httpPort;
     }
 }

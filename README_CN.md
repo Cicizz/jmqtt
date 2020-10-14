@@ -42,19 +42,18 @@
 * **remoting**：通信层，连接管理，协议解析，心跳等
 * **distribution**：配置模块，主要是配置文件，启停命令等存放
 * **example**：客户端示例，目前只有java以及websocket
-* **group**：集群管理模块：消息传输，集群管理，以及相关运维功能实现
 * **store**：存储模块，提供了mqtt协议数据的几个接口，支持基于内存的和Rocksdb的本地存储
 
 ## RoadMap
 
-### Version 3.x
+### Version 3.x（开发中......）
 
 1. 支持简单运维功能
 2. 支持RocketMQ Bridge
 3. 支持Kafka Bridge
 4. 支持$SYS Topic监控
 
-### Version 2.x（开发中，需要测试）
+### Version 2.x
 
 1. 支持基于redis的中央集群，多主机横向扩展，实现高可用
 2. 支持SSL/TLS

@@ -36,7 +36,7 @@ import java.util.concurrent.RejectedExecutionException;
 
 
 public class NettyRemotingServer implements RemotingService {
-
+    int coreThreadNum = Runtime.getRuntime().availableProcessors();
     private static final Logger log = LoggerFactory.getLogger(LoggerName.REMOTING);
     private NettyConfig nettyConfig;
     private EventLoopGroup selectorGroup;
@@ -52,16 +52,16 @@ public class NettyRemotingServer implements RemotingService {
         this.brokerConfig = brokerConfig;
         this.nettyEventExecutor = new NettyEventExecutor(listener);
 
-        if (!nettyConfig.isUseEpoll()) {
-            selectorGroup = new NioEventLoopGroup(nettyConfig.getSelectorThreadNum(),
+        if (!nettyConfig.getUseEpoll()) {
+            selectorGroup = new NioEventLoopGroup(coreThreadNum,
                     new ThreadFactoryImpl("SelectorEventGroup"));
-            ioGroup = new NioEventLoopGroup(nettyConfig.getIoThreadNum(),
+            ioGroup = new NioEventLoopGroup(coreThreadNum * 2,
                     new ThreadFactoryImpl("IOEventGroup"));
             clazz = NioServerSocketChannel.class;
         } else {
-            selectorGroup = new EpollEventLoopGroup(nettyConfig.getSelectorThreadNum(),
+            selectorGroup = new EpollEventLoopGroup(coreThreadNum,
                     new ThreadFactoryImpl("SelectorEventGroup"));
-            ioGroup = new EpollEventLoopGroup(nettyConfig.getIoThreadNum(),
+            ioGroup = new EpollEventLoopGroup(coreThreadNum * 2,
                     new ThreadFactoryImpl("IOEventGroup"));
             clazz = EpollServerSocketChannel.class;
         }
@@ -73,20 +73,20 @@ public class NettyRemotingServer implements RemotingService {
         //Netty event executor start
         this.nettyEventExecutor.start();
         // start TCP server
-        if (nettyConfig.isStartTcp()) {
+        if (nettyConfig.getStartTcp()) {
             startTcpServer(false, nettyConfig.getTcpPort());
         }
 
-        if (nettyConfig.isStartSslTcp()) {
+        if (nettyConfig.getStartSslTcp()) {
             startTcpServer(true, nettyConfig.getSslTcpPort());
         }
 
         // start Websocket server
-        if (nettyConfig.isStartWebsocket()) {
+        if (nettyConfig.getStartWebsocket()) {
             startWebsocketServer(false, nettyConfig.getWebsocketPort());
         }
 
-        if (nettyConfig.isStartSslWebsocket()) {
+        if (nettyConfig.getStartSslWebsocket()) {
             startWebsocketServer(true, nettyConfig.getSslWebsocketPort());
         }
     }
@@ -96,11 +96,11 @@ public class NettyRemotingServer implements RemotingService {
         bootstrap.group(selectorGroup, ioGroup)
                 .channel(clazz)
                 .option(ChannelOption.SO_BACKLOG, nettyConfig.getTcpBackLog())
-                .childOption(ChannelOption.TCP_NODELAY, nettyConfig.isTcpNoDelay())
+                .childOption(ChannelOption.TCP_NODELAY, nettyConfig.getTcpNoDelay())
                 .childOption(ChannelOption.SO_SNDBUF, nettyConfig.getTcpSndBuf())
                 .option(ChannelOption.SO_RCVBUF, nettyConfig.getTcpRcvBuf())
-                .option(ChannelOption.SO_REUSEADDR, nettyConfig.isTcpReuseAddr())
-                .childOption(ChannelOption.SO_KEEPALIVE, nettyConfig.isTcpKeepAlive())
+                .option(ChannelOption.SO_REUSEADDR, nettyConfig.getTcpReuseAddr())
+                .childOption(ChannelOption.SO_KEEPALIVE, nettyConfig.getTcpKeepAlive())
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
@@ -108,7 +108,7 @@ public class NettyRemotingServer implements RemotingService {
                         if (useSsl) {
                             pipeline.addLast("ssl", NettySslHandler.getSslHandler(
                                     socketChannel,
-                                    nettyConfig.isUseClientCA(),
+                                    nettyConfig.getUseClientCA(),
                                     nettyConfig.getSslKeyStoreType(),
                                     brokerConfig.getJmqttHome() + nettyConfig.getSslKeyFilePath(),
                                     nettyConfig.getSslManagerPwd(),
@@ -125,11 +125,11 @@ public class NettyRemotingServer implements RemotingService {
                                 .addLast("mqttDecoder", new MqttDecoder(nettyConfig.getMaxMsgSize()))
                                 .addLast("mqttEncoder", MqttEncoder.INSTANCE)
                                 .addLast("nettyConnectionManager", new NettyConnectHandler(
-                                    nettyEventExecutor))
+                                        nettyEventExecutor))
                                 .addLast("nettyMqttHandler", new NettyMqttHandler());
                     }
                 });
-        if (nettyConfig.isPooledByteBufAllocatorEnable()) {
+        if (nettyConfig.getPooledByteBufAllocatorEnable()) {
             bootstrap.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         }
         try {
@@ -145,11 +145,11 @@ public class NettyRemotingServer implements RemotingService {
         bootstrap.group(selectorGroup, ioGroup)
                 .channel(clazz)
                 .option(ChannelOption.SO_BACKLOG, nettyConfig.getTcpBackLog())
-                .childOption(ChannelOption.TCP_NODELAY, nettyConfig.isTcpNoDelay())
+                .childOption(ChannelOption.TCP_NODELAY, nettyConfig.getTcpNoDelay())
                 .childOption(ChannelOption.SO_SNDBUF, nettyConfig.getTcpSndBuf())
                 .option(ChannelOption.SO_RCVBUF, nettyConfig.getTcpRcvBuf())
-                .option(ChannelOption.SO_REUSEADDR, nettyConfig.isTcpReuseAddr())
-                .childOption(ChannelOption.SO_KEEPALIVE, nettyConfig.isTcpKeepAlive())
+                .option(ChannelOption.SO_REUSEADDR, nettyConfig.getTcpReuseAddr())
+                .childOption(ChannelOption.SO_KEEPALIVE, nettyConfig.getTcpKeepAlive())
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
@@ -157,7 +157,7 @@ public class NettyRemotingServer implements RemotingService {
                         if (useSsl) {
                             pipeline.addLast("ssl", NettySslHandler.getSslHandler(
                                     socketChannel,
-                                    nettyConfig.isUseClientCA(),
+                                    nettyConfig.getUseClientCA(),
                                     nettyConfig.getSslKeyStoreType(),
                                     brokerConfig.getJmqttHome() + nettyConfig.getSslKeyFilePath(),
                                     nettyConfig.getSslManagerPwd(),
@@ -168,11 +168,11 @@ public class NettyRemotingServer implements RemotingService {
                                 .addLast("mqttEncoder", MqttEncoder.INSTANCE)
                                 .addLast("mqttDecoder", new MqttDecoder(nettyConfig.getMaxMsgSize()))
                                 .addLast("nettyConnectionManager", new NettyConnectHandler(
-                                    nettyEventExecutor))
+                                        nettyEventExecutor))
                                 .addLast("nettyMqttHandler", new NettyMqttHandler());
                     }
                 });
-        if (nettyConfig.isPooledByteBufAllocatorEnable()) {
+        if (nettyConfig.getPooledByteBufAllocatorEnable()) {
             bootstrap.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         }
         try {
@@ -199,7 +199,6 @@ public class NettyRemotingServer implements RemotingService {
     }
 
     class NettyMqttHandler extends ChannelInboundHandlerAdapter {
-
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object obj) {
             MqttMessage mqttMessage = (MqttMessage) obj;
@@ -216,7 +215,5 @@ public class NettyRemotingServer implements RemotingService {
                 ctx.close();
             }
         }
-
     }
-
 }

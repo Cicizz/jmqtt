@@ -12,7 +12,7 @@ public class StoreConfig {
     private int storeType = 3;
 
     /* rocksdb store configuration start */
-    private String rocksDbPath = System.getProperty("user.home",System.getenv("user.home"))+ File.separator + "rocksdb";
+    private String rocksDbPath = System.getenv("JMQTT_HOME") != null ? System.getenv("JMQTT_HOME") : System.getProperty("user.dir") + File.separator + "rocksdb";
     private int maxBackgroundFlushes = 10;
     private int maxBackgroundCompactions = 10;
     private int maxOpenFiles = 2048;
