@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <configuration>
-    <!--<property name="user.home" value="" />-->
+    <!--<property name="user.dir" value="" />-->
 
     <!-- console -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -13,10 +13,10 @@
     <!-- other.log -->
     <appender name="JmqttOtherAppender_inner"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.home}/logs/jmqttlogs/store.log</file>
+        <file>${user.dir}/log/jmqttlogs/store.log</file>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>${user.home}/logs/jmqttlogs/otherdays/cluster.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${user.dir}/log/jmqttlogs/otherdays/cluster.%i.log.gz</fileNamePattern>
             <minIndex>1</minIndex>
             <maxIndex>20</maxIndex>
         </rollingPolicy>
@@ -35,10 +35,10 @@
     <!-- cluster.log -->
     <appender name="JmqttClusterAppender_inner"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.home}/logs/jmqttlogs/store.log</file>
+        <file>${user.dir}/log/jmqttlogs/store.log</file>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>${user.home}/logs/jmqttlogs/otherdays/cluster.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${user.dir}/log/jmqttlogs/otherdays/cluster.%i.log.gz</fileNamePattern>
             <minIndex>1</minIndex>
             <maxIndex>20</maxIndex>
         </rollingPolicy>
@@ -57,10 +57,10 @@
     <!-- store.log -->
     <appender name="JmqttStoreAppender_inner"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.home}/logs/jmqttlogs/store.log</file>
+        <file>${user.dir}/log/jmqttlogs/store.log</file>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>${user.home}/logs/jmqttlogs/otherdays/store.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${user.dir}/log/jmqttlogs/otherdays/store.%i.log.gz</fileNamePattern>
             <minIndex>1</minIndex>
             <maxIndex>20</maxIndex>
         </rollingPolicy>
@@ -79,10 +79,10 @@
     <!-- remoting.log -->
     <appender name="JmqttRemotingAppender_inner"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.home}/logs/jmqttlogs/remoting.log</file>
+        <file>${user.dir}/log/jmqttlogs/remoting.log</file>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>${user.home}/logs/jmqttlogs/otherdays/remoting.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${user.dir}/log/jmqttlogs/otherdays/remoting.%i.log.gz</fileNamePattern>
             <minIndex>1</minIndex>
             <maxIndex>20</maxIndex>
         </rollingPolicy>
@@ -101,10 +101,10 @@
     <!-- messageTrace.log -->
     <appender name="JmqttMessageTraceAppender_inner"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.home}/logs/jmqttlogs/messageTrace.log</file>
+        <file>${user.dir}/log/jmqttlogs/messageTrace.log</file>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>${user.home}/logs/jmqttlogs/otherdays/messageTrace.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${user.dir}/log/jmqttlogs/otherdays/messageTrace.%i.log.gz</fileNamePattern>
             <minIndex>1</minIndex>
             <maxIndex>20</maxIndex>
         </rollingPolicy>
@@ -123,10 +123,10 @@
     <!-- broker.log -->
     <appender name="JmqttBrokerAppender_inner"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.home}/logs/jmqttlogs/broker.log</file>
+        <file>${user.dir}/log/jmqttlogs/broker.log</file>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>${user.home}/logs/jmqttlogs/otherdays/broker.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${user.dir}/log/jmqttlogs/otherdays/broker.%i.log.gz</fileNamePattern>
             <minIndex>1</minIndex>
             <maxIndex>20</maxIndex>
         </rollingPolicy>
@@ -145,10 +145,10 @@
     <!-- clientTrace.log -->
     <appender name="JmqttClientTraceAppender_inner"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.home}/logs/jmqttlogs/clientTrace.log</file>
+        <file>${user.dir}/log/jmqttlogs/clientTrace.log</file>
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-            <fileNamePattern>${user.home}/logs/jmqttlogs/otherdays/clientTrace.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${user.dir}/log/jmqttlogs/otherdays/clientTrace.%i.log.gz</fileNamePattern>
             <minIndex>1</minIndex>
             <maxIndex>20</maxIndex>
         </rollingPolicy>

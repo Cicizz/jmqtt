@@ -48,7 +48,7 @@
         <junit.version>4.11</junit.version>
         <jedis.version>2.9.0</jedis.version>
         <hazelcast.version>4.0.3</hazelcast.version>
-        <HServer.version>2.9.50</HServer.version>
+        <HServer.version>2.9.46</HServer.version>
     </properties>
 
     <dependencyManagement>
@@ -87,6 +87,12 @@
                 <groupId>top.hserver</groupId>
                 <artifactId>HServer</artifactId>
                 <version>${HServer.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty-all</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
         </dependencies>
     </dependencyManagement>
