@@ -146,34 +146,34 @@ a {
 }
 
 .index-foot {
-    text-align:center;
+    text-align: center;
     margin-top: 50px;
 }
 
 .button_foot {
-    width:150px;
-    text-align:center;
-    line-height:100%;
-    padding:0.3em;
-    font:16px Arial,sans-serif bold;
-    font-style:normal;
-    text-decoration:none;
-    margin:2px;
-    vertical-align:text-bottom;
-    zoom:1;
-    outline:none;
-    font-size-adjust:none;
-    font-stretch:normal;
-    border-radius:50px;
-    box-shadow:0px 1px 2px rgba(0,0,0,0.2);
-    text-shadow:0px 1px 1px rgba(0,0,0,0.3);
-    color:#fefee9;
-    border:0.2px solid #2299ff;
-    background-repeat:repeat;
-    background-size:auto;
-    background-origin:padding-box;
-    background-clip:padding-box;
-    background-color:#3399ff;
+    width: 150px;
+    text-align: center;
+    line-height: 100%;
+    padding: 0.3em;
+    font: 16px Arial, sans-serif bold;
+    font-style: normal;
+    text-decoration: none;
+    margin: 2px;
+    vertical-align: text-bottom;
+    zoom: 1;
+    outline: none;
+    font-size-adjust: none;
+    font-stretch: normal;
+    border-radius: 50px;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2);
+    text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.3);
+    color: #fefee9;
+    border: 0.2px solid #2299ff;
+    background-repeat: repeat;
+    background-size: auto;
+    background-origin: padding-box;
+    background-clip: padding-box;
+    background-color: #3399ff;
     background: linear-gradient(111deg, #04bde4, #3399ff);
 }
 
