@@ -14,7 +14,6 @@ import org.jmqtt.broker.cluster.redis.RedisClusterMessageTransfer;
 import org.jmqtt.broker.cluster.redis.RedisClusterSessionManager;
 import org.jmqtt.broker.dispatcher.DefaultDispatcherMessage;
 import org.jmqtt.broker.dispatcher.MessageDispatcher;
-import org.jmqtt.broker.manage.HttpServer;
 import org.jmqtt.broker.processor.*;
 import org.jmqtt.broker.recover.ReSendMessageService;
 import org.jmqtt.broker.subscribe.DefaultSubscriptionTreeMatcher;
@@ -27,6 +26,7 @@ import org.jmqtt.common.helper.MixAll;
 import org.jmqtt.common.helper.RejectHandler;
 import org.jmqtt.common.helper.ThreadFactoryImpl;
 import org.jmqtt.common.log.LoggerName;
+import org.jmqtt.manage.HttpServer;
 import org.jmqtt.remoting.netty.ChannelEventListener;
 import org.jmqtt.remoting.netty.NettyRemotingServer;
 import org.jmqtt.remoting.netty.RequestProcessor;
@@ -126,7 +126,7 @@ public class BrokerController {
 
         this.channelEventListener = new ClientLifeCycleHookService(willMessageStore, messageDispatcher);
         this.remotingServer = new NettyRemotingServer(brokerConfig, nettyConfig, channelEventListener);
-        this.httpServer = new HttpServer(this);
+        this.httpServer = new HttpServer(nettyConfig);
         this.reSendMessageService = new ReSendMessageService(offlineMessageStore, flowMessageStore);
 
         int coreThreadNum = Runtime.getRuntime().availableProcessors();

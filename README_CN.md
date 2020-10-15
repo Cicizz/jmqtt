@@ -42,6 +42,7 @@
 * **remoting**：通信层，连接管理，协议解析，心跳等
 * **distribution**：配置模块，主要是配置文件，启停命令等存放
 * **example**：客户端示例，目前只有java以及websocket
+* **manage**：管理模块，主要涉及动态配置和系统监控等功能
 * **store**：存储模块，提供了mqtt协议数据的几个接口，支持基于内存的和Rocksdb的本地存储
 
 ## RoadMap
