@@ -34,8 +34,8 @@
             <artifactId>jmqtt-store</artifactId>
         </dependency>
         <dependency>
-            <groupId>top.hserver</groupId>
-            <artifactId>HServer</artifactId>
+            <groupId>org.jmqtt</groupId>
+            <artifactId>jmqtt-manage</artifactId>
         </dependency>
     </dependencies>
 

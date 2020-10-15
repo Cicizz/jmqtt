@@ -15,6 +15,7 @@
         <module>jmqtt-common</module>
         <module>jmqtt-distribution</module>
         <module>jmqtt-example</module>
+        <module>jmqtt-manage</module>
     </modules>
 
     <name>jmqtt</name>
@@ -71,6 +72,11 @@
             <dependency>
                 <groupId>org.jmqtt</groupId>
                 <artifactId>jmqtt-broker</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jmqtt</groupId>
+                <artifactId>jmqtt-manage</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

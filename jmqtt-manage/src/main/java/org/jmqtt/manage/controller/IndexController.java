@@ -1,4 +1,4 @@
-package org.jmqtt.broker.manage.controller;
+package org.jmqtt.manage.controller;
 
 import top.hserver.core.interfaces.HttpResponse;
 import top.hserver.core.ioc.annotation.Controller;

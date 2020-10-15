@@ -1,4 +1,4 @@
-package org.jmqtt.broker.manage.exception;
+package org.jmqtt.manage.exception;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import top.hserver.core.interfaces.GlobalException;
