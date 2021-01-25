@@ -2,24 +2,24 @@ package org.jmqtt.broker.client;
 
 import io.netty.channel.Channel;
 import org.apache.commons.lang3.StringUtils;
+import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.dispatcher.MessageDispatcher;
-import org.jmqtt.common.log.LoggerName;
-import org.jmqtt.common.model.Message;
-import org.jmqtt.remoting.netty.ChannelEventListener;
-import org.jmqtt.remoting.session.ConnectManager;
-import org.jmqtt.remoting.util.NettyUtil;
-import org.jmqtt.store.WillMessageStore;
+import org.jmqtt.broker.remoting.netty.ChannelEventListener;
+import org.jmqtt.broker.remoting.session.ConnectManager;
+import org.jmqtt.broker.remoting.util.NettyUtil;
+import org.jmqtt.broker.store.MessageStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ClientLifeCycleHookService implements ChannelEventListener {
 
-	private static final Logger log = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
-    private WillMessageStore willMessageStore;
-    private MessageDispatcher messageDispatcher;
+	private static final Logger            log = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
+    private              MessageStore      messageStore;
+    private              MessageDispatcher messageDispatcher;
 
-    public ClientLifeCycleHookService(WillMessageStore willMessageStore,MessageDispatcher messageDispatcher){
-        this.willMessageStore = willMessageStore;
+    public ClientLifeCycleHookService(MessageStore messageStore,MessageDispatcher messageDispatcher){
+        this.messageStore = messageStore;
         this.messageDispatcher = messageDispatcher;
     }
 
@@ -31,8 +31,8 @@ public class ClientLifeCycleHookService implements ChannelEventListener {
     public void onChannelClose(String remoteAddr, Channel channel) {
         String clientId = NettyUtil.getClientId(channel);
         if(StringUtils.isNotEmpty(clientId)){
-            if(willMessageStore.hasWillMessage(clientId)){
-                Message willMessage = willMessageStore.getWillMessage(clientId);
+            Message willMessage = messageStore.getWillMessage(clientId);
+            if (willMessage != null) {
                 messageDispatcher.appendMessage(willMessage);
             }
         }

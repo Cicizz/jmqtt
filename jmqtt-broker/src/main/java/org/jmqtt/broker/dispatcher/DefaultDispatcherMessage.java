@@ -1,18 +1,17 @@
 package org.jmqtt.broker.dispatcher;
 
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
+import org.jmqtt.broker.common.helper.RejectHandler;
+import org.jmqtt.broker.common.helper.ThreadFactoryImpl;
+import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.model.Message;
+import org.jmqtt.broker.common.model.MessageHeader;
+import org.jmqtt.broker.common.model.Subscription;
+import org.jmqtt.broker.remoting.session.ClientSession;
+import org.jmqtt.broker.remoting.session.ConnectManager;
+import org.jmqtt.broker.remoting.util.MessageUtil;
+import org.jmqtt.broker.store.SessionStore;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
-import org.jmqtt.common.helper.RejectHandler;
-import org.jmqtt.common.helper.ThreadFactoryImpl;
-import org.jmqtt.common.log.LoggerName;
-import org.jmqtt.common.model.Message;
-import org.jmqtt.common.model.MessageHeader;
-import org.jmqtt.common.model.Subscription;
-import org.jmqtt.remoting.session.ClientSession;
-import org.jmqtt.remoting.session.ConnectManager;
-import org.jmqtt.remoting.util.MessageUtil;
-import org.jmqtt.store.FlowMessageStore;
-import org.jmqtt.store.OfflineMessageStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +21,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.*;
 
+/**
+ * 默认的消息分发实现类
+ */
 public class DefaultDispatcherMessage implements MessageDispatcher {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
@@ -30,14 +32,12 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
     private ThreadPoolExecutor pollThread;
     private int pollThreadNum;
     private SubscriptionMatcher subscriptionMatcher;
-    private FlowMessageStore flowMessageStore;
-    private OfflineMessageStore offlineMessageStore;
+    private SessionStore sessionStore;
 
-    public DefaultDispatcherMessage(int pollThreadNum, SubscriptionMatcher subscriptionMatcher, FlowMessageStore flowMessageStore, OfflineMessageStore offlineMessageStore) {
+
+    public DefaultDispatcherMessage(int pollThreadNum, SubscriptionMatcher subscriptionMatcher, SessionStore sessionStore) {
         this.pollThreadNum = pollThreadNum;
         this.subscriptionMatcher = subscriptionMatcher;
-        this.flowMessageStore = flowMessageStore;
-        this.offlineMessageStore = offlineMessageStore;
     }
 
     @Override
@@ -119,12 +119,12 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
                                 message.putHeader(MessageHeader.QOS, qos);
                                 message.setMsgId(messageId);
                                 if (qos > 0) {
-                                    flowMessageStore.cacheSendMsg(clientId, message);
+                                    sessionStore.cacheOutflowMsg(clientId, message);
                                 }
                                 MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message, false, qos, messageId);
                                 clientSession.getCtx().writeAndFlush(publishMessage);
                             } else {
-                                offlineMessageStore.addOfflineMessage(clientId, message);
+                                sessionStore.storeOfflineMsg(clientId, message);
                             }
                         }
                     }

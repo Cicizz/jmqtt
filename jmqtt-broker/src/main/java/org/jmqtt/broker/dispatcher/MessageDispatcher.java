@@ -1,7 +1,10 @@
 package org.jmqtt.broker.dispatcher;
 
-import org.jmqtt.common.model.Message;
+import org.jmqtt.broker.common.model.Message;
 
+/**
+ * 消息分发器：
+ */
 public interface MessageDispatcher {
 
     void start();
