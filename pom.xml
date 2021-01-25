@@ -10,12 +10,10 @@
     <version>2.1.0</version>
     <modules>
         <module>jmqtt-broker</module>
-        <module>jmqtt-remoting</module>
-        <module>jmqtt-store</module>
         <module>jmqtt-common</module>
         <module>jmqtt-distribution</module>
         <module>jmqtt-example</module>
-        <module>jmqtt-manage</module>
+        <module>jmqtt-admin</module>
     </modules>
 
     <name>jmqtt</name>
@@ -39,7 +37,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <netty.version>4.1.42.Final</netty.version>
+        <netty.version>4.1.54.Final</netty.version>
         <rocksdb.version>5.17.2</rocksdb.version>
         <fastjson.version>1.2.54</fastjson.version>
         <slf4j.version>1.7.25</slf4j.version>
@@ -61,28 +59,13 @@
             </dependency>
             <dependency>
                 <groupId>org.jmqtt</groupId>
-                <artifactId>jmqtt-remoting</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jmqtt</groupId>
-                <artifactId>jmqtt-store</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jmqtt</groupId>
                 <artifactId>jmqtt-broker</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.jmqtt</groupId>
-                <artifactId>jmqtt-manage</artifactId>
+                <artifactId>jmqtt-admin</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.rocksdb</groupId>
-                <artifactId>rocksdbjni</artifactId>
-                <version>${rocksdb.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
@@ -144,11 +127,6 @@
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast</artifactId>
-            <version>${hazelcast.version}</version>
         </dependency>
     </dependencies>
 
