@@ -1,6 +1,4 @@
-/**
- * Alipay.com Inc. Copyright (c) 2004-2021 All Rights Reserved.
- */
+
 package org.jmqtt.broker.store.memory;
 
 import org.jmqtt.broker.common.model.Message;
