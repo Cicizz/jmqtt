@@ -7,10 +7,9 @@
     <groupId>org.jmqtt</groupId>
     <artifactId>jmqtt</artifactId>
     <packaging>pom</packaging>
-    <version>2.1.0</version>
+    <version>3.0.0</version>
     <modules>
         <module>jmqtt-broker</module>
-        <module>jmqtt-common</module>
         <module>jmqtt-distribution</module>
         <module>jmqtt-example</module>
         <module>jmqtt-admin</module>
@@ -38,8 +37,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <netty.version>4.1.54.Final</netty.version>
-        <rocksdb.version>5.17.2</rocksdb.version>
-        <fastjson.version>1.2.54</fastjson.version>
+        <fastjson.version>1.2.75</fastjson.version>
         <slf4j.version>1.7.25</slf4j.version>
         <logback.version>1.2.3</logback.version>
         <commons-cli.version>1.4</commons-cli.version>
@@ -48,6 +46,8 @@
         <jedis.version>2.9.0</jedis.version>
         <hazelcast.version>4.0.3</hazelcast.version>
         <HServer.version>2.9.46</HServer.version>
+        <mybatis.version>3.4.6</mybatis.version>
+        <druid.version>1.2.4</druid.version>
     </properties>
 
     <dependencyManagement>
@@ -71,6 +71,16 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
                 <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis</artifactId>
+                <version>${mybatis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid</artifactId>
+                <version>${druid.version}</version>
             </dependency>
             <dependency>
                 <groupId>top.hserver</groupId>

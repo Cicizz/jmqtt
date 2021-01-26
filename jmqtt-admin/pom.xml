@@ -5,11 +5,11 @@
     <parent>
         <artifactId>jmqtt</artifactId>
         <groupId>org.jmqtt</groupId>
-        <version>2.1.0</version>
+        <version>3.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <version>2.1.0</version>
-    <artifactId>jmqtt-manage</artifactId>
+    <version>3.0.0</version>
+    <artifactId>jmqtt-admin</artifactId>
 
     <dependencies>
         <dependency>

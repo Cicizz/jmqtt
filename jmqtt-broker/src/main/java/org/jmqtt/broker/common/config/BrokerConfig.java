@@ -16,9 +16,7 @@ public class BrokerConfig {
 
     private String messageStoreClass = "";
 
-    /**
-     * redis相关配置
-     */
+    /* redis相关配置 */
     private String redisHost = "127.0.0.1";
     private int redisPort = 6379;
     private String redisPassword = "";
@@ -27,6 +25,9 @@ public class BrokerConfig {
     private int minIdle = 20;
     private int maxTotal = 200;
     private int maxIdle = 50;
+
+    /* db相关配置 */
+
 
 
     public String getRedisHost() {
