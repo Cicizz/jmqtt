@@ -1,6 +1,7 @@
 
 package org.jmqtt.broker.store;
 
+import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.Subscription;
 
@@ -19,6 +20,10 @@ import java.util.Set;
  *  TODO 待实现
  */
 public interface SessionStore {
+
+    void start(BrokerConfig brokerConfig);
+
+    void shutdown();
 
     /**
      * 从集群中查询该clientId之前的连接状态
