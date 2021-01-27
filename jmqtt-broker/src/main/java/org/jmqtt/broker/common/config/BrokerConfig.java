@@ -27,7 +27,13 @@ public class BrokerConfig {
     private int maxIdle = 50;
 
     /* db相关配置 */
+    private String driver;
+    private String url;
+    private String username;
+    private String password;
 
+    // 是否启用高性能模式，高性能模式下：入栈消息，出栈消息等过程消息都会默认采用内存缓存，若为false，则会用具体实现的存储缓存这一阶段的消息
+    private boolean highPerformance = false;
 
 
     public String getRedisHost() {
@@ -125,5 +131,53 @@ public class BrokerConfig {
 
     public void setAnonymousEnable(boolean anonymousEnable) {
         this.anonymousEnable = anonymousEnable;
+    }
+
+    public String getSessionStoreClass() {
+        return sessionStoreClass;
+    }
+
+    public void setSessionStoreClass(String sessionStoreClass) {
+        this.sessionStoreClass = sessionStoreClass;
+    }
+
+    public String getMessageStoreClass() {
+        return messageStoreClass;
+    }
+
+    public void setMessageStoreClass(String messageStoreClass) {
+        this.messageStoreClass = messageStoreClass;
+    }
+
+    public String getDriver() {
+        return driver;
+    }
+
+    public void setDriver(String driver) {
+        this.driver = driver;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

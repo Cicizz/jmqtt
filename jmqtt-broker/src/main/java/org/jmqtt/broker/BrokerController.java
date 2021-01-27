@@ -77,8 +77,8 @@ public class BrokerController {
         {
             // 会话状态，消息存储加载，可自己实现相关的类
             // TODO 插件化改造，改造成反射加载具体实现类
-            this.sessionStore = new DefaultSessionStore();
-            this.messageStore = new DefaultMessageStore();
+            //this.sessionStore = new DefaultSessionStore();
+            //this.messageStore = new DefaultMessageStore();
 
         }
 

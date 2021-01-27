@@ -7,21 +7,14 @@ public class SessionDO implements Serializable {
 
     private static final long serialVersionUID = 12213131231231L;
 
-    private Long id;
+    private long id;
 
     private String clientId;
 
     private String state;
 
-    private Long offlineTime;
+    private long offlineTime;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getClientId() {
         return clientId;
@@ -39,11 +32,19 @@ public class SessionDO implements Serializable {
         this.state = state;
     }
 
-    public Long getOfflineTime() {
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public long getOfflineTime() {
         return offlineTime;
     }
 
-    public void setOfflineTime(Long offlineTime) {
+    public void setOfflineTime(long offlineTime) {
         this.offlineTime = offlineTime;
     }
 }

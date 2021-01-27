@@ -17,14 +17,13 @@ DROP TABLE `jmqtt_inflow_message`;
 DROP TABLE `jmqtt_outflow_message`;
 DROP TABLE `jmqtt_offline_message`;
 DROP TABLE `jmqtt_retain_message`;
-DROP TABLE `jmqtt_message`;
 DROP TABLE `jmqtt_outflow_sec_message`;
 
 CREATE TABLE `jmqtt_session` (
 `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
 `client_id` varchar(64) NOT NULL COMMENT '客户端id',
 `state` varchar(12) NOT NULL COMMENT '状态：ONLINE,OFFLINE两种',
-`offlineTime` bigint(20) NOT NULL COMMENT 'OFFLINE状态时对应的离线时间戳（只有cleanStart为0时候离线才有该数据）',
+`offline_time` bigint(20) NOT NULL COMMENT 'OFFLINE状态时对应的离线时间戳（只有cleanStart为0时候离线才有该数据）',
 PRIMARY KEY (`id`) ,
 UNIQUE INDEX `uqe_client_id` (`client_id` ASC)
 )
@@ -91,14 +90,16 @@ UNIQUE INDEX `uqe_topic` (`topic` ASC)
 COMMENT = '保留消息表';
 
 
-CREATE TABLE `jmqtt_message` (
+CREATE TABLE `jmqtt_event` (
 `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键：也是集群节点批量拉消息的offset',
 `content` text NOT NULL COMMENT '消息体',
 `gmt_create` datetime(6) NOT NULL COMMENT '创建时间',
 `jmqtt_ip` varchar(24) NOT NULL COMMENT 'jmqtt服务器ip，发送该消息到集群中的broker ip',
+`event_code` varchar(24) NOT NULL COMMENT '事件码',
 PRIMARY KEY (`id`)
 )
-COMMENT = 'jmqtt 集群消息转发表：由发送端将消息发送到该表中，其他节点批量拉取该表中的消息进行分发';
+COMMENT = 'jmqtt 集群事件转发表：由发送端将消息发送到该表中，其他节点批量拉取该表中的事件进行处理';
+
 
 
 CREATE TABLE `jmqtt_outflow_sec_message` (

@@ -16,7 +16,7 @@ import java.util.Properties;
 /**
  * jmqtt 启动类,代码风格参考RocketMQ
  * 代码阅读沟通，二次开发文档：请加 qq群：578185385 或 http://www.mangdagou.com/
- *
+ * mqtt5.0协议 http://www.mangdagou.com/links
  */
 public class BrokerStartup {
 
