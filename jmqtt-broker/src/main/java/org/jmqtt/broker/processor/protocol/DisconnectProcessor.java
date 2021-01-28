@@ -61,7 +61,7 @@ public class DisconnectProcessor implements RequestProcessor {
             for (Subscription subscription : subscriptions) {
                 this.subscriptionMatcher.unSubscribe(subscription.getTopic(), clientSession.getClientId());
             }
-            sessionStore.clearSession(clientSession.getClientId());
+            sessionStore.clearSession(clientSession.getClientId(),false);
         } else {
             SessionState sessionState = new SessionState(SessionState.StateEnum.OFFLINE, System.currentTimeMillis());
             this.sessionStore.storeSession(clientSession.getClientId(), sessionState, false);

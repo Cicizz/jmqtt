@@ -11,12 +11,10 @@ import org.jmqtt.broker.store.SessionState;
 import org.jmqtt.broker.store.SessionStore;
 import org.jmqtt.broker.store.rdb.daoobject.EventDO;
 import org.jmqtt.broker.store.rdb.daoobject.SessionDO;
+import org.jmqtt.broker.store.rdb.daoobject.SubscriptionDO;
 import org.jmqtt.broker.store.rdb.mapper.EventMapper;
-import org.jmqtt.broker.store.rdb.mapper.SessionMapper;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.Set;
+import java.util.*;
 
 public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
@@ -33,7 +31,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public SessionState getSession(String clientId) {
-        SessionDO sessionDO = getMapper(SessionMapper.class).getSession(clientId);
+        SessionDO sessionDO = getMapper(sessionMapperClass).getSession(clientId);
         if (sessionDO == null) {
             return new SessionState(SessionState.StateEnum.NULL);
         }
@@ -48,12 +46,12 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
         sessionDO.setOfflineTime(sessionState.getOfflineTime());
 
         if (!notifyClearOtherSession) {
-            getMapper(SessionMapper.class).storeSession(sessionDO);
+            getMapper(sessionMapperClass).storeSession(sessionDO);
         } else {
             SqlSession session = getSessionWithTrans();
             try {
                 // 1. 存储session
-                session.getMapper(SessionMapper.class).storeSession(sessionDO);
+                session.getMapper(sessionMapperClass).storeSession(sessionDO);
                 // 2. 存储事件
                 EventDO eventDO = new EventDO();
                 eventDO.setContent(clientId);
@@ -64,7 +62,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
                 session.commit();
             } catch (Exception ex) {
                 log.error("StoreSession with trans error,{},{},{}",clientId,sessionState,ex);
-                session.rollback();
+                session.rollback(true);
                 return false;
             }
         }
@@ -72,23 +70,44 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
     }
 
     @Override
-    public void clearSession(String clientId) {
-
-    }
-
-    @Override
     public boolean storeSubscription(String clientId, Subscription subscription) {
+        SubscriptionDO subscriptionDO = new SubscriptionDO();
+        subscriptionDO.setClientId(clientId);
+        subscriptionDO.setTopic(subscription.getTopic());
+        subscriptionDO.setQos(subscription.getQos());
+        Long id = getMapper(subscriptionMapperClass).storeSubscription(subscriptionDO);
+        if (id != null) {
+            return true;
+        }
         return false;
     }
 
     @Override
+    public boolean clearSubscription(String clientId) {
+        Integer effectNum = getMapper(subscriptionMapperClass).clearSubscription(clientId);
+        log.debug("[ClearSubscription] effect num:{}",effectNum);
+        return true;
+    }
+
+    @Override
     public boolean delSubscription(String clientId, String topic) {
+        Integer effectNum = getMapper(subscriptionMapperClass).delSubscription(clientId,topic);
+        if (effectNum != null && effectNum > 0) {
+            return true;
+        }
+        log.warn("[DelSubscription]  subscription is not exist:{},{}",clientId,topic);
         return false;
     }
 
     @Override
     public Set<Subscription> getSubscriptions(String clientId) {
-        return null;
+        List<SubscriptionDO> subscriptionDOList = getMapper(subscriptionMapperClass).querySubscription(clientId);
+        Set<Subscription> set = new HashSet<>();
+        for (SubscriptionDO item : subscriptionDOList) {
+            Subscription subscription = new Subscription(item.getClientId(),item.getTopic(),item.getQos());
+            set.add(subscription);
+        }
+        return set;
     }
 
     @Override

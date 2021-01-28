@@ -1,9 +1,9 @@
-
 package org.jmqtt.broker.store.rdb.daoobject;
 
 import java.io.Serializable;
 
-public class SessionDO implements Serializable {
+
+public class SubscriptionDO implements Serializable {
 
     private static final long serialVersionUID = 12213131231231L;
 
@@ -11,9 +11,9 @@ public class SessionDO implements Serializable {
 
     private String clientId;
 
-    private String state;
+    private String topic;
 
-    private Long offlineTime;
+    private Integer qos;
 
     public Long getId() {
         return id;
@@ -31,19 +31,19 @@ public class SessionDO implements Serializable {
         this.clientId = clientId;
     }
 
-    public String getState() {
-        return state;
+    public String getTopic() {
+        return topic;
     }
 
-    public void setState(String state) {
-        this.state = state;
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 
-    public Long getOfflineTime() {
-        return offlineTime;
+    public Integer getQos() {
+        return qos;
     }
 
-    public void setOfflineTime(Long offlineTime) {
-        this.offlineTime = offlineTime;
+    public void setQos(Integer qos) {
+        this.qos = qos;
     }
 }

@@ -7,6 +7,10 @@ public enum ClusterEvent {
 
     CLEAR_SESSION("CLEAR_SESSION","清理本节点客户端会话缓存"),
 
+    DISPATCHER_CLIENT_MESSAGE("DISPATCHER_CLIENT_MESSAGE","向集群分发客户端发送的消息"),
+
+    DISPATCHER_WILL_MESSAGE("DISPATCHER_WILL_MESSAGE","向集群分发will消息"),
+
     ;
 
     private String code;

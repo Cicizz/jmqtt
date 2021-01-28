@@ -43,7 +43,13 @@ public interface SessionStore {
      *  3. 订阅关系
      *  4. 订阅状态{@link SessionState}
      */
-    void clearSession(String clientId);
+    default void clearSession(String clientId,boolean clearOfflineMsg){
+        storeSession(clientId,new SessionState(SessionState.StateEnum.NULL),false);
+        clearSubscription(clientId);
+        if (clearOfflineMsg) {
+            clearOfflineMsg(clientId);
+        }
+    }
 
     /**
      * 存储订阅关系
@@ -54,6 +60,11 @@ public interface SessionStore {
      * 移除订阅关系
      */
     boolean delSubscription(String clientId,String topic);
+
+    /**
+     * 清理订阅信息
+     */
+    boolean clearSubscription(String clientId);
 
     /**
      * 获取该clientId的所有的订阅关系

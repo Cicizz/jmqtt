@@ -41,7 +41,7 @@ public class RedisTemplate {
         }
     }
 
-    public Object operate(RedisCallBack redisCallBack){
+    public <T> T operate(RedisCallBack redisCallBack){
         log.debug("[Cluster] redis operate begin");
         long startTime = System.currentTimeMillis();
         Jedis jedis = null;

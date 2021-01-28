@@ -172,7 +172,7 @@ public class ConnectProcessor implements RequestProcessor {
         ClientSession clientSession = new ClientSession(clientId, true);
         clientSession.setCtx(ctx);
         //clear previous sessions
-        this.sessionStore.clearSession(clientId);
+        this.sessionStore.clearSession(clientId,true);
         return clientSession;
     }
 

@@ -13,6 +13,6 @@ public interface SessionMapper {
     @Insert("insert into jmqtt_session(client_id,state,offline_time) values "
             + "(#{clientId},#{state},#{offlineTime}) "
             + "on DUPLICATE key update state = #{state},offline_time = #{offlineTime}")
-    long storeSession(SessionDO sessionDO);
+    Long storeSession(SessionDO sessionDO);
 
 }

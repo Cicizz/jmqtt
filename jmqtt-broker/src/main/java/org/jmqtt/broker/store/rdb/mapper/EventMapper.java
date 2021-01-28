@@ -10,7 +10,7 @@ public interface EventMapper {
 
     @Insert("insert into jmqtt_event content,gmt_create,jmqtt_ip,event_code values "
             + "(#{content},#{gmtCreate},#{jmqttIp},#{eventCode})")
-    long sendEvent(EventDO eventDO);
+    Long sendEvent(EventDO eventDO);
 
 
     @Select("select content,gmt_create,jmqtt_ip,event_code from jmqtt_event "
