@@ -9,7 +9,7 @@ public class RedisMqttStore extends AbstractMqttStore {
     private RedisTemplate redisTemplate;
 
     public RedisMqttStore(ClusterConfig clusterConfig) {
-        this.clusterConfig = new ClusterConfig();
+        this.clusterConfig = clusterConfig;
     }
 
     @Override
