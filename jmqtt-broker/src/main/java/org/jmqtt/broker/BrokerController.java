@@ -21,8 +21,6 @@ import org.jmqtt.broker.remoting.netty.ChannelEventListener;
 import org.jmqtt.broker.remoting.netty.NettyRemotingServer;
 import org.jmqtt.broker.store.MessageStore;
 import org.jmqtt.broker.store.SessionStore;
-import org.jmqtt.broker.store.memory.DefaultMessageStore;
-import org.jmqtt.broker.store.memory.DefaultSessionStore;
 import org.jmqtt.broker.subscribe.DefaultSubscriptionTreeMatcher;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.slf4j.Logger;

@@ -3,19 +3,17 @@ package org.jmqtt.broker.store.rdb.daoobject;
 import java.io.Serializable;
 import java.util.Date;
 
-public class EventDO implements Serializable {
+public class InflowMessageDO implements Serializable {
 
-    private static final long serialVersionUID = 12213213131231231L;
+    private static final long serialVersionUID = 12313131231231L;
 
     private Long id;
+
+    private Integer msgId;
 
     private String content;
 
     private Date gmtCreate;
-
-    private String jmqttIp;
-
-    private String eventCode;
 
     public Long getId() {
         return id;
@@ -23,6 +21,14 @@ public class EventDO implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Integer getMsgId() {
+        return msgId;
+    }
+
+    public void setMsgId(Integer msgId) {
+        this.msgId = msgId;
     }
 
     public String getContent() {
@@ -39,21 +45,5 @@ public class EventDO implements Serializable {
 
     public void setGmtCreate(Date gmtCreate) {
         this.gmtCreate = gmtCreate;
-    }
-
-    public String getJmqttIp() {
-        return jmqttIp;
-    }
-
-    public void setJmqttIp(String jmqttIp) {
-        this.jmqttIp = jmqttIp;
-    }
-
-    public String getEventCode() {
-        return eventCode;
-    }
-
-    public void setEventCode(String eventCode) {
-        this.eventCode = eventCode;
     }
 }

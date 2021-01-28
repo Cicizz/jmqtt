@@ -69,7 +69,7 @@ COMMENT = '出栈消息表';
 
 
 CREATE TABLE `jmqtt_offline_message` (
-`id` bigint(20) NOT NULL,
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
 `client_id` varchar(64) NOT NULL COMMENT '客户端id',
 `content` text NOT NULL COMMENT '消息体',
 `gmt_create` datetime(6) NOT NULL COMMENT '创建时间',

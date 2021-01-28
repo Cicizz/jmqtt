@@ -18,6 +18,9 @@ import java.sql.SQLException;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * db 工具类
+ */
 public class DBUtils {
 
     private static final DBUtils dbUtils = new DBUtils();
@@ -84,6 +87,9 @@ public class DBUtils {
         }
     }
 
+    /**
+     * 获取关闭事物的session，需要手动提交事物
+     */
     public SqlSession getSessionWithTrans(){
         try (SqlSession sqlSession = this.sqlSessionFactory.openSession()){
             return sqlSession;
