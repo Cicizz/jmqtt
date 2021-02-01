@@ -20,6 +20,8 @@ public class Message {
 
     private byte[] payload;
 
+    private long storeTime;
+
     public Message(){};
 
     public Message(Type type,Map<String,Object> headers,byte[] payload){
@@ -82,6 +84,14 @@ public class Message {
 
     public void setClientId(String clientId) {
         this.clientId = clientId;
+    }
+
+    public long getStoreTime() {
+        return storeTime;
+    }
+
+    public void setStoreTime(long storeTime) {
+        this.storeTime = storeTime;
     }
 
     /**

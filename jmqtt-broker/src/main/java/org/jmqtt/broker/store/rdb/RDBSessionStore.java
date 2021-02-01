@@ -76,10 +76,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
         subscriptionDO.setTopic(subscription.getTopic());
         subscriptionDO.setQos(subscription.getQos());
         Long id = getMapper(subscriptionMapperClass).storeSubscription(subscriptionDO);
-        if (id != null) {
-            return true;
-        }
-        return false;
+        return id != null;
     }
 
     @Override
@@ -112,6 +109,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public boolean cacheInflowMsg(String clientId, Message message) {
+
         return false;
     }
 
@@ -142,6 +140,26 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public Message releaseOutflowMsg(String clientId, int msgId) {
+        return null;
+    }
+
+    @Override
+    public void clearSession(String clientId, boolean clearOfflineMsg) {
+
+    }
+
+    @Override
+    public boolean cacheOutflowSecMsgId(String clientId, int msgId) {
+        return false;
+    }
+
+    @Override
+    public boolean releaseOutflowSecMsgId(String clientId, int msgId) {
+        return false;
+    }
+
+    @Override
+    public List<Integer> getAllOutflowSecMsgId(String clientId) {
         return null;
     }
 
