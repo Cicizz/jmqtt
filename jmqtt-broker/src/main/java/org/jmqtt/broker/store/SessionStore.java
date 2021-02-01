@@ -6,6 +6,7 @@ import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.Subscription;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -79,7 +80,6 @@ public interface SessionStore {
 
     /**
      * 获取并删除接收到的qos2消息-入栈消息
-     * @return
      */
     Message releaseInflowMsg(String clientId,int msgId);
 
@@ -105,11 +105,24 @@ public interface SessionStore {
 
     /**
      * 获取并删除发送的出栈消息
-     * @param clientId
-     * @param msgId
-     * @return
      */
     Message releaseOutflowMsg(String clientId,int msgId);
+
+    /**
+     * 出栈qos2第二阶段，缓存msgId
+     */
+    boolean cacheOutflowSecMsgId(String clientId,int msgId);
+
+    /**
+     * 出栈qos2第二阶段，释放msgId
+     * 若为false，说明msgId不存在（异常情况）
+     */
+    boolean releaseOutflowSecMsgId(String clientId,int msgId);
+
+    /**
+     * 获取所有的信息，进行发送
+     */
+    List<Integer> getAllOutflowSecMsgId(String clientId);
 
     /**
      * 缓存离线消息
