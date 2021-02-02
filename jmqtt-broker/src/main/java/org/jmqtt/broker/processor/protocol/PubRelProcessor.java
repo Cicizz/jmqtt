@@ -10,7 +10,6 @@ import org.jmqtt.broker.remoting.session.ConnectManager;
 import org.jmqtt.broker.remoting.util.MessageUtil;
 import org.jmqtt.broker.remoting.util.NettyUtil;
 import org.jmqtt.broker.remoting.util.RemotingHelper;
-import org.jmqtt.broker.store.SessionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,11 +24,8 @@ public class PubRelProcessor extends AbstractMessageProcessor implements Request
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
 
-    private SessionStore sessionStore;
-
     public PubRelProcessor(BrokerController controller) {
-        super(controller.getMessageStore());
-        this.sessionStore = controller.getSessionStore();
+        super(controller);
     }
 
     @Override
@@ -37,7 +33,7 @@ public class PubRelProcessor extends AbstractMessageProcessor implements Request
         String clientId = NettyUtil.getClientId(ctx.channel());
         int msgId = MessageUtil.getMessageId(mqttMessage);
         if(ConnectManager.getInstance().containClient(clientId)){
-            Message message = sessionStore.releaseInflowMsg(clientId,msgId);
+            Message message = releaseInflowMsg(clientId,msgId);
             if(Objects.nonNull(message)){
                 super.processMessage(message);
             }else{

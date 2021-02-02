@@ -1,10 +1,12 @@
-package org.jmqtt.broker.recover;
+package org.jmqtt.broker.processor.recover;
 
 import io.netty.handler.codec.mqtt.MqttMessage;
+import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.helper.ThreadFactoryImpl;
 import org.jmqtt.broker.common.log.LoggerName;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
+import org.jmqtt.broker.processor.HighPerformanceMessageHandler;
 import org.jmqtt.broker.remoting.session.ClientSession;
 import org.jmqtt.broker.remoting.session.ConnectManager;
 import org.jmqtt.broker.remoting.util.MessageUtil;
@@ -21,7 +23,7 @@ import java.util.concurrent.locks.LockSupport;
  * send offline message and flow message when client re connect and cleanSession is false 设备重连：分发会话消息服务 客户端以新开始(Clean
  * Start)标志为0且会话存在的情况下重连时, 客户端和服务端都必须使用原始报文标识符重新发送任何未被确认的 PUBLISH 报文(当QoS > 0)和PUBREL报文. 这是唯一要求客户端 或服务端重发消息的情况. 客户端和服务端不能在其他任何时间重发消息
  */
-public class ReSendMessageService {
+public class ReSendMessageService extends HighPerformanceMessageHandler {
 
     private Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
 
@@ -39,9 +41,10 @@ public class ReSendMessageService {
             new LinkedBlockingQueue<>(10000),
             new ThreadFactoryImpl("ReSendMessageThread"));
 
-    public ReSendMessageService(MessageStore messageStore, SessionStore sessionStore) {
-        this.messageStore = messageStore;
-        this.sessionStore = sessionStore;
+    public ReSendMessageService(BrokerController brokerController) {
+        super(brokerController);
+        this.messageStore = brokerController.getMessageStore();
+        this.sessionStore = brokerController.getSessionStore();
         this.thread = new Thread(new PutClient());
     }
 
@@ -100,7 +103,7 @@ public class ReSendMessageService {
         public Boolean call() {
 
             // 入栈报文：未处理的pubRel报文
-            Collection<Message> waitPubRelMsgs = sessionStore.getAllInflowMsg(clientId);
+            Collection<Message> waitPubRelMsgs = getAllInflowMsg(clientId);
             for (Message waitPubRelMsg : waitPubRelMsgs) {
                 if (!dispatcherMessage(clientId, waitPubRelMsg, new Build() {
                     @Override
@@ -108,7 +111,7 @@ public class ReSendMessageService {
                         return MessageUtil.getPubRelMessage(message.getMsgId());
                     }
                 })) {
-                    return false;
+                    log.warn("ReSendMessageService resend inflow error,{}",waitPubRelMsg);
                 }
             }
 
@@ -118,16 +121,31 @@ public class ReSendMessageService {
                     int qos = (int) message.getHeader(MessageHeader.QOS);
                     int messageId = message.getMsgId();
                     if (qos > 0) {
-                        sessionStore.cacheInflowMsg(clientId, message);
+                        cacheInflowMsg(clientId, message);
                     }
                     return MessageUtil.getPubMessage(message, false, qos, messageId);
                 }
             };
 
-            // 出栈报文： TODO 这里需要优化，qos2的需要中间状态，否则这里消息重发了
-            Collection<Message> flowMsgs = sessionStore.getAllOutflowMsg(clientId);
-            for (Message message : flowMsgs) {
+            // 出栈报文-qos1,qos2第一阶段：
+            Collection<Message> outflowMsgs = getAllOutflowMsg(clientId);
+            for (Message message : outflowMsgs) {
                 if (!dispatcherMessage(clientId, message, publishMqttMsg)) {
+                    log.warn("ReSendMessageService resend outflow error,{}",message);
+                }
+            }
+
+            // 出栈报文-qos2第二阶段：
+            Collection<Integer> qos2MsgIds = getAllOutflowSecMsgId(clientId);
+            for (Integer msgId : qos2MsgIds) {
+                Message temp = new Message();
+                temp.setMsgId(msgId);
+                if (!dispatcherMessage(clientId, temp, new Build() {
+                    @Override
+                    public MqttMessage buildMqttMessage(Message message) {
+                        return MessageUtil.getPubRelMessage(msgId);
+                    }
+                })) {
                     return false;
                 }
             }

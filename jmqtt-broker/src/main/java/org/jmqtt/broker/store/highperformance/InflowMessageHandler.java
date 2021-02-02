@@ -19,7 +19,7 @@ public class InflowMessageHandler {
      * 缓存qos2 publish报文消息-入栈消息
      * @return true:缓存成功   false:缓存失败
      */
-    boolean cacheInflowMsg(String clientId, Message message){
+    public boolean cacheInflowMsg(String clientId, Message message){
         Map<Integer,Message> msgCache = infowMsgMap.get(clientId);
         if (msgCache == null) {
             synchronized (lock) {
@@ -37,7 +37,7 @@ public class InflowMessageHandler {
     /**
      * 获取并删除接收到的qos2消息-入栈消息
      */
-    Message releaseInflowMsg(String clientId,int msgId){
+    public Message releaseInflowMsg(String clientId,int msgId){
         Map<Integer,Message> msgCache = infowMsgMap.get(clientId);
         if (msgCache == null) {
             return null;
@@ -48,7 +48,7 @@ public class InflowMessageHandler {
     /**
      * 获取所有的入栈消息
      */
-    Collection<Message> getAllInflowMsg(String clientId){
+    public Collection<Message> getAllInflowMsg(String clientId){
         Map<Integer,Message> msgCache = infowMsgMap.get(clientId);
         if (msgCache == null || msgCache.size() == 0) {
             return Collections.EMPTY_LIST;

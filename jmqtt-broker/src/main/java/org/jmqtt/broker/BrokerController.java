@@ -12,11 +12,11 @@ import org.jmqtt.broker.common.helper.MixAll;
 import org.jmqtt.broker.common.helper.RejectHandler;
 import org.jmqtt.broker.common.helper.ThreadFactoryImpl;
 import org.jmqtt.broker.common.log.LoggerName;
-import org.jmqtt.broker.dispatcher.DefaultDispatcherMessage;
-import org.jmqtt.broker.dispatcher.MessageDispatcher;
 import org.jmqtt.broker.processor.RequestProcessor;
+import org.jmqtt.broker.processor.dispatcher.DefaultDispatcherMessage;
+import org.jmqtt.broker.processor.dispatcher.MessageDispatcher;
 import org.jmqtt.broker.processor.protocol.*;
-import org.jmqtt.broker.recover.ReSendMessageService;
+import org.jmqtt.broker.processor.recover.ReSendMessageService;
 import org.jmqtt.broker.remoting.netty.ChannelEventListener;
 import org.jmqtt.broker.remoting.netty.NettyRemotingServer;
 import org.jmqtt.broker.store.MessageStore;
@@ -88,11 +88,11 @@ public class BrokerController {
         }
 
         this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
-        this.messageDispatcher = new DefaultDispatcherMessage(brokerConfig.getPollThreadNum(), subscriptionMatcher, sessionStore);
+        this.messageDispatcher = new DefaultDispatcherMessage(this);
 
         this.channelEventListener = new ClientLifeCycleHookService(messageStore,messageDispatcher);
         this.remotingServer = new NettyRemotingServer(brokerConfig, nettyConfig, channelEventListener);
-        this.reSendMessageService = new ReSendMessageService(messageStore, sessionStore);
+        this.reSendMessageService = new ReSendMessageService(this);
 
         int coreThreadNum = Runtime.getRuntime().availableProcessors();
         this.connectExecutor = new ThreadPoolExecutor(coreThreadNum * 2,
@@ -147,9 +147,9 @@ public class BrokerController {
             RequestProcessor pubRelProcessor = new PubRelProcessor(this);
             RequestProcessor subscribeProcessor = new SubscribeProcessor(this);
             RequestProcessor unSubscribeProcessor = new UnSubscribeProcessor(subscriptionMatcher, sessionStore);
-            RequestProcessor pubRecProcessor = new PubRecProcessor(sessionStore);
-            RequestProcessor pubAckProcessor = new PubAckProcessor(sessionStore);
-            RequestProcessor pubCompProcessor = new PubCompProcessor(sessionStore);
+            RequestProcessor pubRecProcessor = new PubRecProcessor(this);
+            RequestProcessor pubAckProcessor = new PubAckProcessor(this);
+            RequestProcessor pubCompProcessor = new PubCompProcessor(this);
 
             this.remotingServer.registerProcessor(MqttMessageType.CONNECT, connectProcessor, connectExecutor);
             this.remotingServer.registerProcessor(MqttMessageType.DISCONNECT, disconnectProcessor, connectExecutor);

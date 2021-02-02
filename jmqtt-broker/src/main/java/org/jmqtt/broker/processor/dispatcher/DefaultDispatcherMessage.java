@@ -1,12 +1,14 @@
-package org.jmqtt.broker.dispatcher;
+package org.jmqtt.broker.processor.dispatcher;
 
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
+import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.helper.RejectHandler;
 import org.jmqtt.broker.common.helper.ThreadFactoryImpl;
 import org.jmqtt.broker.common.log.LoggerName;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
 import org.jmqtt.broker.common.model.Subscription;
+import org.jmqtt.broker.processor.HighPerformanceMessageHandler;
 import org.jmqtt.broker.remoting.session.ClientSession;
 import org.jmqtt.broker.remoting.session.ConnectManager;
 import org.jmqtt.broker.remoting.util.MessageUtil;
@@ -24,7 +26,7 @@ import java.util.concurrent.*;
 /**
  * 默认的消息分发实现类
  */
-public class DefaultDispatcherMessage implements MessageDispatcher {
+public class DefaultDispatcherMessage extends HighPerformanceMessageHandler implements MessageDispatcher {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
     private boolean stoped = false;
@@ -35,9 +37,11 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
     private SessionStore sessionStore;
 
 
-    public DefaultDispatcherMessage(int pollThreadNum, SubscriptionMatcher subscriptionMatcher, SessionStore sessionStore) {
-        this.pollThreadNum = pollThreadNum;
-        this.subscriptionMatcher = subscriptionMatcher;
+    public DefaultDispatcherMessage(BrokerController brokerController) {
+        super(brokerController);
+        this.pollThreadNum = brokerController.getBrokerConfig().getPollThreadNum();
+        this.subscriptionMatcher = brokerController.getSubscriptionMatcher();
+        this.sessionStore = brokerController.getSessionStore();
     }
 
     @Override
@@ -119,7 +123,7 @@ public class DefaultDispatcherMessage implements MessageDispatcher {
                                 message.putHeader(MessageHeader.QOS, qos);
                                 message.setMsgId(messageId);
                                 if (qos > 0) {
-                                    sessionStore.cacheOutflowMsg(clientId, message);
+                                    cacheOutflowMsg(clientId, message);
                                 }
                                 MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message, false, qos, messageId);
                                 clientSession.getCtx().writeAndFlush(publishMessage);
