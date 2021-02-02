@@ -1,7 +1,6 @@
 package org.jmqtt.broker.store.rdb.daoobject;
 
 import java.io.Serializable;
-import java.util.Date;
 
 public class InflowMessageDO implements Serializable {
 
@@ -11,9 +10,11 @@ public class InflowMessageDO implements Serializable {
 
     private Integer msgId;
 
+    private String clientId;
+
     private String content;
 
-    private Date gmtCreate;
+    private Long gmtCreate;
 
     public Long getId() {
         return id;
@@ -21,6 +22,14 @@ public class InflowMessageDO implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     public Integer getMsgId() {
@@ -39,11 +48,11 @@ public class InflowMessageDO implements Serializable {
         this.content = content;
     }
 
-    public Date getGmtCreate() {
+    public Long getGmtCreate() {
         return gmtCreate;
     }
 
-    public void setGmtCreate(Date gmtCreate) {
+    public void setGmtCreate(Long gmtCreate) {
         this.gmtCreate = gmtCreate;
     }
 }

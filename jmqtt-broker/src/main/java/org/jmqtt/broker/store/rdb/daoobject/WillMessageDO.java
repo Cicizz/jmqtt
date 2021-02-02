@@ -2,9 +2,9 @@ package org.jmqtt.broker.store.rdb.daoobject;
 
 import java.io.Serializable;
 
-public class OfflineMessageDO implements Serializable {
+public class WillMessageDO implements Serializable {
 
-    private static final long serialVersionUID = 143413131231231L;
+    private static final long serialVersionUID = 12213131231231L;
 
     private Long id;
 
