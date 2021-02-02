@@ -18,7 +18,6 @@ import java.util.Set;
  *  5. 从客户端收到的, 但是还没有完成确认的QoS等级2消息. 遗嘱小子和遗嘱延时间隔.
  *  6. 如果会话当前未连接, 会话结束时间和会话状态将被丢弃.
  *
- *  TODO 待实现
  */
 public interface SessionStore {
 
@@ -92,11 +91,6 @@ public interface SessionStore {
      * 缓存出栈消息-分发给客户端的qos1,qos2消息
      */
     boolean cacheOutflowMsg(String clientId,Message message);
-
-    /**
-     * 是否包含该出栈消息
-     */
-    boolean containOutflowMsg(String clientId,int msgId);
 
     /**
      * 获取所有的出栈消息

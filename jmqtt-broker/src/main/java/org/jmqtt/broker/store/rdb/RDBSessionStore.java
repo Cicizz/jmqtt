@@ -1,6 +1,7 @@
 
 package org.jmqtt.broker.store.rdb;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.ibatis.session.SqlSession;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.helper.MixAll;
@@ -9,10 +10,10 @@ import org.jmqtt.broker.common.model.Subscription;
 import org.jmqtt.broker.store.ClusterEvent;
 import org.jmqtt.broker.store.SessionState;
 import org.jmqtt.broker.store.SessionStore;
-import org.jmqtt.broker.store.rdb.daoobject.EventDO;
-import org.jmqtt.broker.store.rdb.daoobject.SessionDO;
-import org.jmqtt.broker.store.rdb.daoobject.SubscriptionDO;
-import org.jmqtt.broker.store.rdb.mapper.EventMapper;
+import org.jmqtt.broker.store.rdb.daoobject.*;
+import org.jmqtt.broker.store.rdb.mapper.InflowMessageMapper;
+import org.jmqtt.broker.store.rdb.mapper.OutflowMessageMapper;
+import org.jmqtt.broker.store.rdb.mapper.OutflowSecMessageMapper;
 
 import java.util.*;
 
@@ -56,9 +57,9 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
                 EventDO eventDO = new EventDO();
                 eventDO.setContent(clientId);
                 eventDO.setEventCode(ClusterEvent.CLEAR_SESSION.getCode());
-                eventDO.setGmtCreate(new Date());
+                eventDO.setGmtCreate(System.currentTimeMillis());
                 eventDO.setJmqttIp(MixAll.getLocalIp());
-                session.getMapper(EventMapper.class).sendEvent(eventDO);
+                session.getMapper(eventMapperClass).sendEvent(eventDO);
                 session.commit();
             } catch (Exception ex) {
                 log.error("StoreSession with trans error,{},{},{}",clientId,sessionState,ex);
@@ -109,72 +110,151 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public boolean cacheInflowMsg(String clientId, Message message) {
-
-        return false;
+        InflowMessageDO inflowMessageDO = new InflowMessageDO();
+        inflowMessageDO.setClientId(clientId);
+        inflowMessageDO.setMsgId(message.getMsgId());
+        inflowMessageDO.setContent(JSONObject.toJSONString(message));
+        inflowMessageDO.setGmtCreate(message.getStoreTime());
+        Long id = getMapper(inflowMessageMapperClass).cacheInflowMessage(inflowMessageDO);
+        return id != null;
     }
 
     @Override
     public Message releaseInflowMsg(String clientId, int msgId) {
-        return null;
+        SqlSession sqlSession = getSessionWithTrans();
+        InflowMessageDO inflowMessageDO = null;
+        try {
+            InflowMessageMapper inflowMessageMapper = sqlSession.getMapper(inflowMessageMapperClass);
+            inflowMessageDO = inflowMessageMapper.getInflowMessage(clientId,msgId);
+            if (inflowMessageDO == null) {
+                return null;
+            }
+            inflowMessageMapper.delInflowMessage(inflowMessageDO.getId());
+        } catch (Exception ex) {
+            log.error("DB cacheInflowMsg error,{}",ex);
+            sqlSession.rollback();
+        }
+        return JSONObject.parseObject(inflowMessageDO.getContent(),Message.class);
     }
 
     @Override
     public Collection<Message> getAllInflowMsg(String clientId) {
-        return null;
+        List<InflowMessageDO> messageList = getMapper(inflowMessageMapperClass).getAllInflowMessage(clientId);
+        if (MixAll.isEmpty(messageList)) {
+            return null;
+        }
+        List<Message> mqttMessages = new ArrayList<>(messageList.size());
+        for (InflowMessageDO inflowMessageDO : messageList) {
+            Message message = JSONObject.parseObject(inflowMessageDO.getContent(),Message.class);
+            mqttMessages.add(message);
+        }
+        return mqttMessages;
     }
 
     @Override
     public boolean cacheOutflowMsg(String clientId, Message message) {
-        return false;
-    }
-
-    @Override
-    public boolean containOutflowMsg(String clientId, int msgId) {
-        return false;
+        OutflowMessageDO outflowMessageDO = new OutflowMessageDO();
+        outflowMessageDO.setClientId(clientId);
+        outflowMessageDO.setMsgId(message.getMsgId());
+        outflowMessageDO.setContent(JSONObject.toJSONString(message));
+        outflowMessageDO.setGmtCreate(message.getStoreTime());
+        Long id = getMapper(outflowMessageMapperClass).cacheOuflowMessage(outflowMessageDO);
+        return id != null;
     }
 
     @Override
     public Collection<Message> getAllOutflowMsg(String clientId) {
-        return null;
+        List<OutflowMessageDO> messageList = getMapper(outflowMessageMapperClass).getAllOutflowMessage(clientId);
+        if (MixAll.isEmpty(messageList)) {
+            return null;
+        }
+        List<Message> mqttMessages = new ArrayList<>(messageList.size());
+        for (OutflowMessageDO outflowMessageDO : messageList) {
+            Message message = JSONObject.parseObject(outflowMessageDO.getContent(),Message.class);
+            mqttMessages.add(message);
+        }
+        return mqttMessages;
     }
 
     @Override
     public Message releaseOutflowMsg(String clientId, int msgId) {
-        return null;
-    }
-
-    @Override
-    public void clearSession(String clientId, boolean clearOfflineMsg) {
-
+        SqlSession sqlSession = getSessionWithTrans();
+        OutflowMessageDO outflowMessageDO = null;
+        try {
+            OutflowMessageMapper outflowMessageMapper = sqlSession.getMapper(outflowMessageMapperClass);
+            outflowMessageDO = outflowMessageMapper.getOutflowMessage(clientId,msgId);
+            if (outflowMessageDO == null) {
+                return null;
+            }
+            outflowMessageMapper.delOutflowMessage(outflowMessageDO.getId());
+        } catch (Exception ex) {
+            log.error("DB cacheInflowMsg error,{}",ex);
+            sqlSession.rollback();
+        }
+        return JSONObject.parseObject(outflowMessageDO.getContent(),Message.class);
     }
 
     @Override
     public boolean cacheOutflowSecMsgId(String clientId, int msgId) {
-        return false;
+        OutflowSecMessageDO outflowSecMessageDO = new OutflowSecMessageDO();
+        outflowSecMessageDO.setClientId(clientId);
+        outflowSecMessageDO.setMsgId(msgId);
+        outflowSecMessageDO.setGmtCreate(System.currentTimeMillis());
+        Long id = getMapper(outflowSecMessageMapperClass).cacheOuflowMessage(outflowSecMessageDO);
+        return id != null;
     }
 
     @Override
     public boolean releaseOutflowSecMsgId(String clientId, int msgId) {
-        return false;
+        SqlSession sqlSession = getSessionWithTrans();
+        try {
+            OutflowSecMessageMapper outflowSecMessageMapper = sqlSession.getMapper(outflowSecMessageMapperClass);
+            OutflowSecMessageDO outflowSecMessageDO = outflowSecMessageMapper.getOutflowSecMessage(clientId,msgId);
+            if (outflowSecMessageDO == null) {
+                log.error("DB releaseOutflowSecMsgId failure,msg id is not exist,{},{}",clientId,msgId);
+                return false;
+            }
+            outflowSecMessageMapper.delOutflowSecMessage(outflowSecMessageDO.getId());
+        } catch (Exception ex) {
+            log.error("DB cacheInflowMsg error,{}",ex);
+            sqlSession.rollback();
+        }
+        return true;
     }
 
     @Override
     public List<Integer> getAllOutflowSecMsgId(String clientId) {
-        return null;
+        return getMapper(outflowSecMessageMapperClass).getAllOutflowSecMessage(clientId);
     }
 
     @Override
     public boolean storeOfflineMsg(String clientId, Message message) {
-        return false;
+        OfflineMessageDO offlineMessageDO = new OfflineMessageDO();
+        offlineMessageDO.setClientId(clientId);
+        offlineMessageDO.setContent(JSONObject.toJSONString(message));
+        offlineMessageDO.setGmtCreate(message.getStoreTime());
+        Long id = getMapper(offlineMessageMapperClass).storeOfflineMessage(offlineMessageDO);
+        return id != 0;
     }
 
     @Override
     public Collection<Message> getAllOfflineMsg(String clientId) {
-        return null;
+        List<OfflineMessageDO> offlineMessageDOList = getMapper(offlineMessageMapperClass).getAllOfflineMessage(clientId);
+        if (MixAll.isEmpty(offlineMessageDOList)) {
+            return null;
+        }
+        List<Message> messageList = new ArrayList<>();
+        for (OfflineMessageDO offlineMessageDO : offlineMessageDOList) {
+            Message message = JSONObject.parseObject(offlineMessageDO.getContent(),Message.class);
+            messageList.add(message);
+        }
+        return messageList;
     }
 
     @Override
     public boolean clearOfflineMsg(String clientId) {
-        return false;
+        Integer effectNum = getMapper(offlineMessageMapperClass).clearOfflineMessage(clientId);
+        log.debug("RDB clearOfflineMsg del nums:{}",effectNum);
+        return true;
     }
 }

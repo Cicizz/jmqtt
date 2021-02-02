@@ -9,29 +9,32 @@ import org.slf4j.LoggerFactory;
 
 public abstract class AbstractDBStore {
 
-    protected static final Class<SessionMapper>           sessionMapperClass = SessionMapper.class;
-    protected static final Class<SubscriptionMapper>            subscriptionMapperClass = SubscriptionMapper.class;
-    protected static final Class<EventMapper>             eventMapperClass = EventMapper.class;
-    protected static final Class<InflowMessageMapper>     inflowMessageMapperClass = InflowMessageMapper.class;
-    protected static final Class<OutflowMessageMapper>    outflowMessageMapperClass = OutflowMessageMapper.class;
-    protected static final Class<OutflowSecMessageMapper> outflowSecMessageMapperClass = OutflowSecMessageMapper.class;
-    protected static final Class<RetainMessageMapper> retainMessageMapperClass = RetainMessageMapper.class;
+    static final Class<SessionMapper>           sessionMapperClass           = SessionMapper.class;
+    static final Class<SubscriptionMapper>      subscriptionMapperClass      = SubscriptionMapper.class;
+    static final Class<EventMapper>             eventMapperClass             = EventMapper.class;
+    static final Class<InflowMessageMapper>     inflowMessageMapperClass     = InflowMessageMapper.class;
+    static final Class<OutflowMessageMapper>    outflowMessageMapperClass    = OutflowMessageMapper.class;
+    static final Class<OutflowSecMessageMapper> outflowSecMessageMapperClass = OutflowSecMessageMapper.class;
+    static final Class<RetainMessageMapper>     retainMessageMapperClass     = RetainMessageMapper.class;
 
-    protected final static Logger log = LoggerFactory.getLogger(LoggerName.STORE);
+    static final Class<OfflineMessageMapper> offlineMessageMapperClass = OfflineMessageMapper.class;
+    static final Class<WillMessageMapper>    willMessageMapperClass    = WillMessageMapper.class;
 
-    protected void start(BrokerConfig brokerConfig){
+    final static Logger log = LoggerFactory.getLogger(LoggerName.STORE);
+
+    void start(BrokerConfig brokerConfig) {
         DBUtils.getInstance().start(brokerConfig);
     }
 
-    protected void shutdown() {
+    void shutdown() {
         DBUtils.getInstance().shutdown();
     }
 
-    protected <T> T getMapper(Class<T> clazz) {
+    <T> T getMapper(Class<T> clazz) {
         return DBUtils.getInstance().getMapper(clazz);
     }
 
-    protected SqlSession getSessionWithTrans(){
+    SqlSession getSessionWithTrans() {
         return DBUtils.getInstance().getSessionWithTrans();
     }
 }
