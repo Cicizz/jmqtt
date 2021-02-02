@@ -16,7 +16,6 @@ import org.jmqtt.broker.remoting.session.ClientSession;
 import org.jmqtt.broker.remoting.session.ConnectManager;
 import org.jmqtt.broker.remoting.util.MessageUtil;
 import org.jmqtt.broker.remoting.util.NettyUtil;
-import org.jmqtt.broker.store.SessionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,11 +31,8 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
 
     private PubSubPermission pubSubPermission;
 
-    private SessionStore sessionStore;
-
     public PublishProcessor(BrokerController controller){
-        super(controller.getMessageStore());
-        this.sessionStore = controller.getSessionStore();
+        super(controller);
         this.pubSubPermission = controller.getPubSubPermission();
     }
 
@@ -87,7 +83,7 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
     private void processQos2(ChannelHandlerContext ctx, Message innerMsg) {
         int originMessageId = innerMsg.getMsgId();
         log.debug("[PubMessage] -> Process qos2 message,clientId={}", innerMsg.getClientId());
-        boolean flag = sessionStore.cacheInflowMsg(innerMsg.getClientId(), innerMsg);
+        boolean flag = cacheInflowMsg(innerMsg.getClientId(), innerMsg);
         if (!flag) {
             log.warn("[PubMessage] -> cache qos2 pub message failure,clientId={}", innerMsg.getClientId());
         }

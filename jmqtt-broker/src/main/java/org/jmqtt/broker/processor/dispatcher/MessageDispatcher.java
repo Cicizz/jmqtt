@@ -1,4 +1,4 @@
-package org.jmqtt.broker.dispatcher;
+package org.jmqtt.broker.processor.dispatcher;
 
 import org.jmqtt.broker.common.model.Message;
 

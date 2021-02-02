@@ -4,7 +4,7 @@ import io.netty.channel.Channel;
 import org.apache.commons.lang3.StringUtils;
 import org.jmqtt.broker.common.log.LoggerName;
 import org.jmqtt.broker.common.model.Message;
-import org.jmqtt.broker.dispatcher.MessageDispatcher;
+import org.jmqtt.broker.processor.dispatcher.MessageDispatcher;
 import org.jmqtt.broker.remoting.netty.ChannelEventListener;
 import org.jmqtt.broker.remoting.session.ConnectManager;
 import org.jmqtt.broker.remoting.util.NettyUtil;

@@ -30,17 +30,6 @@ public class OutflowMessageHandler {
         return true;
     }
 
-    public boolean containOutflowMsg(String clientId, int msgId) {
-        Map<Integer,Message> msgCache = outflowMsgCache.get(clientId);
-        if (msgCache == null) {
-            return false;
-        }
-        if (msgCache.containsKey(msgId)) {
-            return true;
-        }
-        return false;
-    }
-
     public Collection<Message> getAllOutflowMsg(String clientId) {
         Map<Integer,Message> msgCache = outflowMsgCache.get(clientId);
         if (msgCache == null || msgCache.size() == 0) {

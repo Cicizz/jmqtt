@@ -1,8 +1,10 @@
 package org.jmqtt.broker.processor.protocol;
 
+import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
-import org.jmqtt.broker.dispatcher.MessageDispatcher;
+import org.jmqtt.broker.processor.dispatcher.MessageDispatcher;
+import org.jmqtt.broker.processor.HighPerformanceMessageHandler;
 import org.jmqtt.broker.store.MessageStore;
 
 /**
@@ -17,12 +19,13 @@ import org.jmqtt.broker.store.MessageStore;
  *          b. 第二阶段:主动拉取 jmqtt B,C,D broker 定时批量拉取 —> 从消息存储服务拉取 —> 拉取后推送给 B,C,D上连接的设备
  * TODO mqtt5实现
  */
-public abstract class AbstractMessageProcessor {
+public abstract class AbstractMessageProcessor extends HighPerformanceMessageHandler {
 
     private MessageStore messageStore;
 
-    public AbstractMessageProcessor(MessageStore messageStore) {
-        this.messageStore = messageStore;
+    public AbstractMessageProcessor(BrokerController brokerController) {
+        super(brokerController);
+        this.messageStore = brokerController.getMessageStore();
     }
 
     protected void processMessage(Message message) {
@@ -35,7 +38,7 @@ public abstract class AbstractMessageProcessor {
             String topic = (String) message.getHeader(MessageHeader.TOPIC);
             //qos == 0 or payload is none,then clear previous retain message
             if (qos == 0 || payload == null || payload.length == 0) {
-                this.messageStore.clearWillMessage(topic);
+                this.messageStore.clearRetaionMessage(topic);
             } else {
                 this.messageStore.storeRetainMessage(topic, message);
             }

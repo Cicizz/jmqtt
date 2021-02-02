@@ -180,4 +180,16 @@ public class BrokerConfig {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public boolean isAnonymousEnable() {
+        return anonymousEnable;
+    }
+
+    public boolean isHighPerformance() {
+        return highPerformance;
+    }
+
+    public void setHighPerformance(boolean highPerformance) {
+        this.highPerformance = highPerformance;
+    }
 }
