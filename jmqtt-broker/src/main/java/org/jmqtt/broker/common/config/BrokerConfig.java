@@ -12,9 +12,12 @@ public class BrokerConfig {
 
     private int pollThreadNum = Runtime.getRuntime().availableProcessors() * 2;
 
-    private String sessionStoreClass = "";
+    // plugin class config
+    private String sessionStoreClass = "org.jmqtt.broker.store.rdb.RDBSessionStore";
+    private String messageStoreClass = "org.jmqtt.broker.store.rdb.RDBMessageStore";
+    private String authValidClass = "org.jmqtt.broker.acl.impl.DefaultAuthValid";
+    private String clusterEventHandlerClass = "org.jmqtt.broker.processor.dispatcher.rdb.RDBClusterEventHandler";
 
-    private String messageStoreClass = "";
 
     /* redis相关配置 */
     private String redisHost = "127.0.0.1";
@@ -31,6 +34,8 @@ public class BrokerConfig {
     private String url;
     private String username;
     private String password;
+    // 采用拉消息方式时，一次最多拉的消息数目
+    private int maxPollEventNum = 100;
 
     // 是否启用高性能模式，高性能模式下：入栈消息，出栈消息等过程消息都会默认采用内存缓存，若为false，则会用具体实现的存储缓存这一阶段的消息
     private boolean highPerformance = false;
@@ -191,5 +196,29 @@ public class BrokerConfig {
 
     public void setHighPerformance(boolean highPerformance) {
         this.highPerformance = highPerformance;
+    }
+
+    public String getAuthValidClass() {
+        return authValidClass;
+    }
+
+    public void setAuthValidClass(String authValidClass) {
+        this.authValidClass = authValidClass;
+    }
+
+    public String getClusterEventHandlerClass() {
+        return clusterEventHandlerClass;
+    }
+
+    public void setClusterEventHandlerClass(String clusterEventHandlerClass) {
+        this.clusterEventHandlerClass = clusterEventHandlerClass;
+    }
+
+    public int getMaxPollEventNum() {
+        return maxPollEventNum;
+    }
+
+    public void setMaxPollEventNum(int maxPollEventNum) {
+        this.maxPollEventNum = maxPollEventNum;
     }
 }

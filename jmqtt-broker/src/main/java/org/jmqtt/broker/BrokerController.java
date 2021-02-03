@@ -1,10 +1,7 @@
 package org.jmqtt.broker;
 
 import io.netty.handler.codec.mqtt.MqttMessageType;
-import org.jmqtt.broker.acl.ConnectPermission;
-import org.jmqtt.broker.acl.PubSubPermission;
-import org.jmqtt.broker.acl.impl.DefaultConnectPermission;
-import org.jmqtt.broker.acl.impl.DefaultPubSubPermission;
+import org.jmqtt.broker.acl.AuthValid;
 import org.jmqtt.broker.client.ClientLifeCycleHookService;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.config.NettyConfig;
@@ -13,8 +10,10 @@ import org.jmqtt.broker.common.helper.RejectHandler;
 import org.jmqtt.broker.common.helper.ThreadFactoryImpl;
 import org.jmqtt.broker.common.log.LoggerName;
 import org.jmqtt.broker.processor.RequestProcessor;
-import org.jmqtt.broker.processor.dispatcher.DefaultDispatcherMessage;
-import org.jmqtt.broker.processor.dispatcher.MessageDispatcher;
+import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
+import org.jmqtt.broker.processor.dispatcher.DefaultDispatcherInnerMessage;
+import org.jmqtt.broker.processor.dispatcher.EventConsumeHandler;
+import org.jmqtt.broker.processor.dispatcher.InnerMessageDispatcher;
 import org.jmqtt.broker.processor.protocol.*;
 import org.jmqtt.broker.processor.recover.ReSendMessageService;
 import org.jmqtt.broker.remoting.netty.ChannelEventListener;
@@ -54,13 +53,14 @@ public class BrokerController {
     private ChannelEventListener channelEventListener;
     private NettyRemotingServer remotingServer;
 
-    private MessageDispatcher    messageDispatcher;
-    private SubscriptionMatcher  subscriptionMatcher;
-    private ConnectPermission    connectPermission;
-    private PubSubPermission     pubSubPermission;
-    private ReSendMessageService reSendMessageService;
-    private SessionStore         sessionStore;
-    private MessageStore         messageStore;
+    private InnerMessageDispatcher innerMessageDispatcher;
+    private SubscriptionMatcher    subscriptionMatcher;
+    private AuthValid              authValid;
+    private ReSendMessageService   reSendMessageService;
+    private SessionStore           sessionStore;
+    private MessageStore           messageStore;
+    private ClusterEventHandler clusterEventHandler;
+    private EventConsumeHandler eventConsumeHandler;
 
 
     public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig) {
@@ -74,23 +74,21 @@ public class BrokerController {
 
         {
             // 会话状态，消息存储加载，可自己实现相关的类
-            // TODO 插件化改造，改造成反射加载具体实现类
-            //this.sessionStore = new DefaultSessionStore();
-            //this.messageStore = new DefaultMessageStore();
+            this.sessionStore = MixAll.pluginInit(brokerConfig.getSessionStoreClass());
+            this.messageStore = MixAll.pluginInit(brokerConfig.getMessageStoreClass());
 
-        }
-
-        {
             // 设备连接，发布，订阅消息权限控制
-            // TODO 插件化改造，反射加载具体实现类
-            this.connectPermission = new DefaultConnectPermission();
-            this.pubSubPermission = new DefaultPubSubPermission();
+            this.authValid = MixAll.pluginInit(brokerConfig.getAuthValidClass());
+
+            // 集群事件转发加载
+            this.clusterEventHandler = MixAll.pluginInit(brokerConfig.getClusterEventHandlerClass());
         }
 
+        this.eventConsumeHandler = new EventConsumeHandler(this);
         this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
-        this.messageDispatcher = new DefaultDispatcherMessage(this);
+        this.innerMessageDispatcher = new DefaultDispatcherInnerMessage(this);
 
-        this.channelEventListener = new ClientLifeCycleHookService(messageStore,messageDispatcher);
+        this.channelEventListener = new ClientLifeCycleHookService(messageStore, innerMessageDispatcher);
         this.remotingServer = new NettyRemotingServer(brokerConfig, nettyConfig, channelEventListener);
         this.reSendMessageService = new ReSendMessageService(this);
 
@@ -124,7 +122,6 @@ public class BrokerController {
                 new ThreadFactoryImpl("PingThread"),
                 new RejectHandler("heartbeat", 100000));
 
-
         {
 
         }
@@ -138,8 +135,24 @@ public class BrokerController {
         MixAll.printProperties(log, brokerConfig);
         MixAll.printProperties(log, nettyConfig);
 
+        // 1. start store
+        this.sessionStore.start(brokerConfig);
+        this.messageStore.start(brokerConfig);
+
+        // 2. start cluster
+        this.clusterEventHandler.start(brokerConfig);
+        this.eventConsumeHandler.start();
+
+        // 3. start message service
+        if (this.innerMessageDispatcher != null) {
+            this.innerMessageDispatcher.start();
+        }
+        if (this.reSendMessageService != null) {
+            this.reSendMessageService.start();
+        }
+
         {
-            //init and register mqtt protocol processor
+            // 4. init and register mqtt protocol processor
             RequestProcessor connectProcessor = new ConnectProcessor(this);
             RequestProcessor disconnectProcessor = new DisconnectProcessor(this);
             RequestProcessor pingProcessor = new PingProcessor();
@@ -163,12 +176,12 @@ public class BrokerController {
             this.remotingServer.registerProcessor(MqttMessageType.PUBCOMP, pubCompProcessor, subExecutor);
         }
 
-        if (this.messageDispatcher != null) {
-            this.messageDispatcher.start();
+        // 5. start auth
+        if (this.authValid != null) {
+            this.authValid.start();
         }
-        if (this.reSendMessageService != null) {
-            this.reSendMessageService.start();
-        }
+
+        // 6. start remoting
         if (this.remotingServer != null) {
             this.remotingServer.start();
         }
@@ -191,12 +204,28 @@ public class BrokerController {
         if (this.pingExecutor != null) {
             this.pingExecutor.shutdown();
         }
-        if (this.messageDispatcher != null) {
-            this.messageDispatcher.shutdown();
+        if (this.innerMessageDispatcher != null) {
+            this.innerMessageDispatcher.shutdown();
         }
         if (this.reSendMessageService != null) {
             this.reSendMessageService.shutdown();
         }
+        if (this.clusterEventHandler != null) {
+            this.clusterEventHandler.shutdown();
+        }
+        if (this.eventConsumeHandler != null) {
+            this.eventConsumeHandler.shutdown();
+        }
+        if (this.sessionStore != null) {
+            this.sessionStore.shutdown();
+        }
+        if (this.messageStore != null) {
+            this.messageStore.shutdown();
+        }
+        if (this.authValid != null) {
+            this.authValid.shutdown();
+        }
+
     }
 
     public BrokerConfig getBrokerConfig() {
@@ -243,8 +272,8 @@ public class BrokerController {
         return remotingServer;
     }
 
-    public MessageDispatcher getMessageDispatcher() {
-        return messageDispatcher;
+    public InnerMessageDispatcher getInnerMessageDispatcher() {
+        return innerMessageDispatcher;
     }
 
     public SubscriptionMatcher getSubscriptionMatcher() {
@@ -252,12 +281,8 @@ public class BrokerController {
     }
 
 
-    public ConnectPermission getConnectPermission() {
-        return connectPermission;
-    }
-
-    public PubSubPermission getPubSubPermission() {
-        return pubSubPermission;
+    public AuthValid getAuthValid() {
+        return authValid;
     }
 
     public ReSendMessageService getReSendMessageService() {
@@ -276,4 +301,11 @@ public class BrokerController {
         return channelEventListener;
     }
 
+    public ClusterEventHandler getClusterEventHandler() {
+        return clusterEventHandler;
+    }
+
+    public void setClusterEventHandler(ClusterEventHandler clusterEventHandler) {
+        this.clusterEventHandler = clusterEventHandler;
+    }
 }

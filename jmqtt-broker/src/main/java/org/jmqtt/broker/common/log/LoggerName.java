@@ -7,6 +7,8 @@ public interface LoggerName {
 
     String MESSAGE_TRACE = "messageTraceLog";
 
+    String EVENT = "eventLog";
+
     String REMOTING = "remotingLog";
 
     String STORE = "storeLog";

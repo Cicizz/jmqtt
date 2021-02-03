@@ -6,7 +6,7 @@ import io.netty.handler.codec.mqtt.MqttPublishMessage;
 import io.netty.handler.codec.mqtt.MqttSubscribeMessage;
 import io.netty.handler.codec.mqtt.MqttTopicSubscription;
 import org.jmqtt.broker.BrokerController;
-import org.jmqtt.broker.acl.PubSubPermission;
+import org.jmqtt.broker.acl.AuthValid;
 import org.jmqtt.broker.common.log.LoggerName;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
@@ -36,13 +36,13 @@ public class SubscribeProcessor implements RequestProcessor {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
 
     private SubscriptionMatcher subscriptionMatcher;
-    private PubSubPermission pubSubPermission;
-    private MessageStore messageStore;
-    private SessionStore sessionStore;
+    private AuthValid           authValid;
+    private MessageStore        messageStore;
+    private SessionStore        sessionStore;
 
     public SubscribeProcessor(BrokerController controller){
         this.subscriptionMatcher = controller.getSubscriptionMatcher();
-        this.pubSubPermission = controller.getPubSubPermission();
+        this.authValid = controller.getAuthValid();
         this.sessionStore = controller.getSessionStore();
         this.messageStore = controller.getMessageStore();
     }
@@ -104,7 +104,7 @@ public class SubscribeProcessor implements RequestProcessor {
     private List<Topic> validTopics(ClientSession clientSession,List<MqttTopicSubscription> topics){
         List<Topic> topicList = new ArrayList<>();
         for(MqttTopicSubscription subscription : topics){
-            if(!pubSubPermission.subscribeVerify(clientSession.getClientId(),subscription.topicName())){
+            if(!authValid.subscribeVerify(clientSession.getClientId(),subscription.topicName())){
                 log.warn("[SubPermission] this clientId:{} have no permission to subscribe this topic:{}",clientSession.getClientId(),subscription.topicName());
                 clientSession.getCtx().close();
                 return null;

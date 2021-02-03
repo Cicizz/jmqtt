@@ -14,7 +14,7 @@ public class EventDO implements Serializable {
 
     private String jmqttIp;
 
-    private String eventCode;
+    private Integer eventCode;
 
     public Long getId() {
         return id;
@@ -48,11 +48,11 @@ public class EventDO implements Serializable {
         this.jmqttIp = jmqttIp;
     }
 
-    public String getEventCode() {
+    public Integer getEventCode() {
         return eventCode;
     }
 
-    public void setEventCode(String eventCode) {
+    public void setEventCode(Integer eventCode) {
         this.eventCode = eventCode;
     }
 }

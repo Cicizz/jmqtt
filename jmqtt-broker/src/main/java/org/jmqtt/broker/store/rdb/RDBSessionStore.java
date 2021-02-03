@@ -7,7 +7,7 @@ import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.helper.MixAll;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.Subscription;
-import org.jmqtt.broker.store.ClusterEvent;
+import org.jmqtt.broker.processor.dispatcher.event.EventCode;
 import org.jmqtt.broker.store.SessionState;
 import org.jmqtt.broker.store.SessionStore;
 import org.jmqtt.broker.store.rdb.daoobject.*;
@@ -56,7 +56,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
                 // 2. 存储事件
                 EventDO eventDO = new EventDO();
                 eventDO.setContent(clientId);
-                eventDO.setEventCode(ClusterEvent.CLEAR_SESSION.getCode());
+                eventDO.setEventCode(EventCode.CLEAR_SESSION.getCode());
                 eventDO.setGmtCreate(System.currentTimeMillis());
                 eventDO.setJmqttIp(MixAll.getLocalIp());
                 session.getMapper(eventMapperClass).sendEvent(eventDO);

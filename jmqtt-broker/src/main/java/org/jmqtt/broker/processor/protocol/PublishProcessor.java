@@ -7,7 +7,7 @@ import io.netty.handler.codec.mqtt.MqttPublishMessage;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.netty.util.ReferenceCountUtil;
 import org.jmqtt.broker.BrokerController;
-import org.jmqtt.broker.acl.PubSubPermission;
+import org.jmqtt.broker.acl.AuthValid;
 import org.jmqtt.broker.common.log.LoggerName;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
@@ -29,11 +29,11 @@ import java.util.Map;
 public class PublishProcessor extends AbstractMessageProcessor implements RequestProcessor {
     private Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
 
-    private PubSubPermission pubSubPermission;
+    private AuthValid authValid;
 
     public PublishProcessor(BrokerController controller){
         super(controller);
-        this.pubSubPermission = controller.getPubSubPermission();
+        this.authValid = controller.getAuthValid();
     }
 
     @Override
@@ -45,7 +45,7 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
             String clientId = NettyUtil.getClientId(ctx.channel());
             ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
             String topic = publishMessage.variableHeader().topicName();
-            if(!this.pubSubPermission.publishVerify(clientId,topic)){
+            if(!this.authValid.publishVerify(clientId,topic)){
                 log.warn("[PubMessage] permission is not allowed");
                 clientSession.getCtx().close();
                 return;
