@@ -26,7 +26,7 @@ import java.util.concurrent.*;
 /**
  * 默认的消息分发实现类
  */
-public class DefaultDispatcherMessage extends HighPerformanceMessageHandler implements MessageDispatcher {
+public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler implements InnerMessageDispatcher {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
     private boolean stoped = false;
@@ -35,13 +35,15 @@ public class DefaultDispatcherMessage extends HighPerformanceMessageHandler impl
     private int pollThreadNum;
     private SubscriptionMatcher subscriptionMatcher;
     private SessionStore sessionStore;
+    private ClusterEventHandler clusterEventHandler;
 
 
-    public DefaultDispatcherMessage(BrokerController brokerController) {
+    public DefaultDispatcherInnerMessage(BrokerController brokerController) {
         super(brokerController);
         this.pollThreadNum = brokerController.getBrokerConfig().getPollThreadNum();
         this.subscriptionMatcher = brokerController.getSubscriptionMatcher();
         this.sessionStore = brokerController.getSessionStore();
+        this.clusterEventHandler = brokerController.getClusterEventHandler();
     }
 
     @Override

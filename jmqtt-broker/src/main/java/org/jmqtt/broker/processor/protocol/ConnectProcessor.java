@@ -7,7 +7,7 @@ import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.netty.handler.codec.mqtt.MqttMessage;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.jmqtt.broker.BrokerController;
-import org.jmqtt.broker.acl.ConnectPermission;
+import org.jmqtt.broker.acl.AuthValid;
 import org.jmqtt.broker.common.log.LoggerName;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
@@ -37,14 +37,14 @@ public class ConnectProcessor implements RequestProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
 
-    private ConnectPermission    connectPermission;
+    private AuthValid            authValid;
     private ReSendMessageService reSendMessageService;
     private SubscriptionMatcher  subscriptionMatcher;
     private SessionStore         sessionStore;
     private MessageStore         messageStore;
 
     public ConnectProcessor(BrokerController brokerController) {
-        this.connectPermission = brokerController.getConnectPermission();
+        this.authValid = brokerController.getAuthValid();
         this.reSendMessageService = brokerController.getReSendMessageService();
         this.subscriptionMatcher = brokerController.getSubscriptionMatcher();
         this.sessionStore = brokerController.getSessionStore();
@@ -145,7 +145,7 @@ public class ConnectProcessor implements RequestProcessor {
     }
 
     private boolean keepAlive(String clientId, ChannelHandlerContext ctx, int heatbeatSec) {
-        if (this.connectPermission.verifyHeartbeatTime(clientId, heatbeatSec)) {
+        if (this.authValid.verifyHeartbeatTime(clientId, heatbeatSec)) {
             int keepAlive = (int) (heatbeatSec * 1.5f);
             if (ctx.pipeline().names().contains("idleStateHandler")) {
                 ctx.pipeline().remove("idleStateHandler");
@@ -195,15 +195,15 @@ public class ConnectProcessor implements RequestProcessor {
     }
 
     private boolean authentication(String clientId, String username, byte[] password) {
-        return this.connectPermission.authentication(clientId, username, password);
+        return this.authValid.authentication(clientId, username, password);
     }
 
     private boolean onBlackList(String remoteAddr, String clientId) {
-        return this.connectPermission.onBlacklist(remoteAddr, clientId);
+        return this.authValid.onBlacklist(remoteAddr, clientId);
     }
 
     private boolean clientIdVerify(String clientId) {
-        return this.connectPermission.clientIdVerify(clientId);
+        return this.authValid.clientIdVerify(clientId);
     }
 
     private boolean versionValid(int mqttVersion) {

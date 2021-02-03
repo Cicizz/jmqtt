@@ -4,7 +4,7 @@ import io.netty.channel.Channel;
 import org.apache.commons.lang3.StringUtils;
 import org.jmqtt.broker.common.log.LoggerName;
 import org.jmqtt.broker.common.model.Message;
-import org.jmqtt.broker.processor.dispatcher.MessageDispatcher;
+import org.jmqtt.broker.processor.dispatcher.InnerMessageDispatcher;
 import org.jmqtt.broker.remoting.netty.ChannelEventListener;
 import org.jmqtt.broker.remoting.session.ConnectManager;
 import org.jmqtt.broker.remoting.util.NettyUtil;
@@ -14,13 +14,13 @@ import org.slf4j.LoggerFactory;
 
 public class ClientLifeCycleHookService implements ChannelEventListener {
 
-	private static final Logger            log = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
-    private              MessageStore      messageStore;
-    private              MessageDispatcher messageDispatcher;
+	private static final Logger                 log = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
+    private              MessageStore           messageStore;
+    private              InnerMessageDispatcher innerMessageDispatcher;
 
-    public ClientLifeCycleHookService(MessageStore messageStore,MessageDispatcher messageDispatcher){
+    public ClientLifeCycleHookService(MessageStore messageStore, InnerMessageDispatcher innerMessageDispatcher){
         this.messageStore = messageStore;
-        this.messageDispatcher = messageDispatcher;
+        this.innerMessageDispatcher = innerMessageDispatcher;
     }
 
     @Override
@@ -33,7 +33,7 @@ public class ClientLifeCycleHookService implements ChannelEventListener {
         if(StringUtils.isNotEmpty(clientId)){
             Message willMessage = messageStore.getWillMessage(clientId);
             if (willMessage != null) {
-                messageDispatcher.appendMessage(willMessage);
+                innerMessageDispatcher.appendMessage(willMessage);
             }
         }
     }

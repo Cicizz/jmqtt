@@ -9,32 +9,32 @@ import org.slf4j.LoggerFactory;
 
 public abstract class AbstractDBStore {
 
-    static final Class<SessionMapper>           sessionMapperClass           = SessionMapper.class;
-    static final Class<SubscriptionMapper>      subscriptionMapperClass      = SubscriptionMapper.class;
-    static final Class<EventMapper>             eventMapperClass             = EventMapper.class;
-    static final Class<InflowMessageMapper>     inflowMessageMapperClass     = InflowMessageMapper.class;
-    static final Class<OutflowMessageMapper>    outflowMessageMapperClass    = OutflowMessageMapper.class;
-    static final Class<OutflowSecMessageMapper> outflowSecMessageMapperClass = OutflowSecMessageMapper.class;
-    static final Class<RetainMessageMapper>     retainMessageMapperClass     = RetainMessageMapper.class;
+    protected static final Class<SessionMapper>           sessionMapperClass           = SessionMapper.class;
+    protected static final Class<SubscriptionMapper>      subscriptionMapperClass      = SubscriptionMapper.class;
+    protected static final Class<EventMapper>             eventMapperClass             = EventMapper.class;
+    protected static final Class<InflowMessageMapper>     inflowMessageMapperClass     = InflowMessageMapper.class;
+    protected static final Class<OutflowMessageMapper>    outflowMessageMapperClass    = OutflowMessageMapper.class;
+    protected static final Class<OutflowSecMessageMapper> outflowSecMessageMapperClass = OutflowSecMessageMapper.class;
+    protected static final Class<RetainMessageMapper>     retainMessageMapperClass     = RetainMessageMapper.class;
 
-    static final Class<OfflineMessageMapper> offlineMessageMapperClass = OfflineMessageMapper.class;
-    static final Class<WillMessageMapper>    willMessageMapperClass    = WillMessageMapper.class;
+    protected static final Class<OfflineMessageMapper> offlineMessageMapperClass = OfflineMessageMapper.class;
+    protected static final Class<WillMessageMapper>    willMessageMapperClass    = WillMessageMapper.class;
 
-    final static Logger log = LoggerFactory.getLogger(LoggerName.STORE);
+    protected final static Logger log = LoggerFactory.getLogger(LoggerName.STORE);
 
-    void start(BrokerConfig brokerConfig) {
+    protected void start(BrokerConfig brokerConfig) {
         DBUtils.getInstance().start(brokerConfig);
     }
 
-    void shutdown() {
+    protected void shutdown() {
         DBUtils.getInstance().shutdown();
     }
 
-    <T> T getMapper(Class<T> clazz) {
+    protected <T> T getMapper(Class<T> clazz) {
         return DBUtils.getInstance().getMapper(clazz);
     }
 
-    SqlSession getSessionWithTrans() {
+    protected SqlSession getSessionWithTrans() {
         return DBUtils.getInstance().getSessionWithTrans();
     }
 }

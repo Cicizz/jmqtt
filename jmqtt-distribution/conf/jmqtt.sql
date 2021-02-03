@@ -107,7 +107,7 @@ CREATE TABLE `jmqtt_event` (
 `content` text NOT NULL COMMENT '消息体',
 `gmt_create` bigint(20) NOT NULL COMMENT '创建时间',
 `jmqtt_ip` varchar(24) NOT NULL COMMENT 'jmqtt服务器ip，发送该消息到集群中的broker ip',
-`event_code` varchar(24) NOT NULL COMMENT '事件码',
+`event_code` int(4) NOT NULL COMMENT '事件码',
 PRIMARY KEY (`id`)
 )
 COMMENT = 'jmqtt 集群事件转发表：由发送端将消息发送到该表中，其他节点批量拉取该表中的事件进行处理';

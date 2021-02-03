@@ -3,7 +3,11 @@ package org.jmqtt.broker.acl;
 /**
  * Connect permission manager
  */
-public interface ConnectPermission {
+public interface AuthValid {
+
+    void start();
+
+    void shutdown();
 
     /**
      * verify the clientId whether it meets the requirements or not
@@ -24,4 +28,14 @@ public interface ConnectPermission {
      * verify the client's heartbeat time whether the compliance
      */
     boolean verifyHeartbeatTime(String clientId,int time);
+
+    /**
+     * verify the clientId whether can publish message to the topic
+     */
+    boolean publishVerify(String clientId,String topic);
+
+    /**
+     * verify the clientId whether can subscribe the topic
+     */
+    boolean subscribeVerify(String clientId,String topic);
 }
