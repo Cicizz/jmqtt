@@ -7,6 +7,7 @@ import org.jmqtt.broker.store.SessionState;
 import org.jmqtt.broker.store.SessionStore;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 public class RedisSessionStore implements SessionStore {
@@ -28,6 +29,11 @@ public class RedisSessionStore implements SessionStore {
     @Override
     public boolean storeSession(String clientId, SessionState sessionState, boolean notifyClearOtherSession) {
         return false;
+    }
+
+    @Override
+    public void clearSession(String clientId, boolean clearOfflineMsg) {
+
     }
 
     @Override
@@ -71,17 +77,27 @@ public class RedisSessionStore implements SessionStore {
     }
 
     @Override
-    public boolean containOutflowMsg(String clientId, int msgId) {
-        return false;
-    }
-
-    @Override
     public Collection<Message> getAllOutflowMsg(String clientId) {
         return null;
     }
 
     @Override
     public Message releaseOutflowMsg(String clientId, int msgId) {
+        return null;
+    }
+
+    @Override
+    public boolean cacheOutflowSecMsgId(String clientId, int msgId) {
+        return false;
+    }
+
+    @Override
+    public boolean releaseOutflowSecMsgId(String clientId, int msgId) {
+        return false;
+    }
+
+    @Override
+    public List<Integer> getAllOutflowSecMsgId(String clientId) {
         return null;
     }
 
