@@ -35,7 +35,8 @@ public class BrokerConfig {
     private String username;
     private String password;
     // 采用拉消息方式时，一次最多拉的消息数目
-    private int maxPollEventNum = 100;
+    private int maxPollEventNum = 10;
+    private int pollWaitInterval = 10;//ms
 
     // 是否启用高性能模式，高性能模式下：入栈消息，出栈消息等过程消息都会默认采用内存缓存，若为false，则会用具体实现的存储缓存这一阶段的消息
     private boolean highPerformance = false;
@@ -220,5 +221,13 @@ public class BrokerConfig {
 
     public void setMaxPollEventNum(int maxPollEventNum) {
         this.maxPollEventNum = maxPollEventNum;
+    }
+
+    public int getPollWaitInterval() {
+        return pollWaitInterval;
+    }
+
+    public void setPollWaitInterval(int pollWaitInterval) {
+        this.pollWaitInterval = pollWaitInterval;
     }
 }

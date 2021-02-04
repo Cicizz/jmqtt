@@ -22,13 +22,10 @@ public class RDBClusterEventHandler extends AbstractDBStore implements ClusterEv
 
     private static final AtomicLong offset = new AtomicLong();
 
-    private int maxPollNum = 50;
-
     @Override
     public void start(BrokerConfig brokerConfig) {
         super.start(brokerConfig);
         Long maxId = getMapper(eventMapperClass).getMaxOffset();
-        maxPollNum = brokerConfig.getMaxPollEventNum();
         if (maxId == null) {
             log.error("RDBClusterEventHandler start error,event db max id is null");
             System.exit(-1);
@@ -59,7 +56,7 @@ public class RDBClusterEventHandler extends AbstractDBStore implements ClusterEv
     }
 
     @Override
-    public List<Event> pollEvent() {
+    public List<Event> pollEvent(int maxPollNum) {
         // offset: min -> max
         long currentOffset = offset.get();
         List<EventDO> eventDOList = getMapper(eventMapperClass).consumeEvent(currentOffset,maxPollNum);

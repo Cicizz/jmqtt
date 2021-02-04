@@ -36,5 +36,5 @@ public interface ClusterEventHandler {
      * consume cluster event: poll from cluster
      * 集群方式2：集群无法主动push，由jmqtt主动拉消息
      */
-    List<Event> pollEvent();
+    List<Event> pollEvent(int maxPollNum);
 }
