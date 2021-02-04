@@ -2,6 +2,7 @@ package org.jmqtt.broker.store.rdb.mapper;
 
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.jmqtt.broker.store.rdb.daoobject.SubscriptionDO;
 
@@ -17,7 +18,7 @@ public interface SubscriptionMapper {
     Integer clearSubscription(String clientId);
 
     @Delete("DELETE FROM jmqtt_subscription WHERE client_id = #{clientId} AND topic = #{topic}")
-    Integer delSubscription(String clientId,String topic);
+    Integer delSubscription(@Param("clientId") String clientId,@Param("topic") String topic);
 
     @Select("SELECT client_id,topic,qos FROM jmqtt_subscription WHERE client_id = #{clientId}")
     List<SubscriptionDO> querySubscription(String clientId);

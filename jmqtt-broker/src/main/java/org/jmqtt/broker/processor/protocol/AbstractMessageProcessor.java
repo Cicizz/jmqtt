@@ -1,10 +1,13 @@
 package org.jmqtt.broker.processor.protocol;
 
+import com.alibaba.fastjson.JSONObject;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
 import org.jmqtt.broker.processor.HighPerformanceMessageHandler;
-import org.jmqtt.broker.processor.dispatcher.InnerMessageDispatcher;
+import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
+import org.jmqtt.broker.processor.dispatcher.event.Event;
+import org.jmqtt.broker.processor.dispatcher.event.EventCode;
 import org.jmqtt.broker.store.MessageStore;
 
 /**
@@ -15,9 +18,12 @@ public abstract class AbstractMessageProcessor extends HighPerformanceMessageHan
 
     private MessageStore messageStore;
 
+    private ClusterEventHandler clusterEventHandler;
+
     public AbstractMessageProcessor(BrokerController brokerController) {
         super(brokerController);
         this.messageStore = brokerController.getMessageStore();
+        this.clusterEventHandler = brokerController.getClusterEventHandler();
     }
 
     protected void processMessage(Message message) {
@@ -41,10 +47,10 @@ public abstract class AbstractMessageProcessor extends HighPerformanceMessageHan
 
     /**
      * 向集群分发消息:第一阶段
-     * TODO 插件化实现，二次开发可实现向自己的转发集群中发送消息
      */
     private void sendMessage2Cluster(Message message) {
-
+        Event event = new Event(EventCode.DISPATCHER_CLIENT_MESSAGE.getCode(), JSONObject.toJSONString(message),System.currentTimeMillis());
+        this.clusterEventHandler.sendEvent(event);
     }
 
 }

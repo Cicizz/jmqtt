@@ -54,11 +54,16 @@ public class BrokerStartup {
         initConfig(jmqttConfigPath,brokerConfig,nettyConfig);
 
         // 日志配置加载
-        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-        JoranConfigurator configurator = new JoranConfigurator();
-        configurator.setContext(lc);
-        lc.reset();
-        configurator.doConfigure(jmqttHome + "/conf/logback_broker.xml");
+        try {
+            LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+            JoranConfigurator configurator = new JoranConfigurator();
+            configurator.setContext(lc);
+            lc.reset();
+            configurator.doConfigure( jmqttHome + File.separator + "conf/logback_broker.xml");
+        } catch (Exception ex) {
+            System.err.print("Logback load error,ex:" + ex);
+        }
+
 
         // 启动服务，线程等
         BrokerController brokerController = new BrokerController(brokerConfig,nettyConfig);
