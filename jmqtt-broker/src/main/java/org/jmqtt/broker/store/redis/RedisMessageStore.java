@@ -1,5 +1,6 @@
 package org.jmqtt.broker.store.redis;
 
+import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.store.MessageStore;
 
@@ -7,13 +8,25 @@ import java.util.Collection;
 
 public class RedisMessageStore implements MessageStore {
     @Override
-    public void storeWillMessage(String clientId, Message message) {
+    public void start(BrokerConfig brokerConfig) {
 
     }
 
     @Override
-    public void clearWillMessage(String clientId) {
+    public void shutdown() {
 
+    }
+
+    @Override
+    public boolean storeWillMessage(String clientId, Message message) {
+
+        return false;
+    }
+
+    @Override
+    public boolean clearWillMessage(String clientId) {
+
+        return false;
     }
 
     @Override
@@ -22,13 +35,15 @@ public class RedisMessageStore implements MessageStore {
     }
 
     @Override
-    public void storeRetainMessage(String topic, Message message) {
+    public boolean storeRetainMessage(String topic, Message message) {
 
+        return false;
     }
 
     @Override
-    public void clearRetaionMessage(String topic) {
+    public boolean clearRetaionMessage(String topic) {
 
+        return false;
     }
 
     @Override
