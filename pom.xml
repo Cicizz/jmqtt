@@ -10,7 +10,6 @@
     <version>3.0.0</version>
     <modules>
         <module>jmqtt-broker</module>
-        <module>jmqtt-distribution</module>
         <module>jmqtt-example</module>
         <module>jmqtt-admin</module>
     </modules>
@@ -48,6 +47,7 @@
         <HServer.version>2.9.46</HServer.version>
         <mybatis.version>3.4.6</mybatis.version>
         <druid.version>1.2.4</druid.version>
+        <jdbc.version>5.1.25</jdbc.version>
     </properties>
 
     <dependencyManagement>
@@ -81,6 +81,11 @@
                 <groupId>com.alibaba</groupId>
                 <artifactId>druid</artifactId>
                 <version>${druid.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${jdbc.version}</version>
             </dependency>
             <dependency>
                 <groupId>top.hserver</groupId>

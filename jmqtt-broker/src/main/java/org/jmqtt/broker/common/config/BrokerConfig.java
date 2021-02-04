@@ -4,43 +4,47 @@ import java.io.File;
 
 public class BrokerConfig {
 
-    private String jmqttHome = System.getenv("JMQTT_HOME") != null ? System.getenv("JMQTT_HOME") : System.getProperty("user.dir") + File.separator + "jmqtt-distribution";
+    // 配置conf文件的所在位置，logback，properties文件等所在位置
+    private String jmqttHome = System.getenv("JMQTT_HOME") != null ? System.getenv("JMQTT_HOME") : System.getProperty("user.dir") +
+            File.separator + "jmqtt-broker" + File.separator + "src" + File.separator + "main" + File.separator + "resources";
 
-    private String version = "3.0.0";
-
+    private String  version         = "3.0.0";
     private boolean anonymousEnable = true;
 
     private int pollThreadNum = Runtime.getRuntime().availableProcessors() * 2;
 
+    /* 集群模式：1.基于发布订阅，集群主动push消息给Jmqtt; 2.基于poll，jmqtt主动从集群拉消息 */
+    private int clusterMode      = 1;
+    // 采用拉消息方式时，一次最多拉的消息数目
+    private int maxPollEventNum  = 10;
+    private int pollWaitInterval = 10;//ms
+
     // plugin class config
-    private String sessionStoreClass = "org.jmqtt.broker.store.rdb.RDBSessionStore";
-    private String messageStoreClass = "org.jmqtt.broker.store.rdb.RDBMessageStore";
-    private String authValidClass = "org.jmqtt.broker.acl.impl.DefaultAuthValid";
+    private String sessionStoreClass        = "org.jmqtt.broker.store.rdb.RDBSessionStore";
+    private String messageStoreClass        = "org.jmqtt.broker.store.rdb.RDBMessageStore";
+    private String authValidClass           = "org.jmqtt.broker.acl.impl.DefaultAuthValid";
     private String clusterEventHandlerClass = "org.jmqtt.broker.processor.dispatcher.rdb.RDBClusterEventHandler";
 
-
     /* redis相关配置 */
-    private String redisHost = "127.0.0.1";
-    private int redisPort = 6379;
-    private String redisPassword = "";
-    private int maxWaitMills = 60 * 1000;
-    private boolean testOnBorrow = true;
-    private int minIdle = 20;
-    private int maxTotal = 200;
-    private int maxIdle = 50;
+    private String  redisHost     = "127.0.0.1";
+    private int     redisPort     = 6379;
+    private String  redisPassword = "";
+    private int     maxWaitMills  = 60 * 1000;
+    private boolean testOnBorrow  = true;
+    private int     minIdle       = 20;
+    private int     maxTotal      = 200;
+    private int     maxIdle       = 50;
 
     /* db相关配置 */
-    private String driver;
-    private String url;
-    private String username;
-    private String password;
-    // 采用拉消息方式时，一次最多拉的消息数目
-    private int maxPollEventNum = 10;
-    private int pollWaitInterval = 10;//ms
+    private String driver   = "com.mysql.jdbc.Driver";
+    private String url
+                            = "jdbc:mysql://localhost:3306/game?characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false"
+            + "&maxReconnects=10&useSSL=false";
+    private String username = "root";
+    private String password = "123456";
 
     // 是否启用高性能模式，高性能模式下：入栈消息，出栈消息等过程消息都会默认采用内存缓存，若为false，则会用具体实现的存储缓存这一阶段的消息
     private boolean highPerformance = false;
-
 
     public String getRedisHost() {
         return redisHost;
@@ -105,7 +109,6 @@ public class BrokerConfig {
     public void setMaxIdle(int maxIdle) {
         this.maxIdle = maxIdle;
     }
-
 
     public int getPollThreadNum() {
         return pollThreadNum;
@@ -229,5 +232,13 @@ public class BrokerConfig {
 
     public void setPollWaitInterval(int pollWaitInterval) {
         this.pollWaitInterval = pollWaitInterval;
+    }
+
+    public int getClusterMode() {
+        return clusterMode;
+    }
+
+    public void setClusterMode(int clusterMode) {
+        this.clusterMode = clusterMode;
     }
 }

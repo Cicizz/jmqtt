@@ -26,12 +26,14 @@ public class EventConsumeHandler {
     private AtomicBoolean          pollStoped = new AtomicBoolean(false);
     private int maxPollNum;
     private int pollWaitInterval;
+    private int clusterMode;
 
     public EventConsumeHandler(BrokerController brokerController) {
         this.innerMessageDispatcher = brokerController.getInnerMessageDispatcher();
         this.clusterEventHandler = brokerController.getClusterEventHandler();
         this.maxPollNum = brokerController.getBrokerConfig().getMaxPollEventNum();
         this.pollWaitInterval = brokerController.getBrokerConfig().getPollWaitInterval();
+        this.clusterMode = brokerController.getBrokerConfig().getClusterMode();
     }
 
     // 集群方式1: consume event from cluster
@@ -58,25 +60,26 @@ public class EventConsumeHandler {
 
 
     public void start(){
-        new Thread(() -> {
-            while (!pollStoped.get()) {
-                try {
-                    List<Event> eventList = pollEvent();
-                    if (!MixAll.isEmpty(eventList)) {
-                        for (Event event : eventList) {
-                            consumeEvent(event);
+        if (clusterMode == 2){
+            new Thread(() -> {
+                while (!pollStoped.get()) {
+                    try {
+                        List<Event> eventList = pollEvent();
+                        if (!MixAll.isEmpty(eventList)) {
+                            for (Event event : eventList) {
+                                consumeEvent(event);
+                            }
                         }
+                        if (MixAll.isEmpty(eventList) || eventList.size() < 5) {
+                            Thread.sleep(pollWaitInterval);
+                        }
+                    } catch (Exception e) {
+                        log.warn("Poll event from cluster error.",e);
                     }
-                    if (MixAll.isEmpty(eventList) || eventList.size() < 5) {
-                        Thread.sleep(pollWaitInterval);
-                    }
-                } catch (Exception e) {
-                    log.warn("Poll event from cluster error.",e);
                 }
-            }
-        }).start();
+            }).start();
+        }
     }
-
 
     public void shutdown(){
 

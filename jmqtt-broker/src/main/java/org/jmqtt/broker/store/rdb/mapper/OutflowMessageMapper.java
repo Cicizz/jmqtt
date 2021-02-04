@@ -2,6 +2,7 @@ package org.jmqtt.broker.store.rdb.mapper;
 
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.jmqtt.broker.store.rdb.daoobject.OutflowMessageDO;
 
@@ -13,7 +14,7 @@ public interface OutflowMessageMapper {
     Long cacheOuflowMessage(OutflowMessageDO outflowMessageDO);
 
     @Select("SELECT id,client_id,msg_id,content,gmt_create FROM jmqtt_outflow_message WHERE client_id = #{clientId} and msg_id = #{msgId}")
-    OutflowMessageDO getOutflowMessage(String clientId,int msgId);
+    OutflowMessageDO getOutflowMessage(@Param("clientId") String clientId,@Param("msgId") int msgId);
 
     @Delete("DELETE FROM jmqtt_outflow_message WHERE id = #{id}")
     Integer delOutflowMessage(Long id);

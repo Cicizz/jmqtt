@@ -30,11 +30,15 @@ public abstract class AbstractDBStore {
         DBUtils.getInstance().shutdown();
     }
 
-    protected <T> T getMapper(Class<T> clazz) {
-        return DBUtils.getInstance().getMapper(clazz);
+    protected <T> T getMapper(SqlSession sqlSession,Class<T> clazz) {
+        return sqlSession.getMapper(clazz);
     }
 
-    protected SqlSession getSessionWithTrans() {
-        return DBUtils.getInstance().getSessionWithTrans();
+    protected Object operate(DBCallback dbCallback){
+       return DBUtils.getInstance().operate(dbCallback);
+    }
+
+    public SqlSession getSqlSessionWithTrans() {
+        return DBUtils.getInstance().getSqlSessionWithTrans();
     }
 }

@@ -10,7 +10,6 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.jmqtt.broker.common.config.BrokerConfig;
-import org.jmqtt.broker.common.model.Subscription;
 import org.jmqtt.broker.store.rdb.mapper.*;
 
 import javax.sql.DataSource;
@@ -67,7 +66,7 @@ public class DBUtils {
 
             // 初始化所有mapper
             configuration.addMapper(SessionMapper.class);
-            configuration.addMapper(Subscription.class);
+            configuration.addMapper(SubscriptionMapper.class);
             configuration.addMapper(OfflineMessageMapper.class);
             configuration.addMapper(EventMapper.class);
             configuration.addMapper(InflowMessageMapper.class);
@@ -81,18 +80,19 @@ public class DBUtils {
 
     public void shutdown(){}
 
-    public <T> T getMapper(Class<T> clazz){
+
+    public Object operate(DBCallback dbCallback) {
         try (SqlSession sqlSession = this.sqlSessionFactory.openSession(true)){
-            return sqlSession.getMapper(clazz);
+            return dbCallback.operate(sqlSession);
         }
     }
 
     /**
      * 获取关闭事物的session，需要手动提交事物
      */
-    public SqlSession getSessionWithTrans(){
-        try (SqlSession sqlSession = this.sqlSessionFactory.openSession()){
-            return sqlSession;
-        }
+    public SqlSession getSqlSessionWithTrans() {
+        SqlSession sqlSession = this.sqlSessionFactory.openSession(false);
+        return sqlSession;
     }
+
 }

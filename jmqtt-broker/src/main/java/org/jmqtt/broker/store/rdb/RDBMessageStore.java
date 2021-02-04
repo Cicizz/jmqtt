@@ -31,19 +31,20 @@ public class RDBMessageStore extends AbstractDBStore implements MessageStore {
         willMessageDO.setClientId(clientId);
         willMessageDO.setContent(JSONObject.toJSONString(message));
         willMessageDO.setGmtCreate(message.getStoreTime());
-        Long id = getMapper(willMessageMapperClass).storeWillMessage(willMessageDO);
+
+        Long id = (Long) operate(sqlSession -> getMapper(sqlSession,willMessageMapperClass).storeWillMessage(willMessageDO));
         return id != 0;
     }
 
     @Override
     public boolean clearWillMessage(String clientId) {
-        getMapper(willMessageMapperClass).delWillMessage(clientId);
+        operate(sqlSession -> getMapper(sqlSession,willMessageMapperClass).delWillMessage(clientId));
         return true;
     }
 
     @Override
     public Message getWillMessage(String clientId) {
-        WillMessageDO willMessageDO = getMapper(willMessageMapperClass).getWillMessage(clientId);
+        WillMessageDO willMessageDO = (WillMessageDO) operate(sqlSession -> getMapper(sqlSession,willMessageMapperClass).getWillMessage(clientId));
         if (willMessageDO == null) {
             return null;
         }
@@ -55,19 +56,19 @@ public class RDBMessageStore extends AbstractDBStore implements MessageStore {
         RetainMessageDO retainMessageDO = new RetainMessageDO();
         retainMessageDO.setTopic(topic);
         retainMessageDO.setContent(JSONObject.toJSONString(message));
-        Long id = getMapper(retainMessageMapperClass).storeRetainMessage(retainMessageDO);
+        Long id = (Long) operate(sqlSession -> getMapper(sqlSession,retainMessageMapperClass).storeRetainMessage(retainMessageDO));
         return id != 0;
     }
 
     @Override
     public boolean clearRetaionMessage(String topic) {
-        getMapper(retainMessageMapperClass).delRetainMessage(topic);
+        operate(sqlSession -> getMapper(sqlSession,retainMessageMapperClass).delRetainMessage(topic));
         return true;
     }
 
     @Override
     public Collection<Message> getAllRetainMsg() {
-        List<RetainMessageDO> messageList = getMapper(retainMessageMapperClass).getAllRetainMessage();
+        List<RetainMessageDO> messageList = (List<RetainMessageDO>) operate(sqlSession -> getMapper(sqlSession,retainMessageMapperClass).getAllRetainMessage());
         if (MixAll.isEmpty(messageList)) {
             return null;
         }
