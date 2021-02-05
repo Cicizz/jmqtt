@@ -7,9 +7,11 @@ import org.jmqtt.broker.store.MessageStore;
 import java.util.Collection;
 
 public class RedisMessageStore implements MessageStore {
+
+    private RedisTemplate redisTemplate;
     @Override
     public void start(BrokerConfig brokerConfig) {
-
+        this.redisTemplate = new RedisTemplate(brokerConfig);
     }
 
     @Override
