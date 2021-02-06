@@ -79,7 +79,7 @@ public class RedisSessionStore implements SessionStore {
     @Override
     public Collection<Message> getAllInflowMsg(String clientId) {
         Map<String, String> inflowMessages = redisSupport.operate(jedis -> jedis.hgetAll(RedisKeySupport.REC_FLOW_MESSAGE + clientId));
-        return inflowMessages.values().stream().map(val -> JSONObject.parseObject(val, Message.class)).collect(Collectors.toSet());
+        return inflowMessages.values().stream().map(val -> JSONObject.parseObject(val, Message.class)).collect(Collectors.toList());
     }
 
     @Override
@@ -91,7 +91,7 @@ public class RedisSessionStore implements SessionStore {
     @Override
     public Collection<Message> getAllOutflowMsg(String clientId) {
         Map<String, String> outflowMessages = redisSupport.operate(jedis -> jedis.hgetAll(RedisKeySupport.SEND_FLOW_MESSAGE + clientId));
-        return outflowMessages.values().stream().map(val -> JSONObject.parseObject(val, Message.class)).collect(Collectors.toSet());
+        return outflowMessages.values().stream().map(val -> JSONObject.parseObject(val, Message.class)).collect(Collectors.toList());
     }
 
     @Override
@@ -127,7 +127,7 @@ public class RedisSessionStore implements SessionStore {
     @Override
     public Collection<Message> getAllOfflineMsg(String clientId) {
         Map<String, String> offlineMessages = redisSupport.operate(jedis -> jedis.hgetAll(RedisKeySupport.OFFLINE + clientId));
-        return offlineMessages.values().stream().map(val -> JSONObject.parseObject(val, Message.class)).collect(Collectors.toSet());
+        return offlineMessages.values().stream().map(val -> JSONObject.parseObject(val, Message.class)).collect(Collectors.toList());
     }
 
     @Override
