@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 出栈消息接收到的qos2消息的pubComp报文：清楚缓存的出栈消息
+ * 出栈消息接收到的qos2消息的pubComp报文：清除缓存的出栈消息
  */
 public class PubCompProcessor extends AbstractMessageProcessor implements RequestProcessor {
 

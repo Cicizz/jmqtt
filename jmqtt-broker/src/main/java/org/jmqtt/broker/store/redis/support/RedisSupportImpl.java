@@ -48,7 +48,7 @@ public class RedisSupportImpl implements RedisSupport{
         Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
-            return redisCallBack.operate(jedis);
+            return (T)redisCallBack.operate(jedis);
         }catch (Exception ex) {
             LogUtil.error(log,"[Cluster] redis operate error,ex:{}",ex);
         } finally {
