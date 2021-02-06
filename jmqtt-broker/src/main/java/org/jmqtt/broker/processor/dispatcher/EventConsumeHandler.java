@@ -72,7 +72,9 @@ public class EventConsumeHandler {
 
 
     public void start(){
-        if (clusterMode == 2){
+        if(clusterMode == 1){
+            clusterEventHandler.setEventConsumeHandler(this);
+        } else if (clusterMode == 2){
             new Thread(() -> {
                 while (!pollStoped.get()) {
                     try {
