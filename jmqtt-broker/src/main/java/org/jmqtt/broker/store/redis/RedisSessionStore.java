@@ -5,20 +5,25 @@ import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.Subscription;
 import org.jmqtt.broker.store.SessionState;
 import org.jmqtt.broker.store.SessionStore;
+import org.jmqtt.broker.store.redis.support.RedisSupport;
+import org.jmqtt.broker.store.redis.support.RedisUtils;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 public class RedisSessionStore implements SessionStore {
+
+    private RedisSupport redisSupport;
+
     @Override
     public void start(BrokerConfig brokerConfig) {
-
+        this.redisSupport = RedisUtils.getInstance().createSupport(brokerConfig);
     }
 
     @Override
     public void shutdown() {
-
+        RedisUtils.getInstance().close();
     }
 
     @Override

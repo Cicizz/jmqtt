@@ -3,25 +3,26 @@ package org.jmqtt.broker.store.redis;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.store.MessageStore;
+import org.jmqtt.broker.store.redis.support.RedisSupport;
+import org.jmqtt.broker.store.redis.support.RedisUtils;
 
 import java.util.Collection;
 
 public class RedisMessageStore implements MessageStore {
 
-    private RedisTemplate redisTemplate;
+    private RedisSupport redisSupport;
     @Override
     public void start(BrokerConfig brokerConfig) {
-        this.redisTemplate = new RedisTemplate(brokerConfig);
+        this.redisSupport = RedisUtils.getInstance().createSupport(brokerConfig);
     }
 
     @Override
     public void shutdown() {
-
+        RedisUtils.getInstance().close();
     }
 
     @Override
     public boolean storeWillMessage(String clientId, Message message) {
-
         return false;
     }
 
