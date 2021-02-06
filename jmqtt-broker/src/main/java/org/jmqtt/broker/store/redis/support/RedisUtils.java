@@ -28,10 +28,6 @@ public class RedisUtils {
         return redisSupport;
     }
 
-    public <T> T operate(RedisCallBack redisCallBack) {
-        return this.redisSupport.operate(redisCallBack);
-    }
-
     public void close() {
         RedisSupportImpl redisSupport = this.redisSupport;
         if(start.compareAndSet(true,false)&&redisSupport!=null){
