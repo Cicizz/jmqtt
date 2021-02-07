@@ -49,7 +49,7 @@ public class RedisMessageStore implements MessageStore {
     }
 
     @Override
-    public boolean clearRetaionMessage(String topic) {
+    public boolean clearRetainMessage(String topic) {
         redisSupport.operate(jedis -> jedis.hdel(RedisKeySupport.RETAIN,topic));
         return true;
     }

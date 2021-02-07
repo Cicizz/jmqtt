@@ -11,6 +11,7 @@ import org.jmqtt.broker.store.redis.support.RedisUtils;
 import redis.clients.jedis.JedisPubSub;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class RedisClusterEventHandler implements ClusterEventHandler {
@@ -26,7 +27,9 @@ public class RedisClusterEventHandler implements ClusterEventHandler {
             jedis.psubscribe(new JedisPubSub() {
                 @Override
                 public void onMessage(String channel, String message) {
-                    eventConsumeHandler.consumeEvent(JSONObject.parseObject(message,Event.class));
+                    if(!Objects.equals(INSTANCE_CHANNEL_ID,channel)) {
+                        eventConsumeHandler.consumeEvent(JSONObject.parseObject(message, Event.class));
+                    }
                 }
             }, INSTANCE_CHANNEL_PATTERN);
             return true;
