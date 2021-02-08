@@ -12,7 +12,7 @@
 ## Official documents
 [Official documents](http://www.mangdagou.com/)
 
-### Quick start
+## Quick start
 1. Download [release](https://github.com/Cicizz/jmqtt/releases) (Version above 3. X) Or `clone` this project
 2. Execute in the root directory:`mvn -Ppackage-all -DskipTests clean install -U`
 3. Configuration file for configuration response:`/jmqtt-broker/resources/conf`
