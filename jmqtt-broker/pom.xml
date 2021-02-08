@@ -5,12 +5,12 @@
     <parent>
         <artifactId>jmqtt</artifactId>
         <groupId>org.jmqtt</groupId>
-        <version>2.1.0</version>
+        <version>3.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>jmqtt-broker</artifactId>
-    <version>2.1.0</version>
+    <version>3.0.0</version>
 
     <name>jmqtt-broker</name>
 
@@ -22,20 +22,31 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.jmqtt</groupId>
-            <artifactId>jmqtt-common</artifactId>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jmqtt</groupId>
-            <artifactId>jmqtt-remoting</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jmqtt</groupId>
-            <artifactId>jmqtt-store</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jmqtt</groupId>
-            <artifactId>jmqtt-manage</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
         </dependency>
     </dependencies>
 
