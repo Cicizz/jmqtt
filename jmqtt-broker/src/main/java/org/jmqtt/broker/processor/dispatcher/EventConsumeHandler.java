@@ -3,15 +3,20 @@ package org.jmqtt.broker.processor.dispatcher;
 import com.alibaba.fastjson.JSONObject;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.helper.MixAll;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.common.model.Message;
+import org.jmqtt.broker.common.model.Subscription;
 import org.jmqtt.broker.processor.dispatcher.event.Event;
 import org.jmqtt.broker.remoting.session.ClientSession;
 import org.jmqtt.broker.remoting.session.ConnectManager;
+import org.jmqtt.broker.store.SessionStore;
+import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -19,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class EventConsumeHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.EVENT);
+    private static final Logger log = JmqttLogger.eventLog;
 
     private InnerMessageDispatcher innerMessageDispatcher;
     private ClusterEventHandler    clusterEventHandler;
@@ -27,6 +32,9 @@ public class EventConsumeHandler {
     private int maxPollNum;
     private int pollWaitInterval;
     private int clusterMode;
+    private String currentIp;
+    private SessionStore sessionStore;
+    private SubscriptionMatcher subscriptionMatcher;
 
     public EventConsumeHandler(BrokerController brokerController) {
         this.innerMessageDispatcher = brokerController.getInnerMessageDispatcher();
@@ -34,10 +42,14 @@ public class EventConsumeHandler {
         this.maxPollNum = brokerController.getBrokerConfig().getMaxPollEventNum();
         this.pollWaitInterval = brokerController.getBrokerConfig().getPollWaitInterval();
         this.clusterMode = brokerController.getBrokerConfig().getClusterMode();
+        this.currentIp = brokerController.getCurrentIp();
+        this.sessionStore = brokerController.getSessionStore();
+        this.subscriptionMatcher = brokerController.getSubscriptionMatcher();
     }
 
     // 集群方式1: consume event from cluster
     public void consumeEvent(Event event){
+
         switch (event.getEventCode()){
             case 1:
                 clearClientSession(event);
@@ -49,7 +61,7 @@ public class EventConsumeHandler {
                 dispatcherMessage(event);
                 break;
             default:
-                log.warn("[EventConsumeHandler] consume event is not supported,event:{}",event);
+                LogUtil.warn(log,"[EventConsumeHandler] consume event is not supported,event:{}",event);
         }
     }
 
@@ -74,7 +86,7 @@ public class EventConsumeHandler {
                             Thread.sleep(pollWaitInterval);
                         }
                     } catch (Exception e) {
-                        log.warn("Poll event from cluster error.",e);
+                        LogUtil.warn(log,"Poll event from cluster error.",e);
                     }
                 }
             }).start();
@@ -85,19 +97,29 @@ public class EventConsumeHandler {
 
     }
 
-
     void dispatcherMessage(Event event) {
         Message message = JSONObject.parseObject(event.getBody(),Message.class);
         this.innerMessageDispatcher.appendMessage(message);
     }
 
     void clearClientSession(Event event){
+        // if event from current node, ignore the event
+        if (currentIp.equals(event.getFromIp())) {
+            LogUtil.debug(log,"Event from current node,ignore the event,fromIp:{}",event.getFromIp());
+            return;
+        }
         String clientId = event.getBody();
         if (ConnectManager.getInstance().containClient(clientId)){
             return;
         }
         ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
         clientSession.getCtx().close();
+        Set<Subscription> subscriptionSet = sessionStore.getSubscriptions(clientId);
+        if (!MixAll.isEmpty(subscriptionSet)) {
+            subscriptionSet.forEach(item -> {
+                subscriptionMatcher.unSubscribe(item.getTopic(),clientId);
+            });
+        }
     }
 
 }

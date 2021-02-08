@@ -4,7 +4,8 @@ import io.netty.handler.codec.mqtt.MqttPublishMessage;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.helper.RejectHandler;
 import org.jmqtt.broker.common.helper.ThreadFactoryImpl;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
 import org.jmqtt.broker.common.model.Subscription;
@@ -28,7 +29,7 @@ import java.util.concurrent.*;
  */
 public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler implements InnerMessageDispatcher {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
+    private static final Logger log = JmqttLogger.messageTraceLog;
     private boolean stoped = false;
     private static final BlockingQueue<Message> messageQueue = new LinkedBlockingQueue<>(100000);
     private ThreadPoolExecutor pollThread;
@@ -79,9 +80,9 @@ public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler
                         pollThread.submit(dispatcher).get();
                     }
                 } catch (InterruptedException e) {
-                    log.warn("poll message wrong.");
+                    LogUtil.warn(log,"poll message wrong.");
                 } catch (ExecutionException e) {
-                    log.warn("AsyncDispatcher get() wrong.");
+                    LogUtil.warn(log,"AsyncDispatcher get() wrong.");
                 }
             }
         }).start();
@@ -91,7 +92,7 @@ public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler
     public boolean appendMessage(Message message) {
         boolean isNotFull = messageQueue.offer(message);
         if (!isNotFull) {
-            log.warn("[PubMessage] -> the buffer queue is full");
+            LogUtil.warn(log,"[PubMessage] -> the buffer queue is full");
         }
         return isNotFull;
     }
@@ -135,7 +136,7 @@ public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler
                         }
                     }
                 } catch (Exception ex) {
-                    log.warn("Dispatcher message failure,cause={}", ex);
+                    LogUtil.warn(log,"Dispatcher message failure,cause={}", ex);
                 }
             }
         }

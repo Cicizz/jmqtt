@@ -18,10 +18,13 @@ public class Event implements Serializable {
 
     private long sendTime;
 
-    public Event(int eventCode, String body,long sendTime) {
+    private String fromIp;
+
+    public Event(int eventCode, String body,long sendTime,String fromIp) {
         this.eventCode = eventCode;
         this.body = body;
         this.sendTime = sendTime;
+        this.fromIp = fromIp;
     }
 
     public int getEventCode() {
@@ -48,7 +51,13 @@ public class Event implements Serializable {
         this.sendTime = sendTime;
     }
 
+    public String getFromIp() {
+        return fromIp;
+    }
 
+    public void setFromIp(String fromIp) {
+        this.fromIp = fromIp;
+    }
 
     @Override
     public String toString() {

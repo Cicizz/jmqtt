@@ -5,7 +5,8 @@ import io.netty.handler.codec.mqtt.MqttMessage;
 import io.netty.handler.codec.mqtt.MqttUnsubAckMessage;
 import io.netty.handler.codec.mqtt.MqttUnsubscribeMessage;
 import io.netty.handler.codec.mqtt.MqttUnsubscribePayload;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.processor.RequestProcessor;
 import org.jmqtt.broker.remoting.session.ClientSession;
 import org.jmqtt.broker.remoting.session.ConnectManager;
@@ -24,7 +25,7 @@ import java.util.Objects;
  */
 public class UnSubscribeProcessor implements RequestProcessor {
 
-    private Logger log = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
+    private Logger log = JmqttLogger.messageTraceLog;
 
     private SubscriptionMatcher subscriptionMatcher;
     private SessionStore        sessionStore;
@@ -42,7 +43,7 @@ public class UnSubscribeProcessor implements RequestProcessor {
         String clientId = NettyUtil.getClientId(ctx.channel());
         ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
         if(Objects.isNull(clientSession)){
-            log.warn("[UnSubscribe] -> The client is not online.clientId={}",clientId);
+            LogUtil.warn(log,"[UnSubscribe] -> The client is not online.clientId={}",clientId);
         }
         topics.forEach( topic -> {
             subscriptionMatcher.unSubscribe(topic,clientId);

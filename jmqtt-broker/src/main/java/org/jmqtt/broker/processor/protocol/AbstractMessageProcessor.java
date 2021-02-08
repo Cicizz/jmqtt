@@ -17,13 +17,14 @@ import org.jmqtt.broker.store.MessageStore;
 public abstract class AbstractMessageProcessor extends HighPerformanceMessageHandler {
 
     private MessageStore messageStore;
-
     private ClusterEventHandler clusterEventHandler;
+    private String currentIp;
 
     public AbstractMessageProcessor(BrokerController brokerController) {
         super(brokerController);
         this.messageStore = brokerController.getMessageStore();
         this.clusterEventHandler = brokerController.getClusterEventHandler();
+        this.currentIp = brokerController.getCurrentIp();
     }
 
     protected void processMessage(Message message) {
@@ -49,7 +50,7 @@ public abstract class AbstractMessageProcessor extends HighPerformanceMessageHan
      * 向集群分发消息:第一阶段
      */
     private void sendMessage2Cluster(Message message) {
-        Event event = new Event(EventCode.DISPATCHER_CLIENT_MESSAGE.getCode(), JSONObject.toJSONString(message),System.currentTimeMillis());
+        Event event = new Event(EventCode.DISPATCHER_CLIENT_MESSAGE.getCode(), JSONObject.toJSONString(message),System.currentTimeMillis(),currentIp);
         this.clusterEventHandler.sendEvent(event);
     }
 

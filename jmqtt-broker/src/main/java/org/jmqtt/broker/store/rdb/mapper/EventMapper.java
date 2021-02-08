@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface EventMapper {
 
-    @Insert("insert into jmqtt_event content,gmt_create,jmqtt_ip,event_code values "
+    @Insert("insert into jmqtt_event (content,gmt_create,jmqtt_ip,event_code) values "
             + "(#{content},#{gmtCreate},#{jmqttIp},#{eventCode})")
     Long sendEvent(EventDO eventDO);
 

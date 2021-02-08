@@ -3,7 +3,8 @@ package org.jmqtt.broker.processor.protocol;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttMessage;
 import org.jmqtt.broker.BrokerController;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.processor.RequestProcessor;
 import org.jmqtt.broker.remoting.util.MessageUtil;
 import org.jmqtt.broker.remoting.util.NettyUtil;
@@ -15,7 +16,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PubRecProcessor extends AbstractMessageProcessor implements RequestProcessor {
 
-    private Logger       log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
+    private Logger       log = JmqttLogger.messageTraceLog;
 
     public PubRecProcessor(BrokerController brokerController){
         super(brokerController);
@@ -29,7 +30,7 @@ public class PubRecProcessor extends AbstractMessageProcessor implements Request
         releaseOutflowMsg(clientId,messageId);
         cacheOutflowSecMsgId(clientId,messageId);
 
-        log.debug("[PubRec] -> Receive PubRec message,clientId={},msgId={}",clientId,messageId);
+        LogUtil.debug(log,"[PubRec] -> Receive PubRec message,clientId={},msgId={}",clientId,messageId);
         MqttMessage pubRelMessage = MessageUtil.getPubRelMessage(messageId);
         ctx.writeAndFlush(pubRelMessage);
     }

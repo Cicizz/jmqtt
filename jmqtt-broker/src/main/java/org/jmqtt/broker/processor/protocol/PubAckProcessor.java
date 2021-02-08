@@ -3,7 +3,8 @@ package org.jmqtt.broker.processor.protocol;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttMessage;
 import org.jmqtt.broker.BrokerController;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.processor.RequestProcessor;
 import org.jmqtt.broker.remoting.util.MessageUtil;
 import org.jmqtt.broker.remoting.util.NettyUtil;
@@ -15,7 +16,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PubAckProcessor extends AbstractMessageProcessor implements RequestProcessor {
 
-    private Logger       log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
+    private Logger       log = JmqttLogger.messageTraceLog;
 
     public PubAckProcessor(BrokerController brokerController) {
         super(brokerController);
@@ -25,7 +26,7 @@ public class PubAckProcessor extends AbstractMessageProcessor implements Request
     public void processRequest(ChannelHandlerContext ctx, MqttMessage mqttMessage) {
         String clientId = NettyUtil.getClientId(ctx.channel());
         int messageId = MessageUtil.getMessageId(mqttMessage);
-        log.info("[PubAck] -> Recieve PubAck message,clientId={},msgId={}", clientId, messageId);
+        LogUtil.info(log,"[PubAck] -> Recieve PubAck message,clientId={},msgId={}", clientId, messageId);
         releaseOutflowMsg(clientId, messageId);
     }
 }

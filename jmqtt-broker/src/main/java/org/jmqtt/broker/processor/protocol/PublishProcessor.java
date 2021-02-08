@@ -8,7 +8,8 @@ import io.netty.handler.codec.mqtt.MqttQoS;
 import io.netty.util.ReferenceCountUtil;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.acl.AuthValid;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
 import org.jmqtt.broker.processor.RequestProcessor;
@@ -27,7 +28,7 @@ import java.util.Map;
  * TODO mqtt5实现,流控处理
  */
 public class PublishProcessor extends AbstractMessageProcessor implements RequestProcessor {
-    private Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
+    private Logger log = JmqttLogger.messageTraceLog;
 
     private AuthValid authValid;
 
@@ -46,7 +47,7 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
             ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
             String topic = publishMessage.variableHeader().topicName();
             if(!this.authValid.publishVerify(clientId,topic)){
-                log.warn("[PubMessage] permission is not allowed");
+                LogUtil.warn(log,"[PubMessage] permission is not allowed");
                 clientSession.getCtx().close();
                 return;
             }
@@ -71,10 +72,10 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
                     processQos2(ctx,innerMsg);
                     break;
                 default:
-                    log.warn("[PubMessage] -> Wrong mqtt message,clientId={}", clientId);
+                    LogUtil.warn(log,"[PubMessage] -> Wrong mqtt message,clientId={}", clientId);
             }
         } catch (Throwable tr) {
-            log.warn("[PubMessage] -> Solve mqtt pub message exception:{}", tr.getMessage());
+            LogUtil.warn(log,"[PubMessage] -> Solve mqtt pub message exception:{}", tr.getMessage());
         } finally {
             ReferenceCountUtil.release(mqttMessage.payload());
         }
@@ -82,10 +83,10 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
 
     private void processQos2(ChannelHandlerContext ctx, Message innerMsg) {
         int originMessageId = innerMsg.getMsgId();
-        log.debug("[PubMessage] -> Process qos2 message,clientId={}", innerMsg.getClientId());
+        LogUtil.debug(log,"[PubMessage] -> Process qos2 message,clientId={}", innerMsg.getClientId());
         boolean flag = cacheInflowMsg(innerMsg.getClientId(), innerMsg);
         if (!flag) {
-            log.warn("[PubMessage] -> cache qos2 pub message failure,clientId={}", innerMsg.getClientId());
+            LogUtil.warn(log,"[PubMessage] -> cache qos2 pub message failure,clientId={}", innerMsg.getClientId());
         }
         MqttMessage pubRecMessage = MessageUtil.getPubRecMessage(originMessageId);
         ctx.writeAndFlush(pubRecMessage);
@@ -94,7 +95,7 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
     private void processQos1(ChannelHandlerContext ctx, Message innerMsg) {
         int originMessageId = innerMsg.getMsgId();
         processMessage(innerMsg);
-        log.info("[PubMessage] -> Process qos1 message,clientId={}", innerMsg.getClientId());
+        LogUtil.info(log,"[PubMessage] -> Process qos1 message,clientId={}", innerMsg.getClientId());
         MqttPubAckMessage pubAckMessage = MessageUtil.getPubAckMessage(originMessageId);
         ctx.writeAndFlush(pubAckMessage);
     }

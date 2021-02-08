@@ -3,7 +3,8 @@ package org.jmqtt.broker.processor.protocol;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttMessage;
 import org.jmqtt.broker.BrokerController;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.processor.RequestProcessor;
 import org.jmqtt.broker.remoting.session.ConnectManager;
@@ -22,7 +23,7 @@ import java.util.Objects;
  */
 public class PubRelProcessor extends AbstractMessageProcessor implements RequestProcessor {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
+    private static final Logger log = JmqttLogger.messageTraceLog;
 
     public PubRelProcessor(BrokerController controller) {
         super(controller);
@@ -37,12 +38,12 @@ public class PubRelProcessor extends AbstractMessageProcessor implements Request
             if(Objects.nonNull(message)){
                 super.processMessage(message);
             }else{
-                log.warn("[PubRelMessage] -> the message is not exist,clientId={},messageId={}.",clientId,msgId);
+                LogUtil.warn(log,"[PubRelMessage] -> the message is not exist,clientId={},messageId={}.",clientId,msgId);
             }
             MqttMessage pubComMessage = MessageUtil.getPubComMessage(msgId);
             ctx.writeAndFlush(pubComMessage);
         }else{
-            log.warn("[PubRelMessage] -> the client：{} disconnect to this server.",clientId);
+            LogUtil.warn(log,"[PubRelMessage] -> the client：{} disconnect to this server.",clientId);
             RemotingHelper.closeChannel(ctx.channel());
         }
     }

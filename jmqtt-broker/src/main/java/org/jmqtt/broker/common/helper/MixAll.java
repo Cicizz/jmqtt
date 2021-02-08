@@ -1,5 +1,6 @@
 package org.jmqtt.broker.common.helper;
 
+import org.jmqtt.broker.common.log.LogUtil;
 import org.slf4j.Logger;
 
 import java.io.ByteArrayInputStream;
@@ -131,7 +132,7 @@ public class MixAll {
                     field.setAccessible(true);
                     String key = field.getName();
                     Object value = field.get(obj);
-                    log.info("{} = {}", key, value);
+                    LogUtil.info(log,"{} = {}", key, value);
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }

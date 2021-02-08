@@ -3,7 +3,8 @@ package org.jmqtt.broker.store.redis;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jmqtt.broker.common.config.BrokerConfig;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -12,7 +13,7 @@ import redis.clients.jedis.JedisPoolConfig;
 
 public class RedisTemplate {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE);
+    private static final Logger log = JmqttLogger.storeLog;
 
     private BrokerConfig brokerConfig;
     private JedisPool    jedisPool;
@@ -37,21 +38,21 @@ public class RedisTemplate {
                 jedisPool = new JedisPool(jedisPoolConfig,brokerConfig.getRedisHost(),brokerConfig.getRedisPort(),10000,brokerConfig.getRedisPassword());
             }
         } catch (Exception ex) {
-            log.error("[Redis handle error],ex:{}",ex);
+            LogUtil.error(log,"[Redis handle error],ex:{}",ex);
         }
     }
 
     public <T> T operate(RedisCallBack redisCallBack){
-        log.debug("[Cluster] redis operate begin");
+        LogUtil.debug(log,"[Cluster] redis operate begin");
         long startTime = System.currentTimeMillis();
         Jedis jedis = null;
         try {
             jedis = jedisPool.getResource();
             return redisCallBack.operate(jedis);
         }catch (Exception ex) {
-            log.error("[Cluster] redis operate error,ex:{}",ex);
+            LogUtil.error(log,"[Cluster] redis operate error,ex:{}",ex);
         } finally {
-            log.debug("[Cluster] redis operate cost:{}",(System.currentTimeMillis() - startTime));
+            LogUtil.debug(log,"[Cluster] redis operate cost:{}",(System.currentTimeMillis() - startTime));
             if (jedis != null) {
                 jedis.close();
             }
@@ -60,7 +61,7 @@ public class RedisTemplate {
     }
 
     public void close(){
-        log.info("[Cluster] redis close");
+        LogUtil.info(log,"[Cluster] redis close");
         if (jedisPool != null) {
             jedisPool.close();
         }

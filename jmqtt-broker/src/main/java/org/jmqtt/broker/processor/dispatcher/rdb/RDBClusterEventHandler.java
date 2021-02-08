@@ -2,14 +2,14 @@ package org.jmqtt.broker.processor.dispatcher.rdb;
 
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.helper.MixAll;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
 import org.jmqtt.broker.processor.dispatcher.EventConsumeHandler;
 import org.jmqtt.broker.processor.dispatcher.event.Event;
 import org.jmqtt.broker.store.rdb.AbstractDBStore;
 import org.jmqtt.broker.store.rdb.daoobject.EventDO;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,9 +18,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class RDBClusterEventHandler extends AbstractDBStore implements ClusterEventHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.EVENT);
-
+    private static final Logger log = JmqttLogger.eventLog;
     private static final AtomicLong offset = new AtomicLong();
+    private static final String currentIp = MixAll.getLocalIp();
 
     @Override
     public void start(BrokerConfig brokerConfig) {
@@ -64,14 +64,14 @@ public class RDBClusterEventHandler extends AbstractDBStore implements ClusterEv
         }
         List<Event> events = new ArrayList<>();
         for (EventDO eventDO : eventDOList) {
-            Event event = new Event(eventDO.getEventCode(),eventDO.getContent(),eventDO.getGmtCreate());
+            Event event = new Event(eventDO.getEventCode(),eventDO.getContent(),eventDO.getGmtCreate(),currentIp);
             events.add(event);
         }
 
         // reset offset
         EventDO eventDO = eventDOList.get(eventDOList.size()-1);
         if (!offset.compareAndSet(currentOffset,eventDO.getId())) {
-            log.warn("[RDBClusterEventHandler] pollEvent offset is wrong,expectOffset:{},currentOffset:{},maxOffset:{}",
+            LogUtil.warn(log,"[RDBClusterEventHandler] pollEvent offset is wrong,expectOffset:{},currentOffset:{},maxOffset:{}",
                     offset.get(),currentOffset,eventDO.getId());
             offset.set(eventDO.getId());
         }

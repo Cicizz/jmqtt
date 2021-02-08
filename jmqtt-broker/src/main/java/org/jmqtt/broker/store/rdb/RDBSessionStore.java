@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.apache.ibatis.session.SqlSession;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.helper.MixAll;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.Subscription;
 import org.jmqtt.broker.processor.dispatcher.event.EventCode;
@@ -62,7 +63,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
                 getMapper(session,eventMapperClass).sendEvent(eventDO);
                 session.commit();
             } catch (Exception ex) {
-                log.error("StoreSession with trans error,{},{},{}",clientId,sessionState,ex);
+                LogUtil.error(log,"StoreSession with trans error,{},{},{}",clientId,sessionState,ex);
                 session.rollback(true);
                 return false;
             }
@@ -84,7 +85,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
     @Override
     public boolean clearSubscription(String clientId) {
         Integer effectNum = (Integer) operate(sqlSession -> getMapper(sqlSession,subscriptionMapperClass).clearSubscription(clientId));
-        log.debug("[ClearSubscription] effect num:{}",effectNum);
+        LogUtil.debug(log,"[ClearSubscription] effect num:{}",effectNum);
         return true;
     }
 
@@ -94,7 +95,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
         if (effectNum != null && effectNum > 0) {
             return true;
         }
-        log.warn("[DelSubscription]  subscription is not exist:{},{}",clientId,topic);
+        LogUtil.warn(log,"[DelSubscription]  subscription is not exist:{},{}",clientId,topic);
         return false;
     }
 
@@ -132,7 +133,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
             }
             inflowMessageMapper.delInflowMessage(inflowMessageDO.getId());
         } catch (Exception ex) {
-            log.error("DB cacheInflowMsg error,{}",ex);
+            LogUtil.error(log,"DB cacheInflowMsg error,{}",ex);
             sqlSession.rollback();
         }
         return JSONObject.parseObject(inflowMessageDO.getContent(),Message.class);
@@ -189,7 +190,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
             }
             outflowMessageMapper.delOutflowMessage(outflowMessageDO.getId());
         } catch (Exception ex) {
-            log.error("DB cacheInflowMsg error,{}",ex);
+            LogUtil.error(log,"DB cacheInflowMsg error,{}",ex);
             sqlSession.rollback();
         }
         return JSONObject.parseObject(outflowMessageDO.getContent(),Message.class);
@@ -212,12 +213,12 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
             OutflowSecMessageMapper outflowSecMessageMapper = getMapper(sqlSession,outflowSecMessageMapperClass);
             OutflowSecMessageDO outflowSecMessageDO = outflowSecMessageMapper.getOutflowSecMessage(clientId,msgId);
             if (outflowSecMessageDO == null) {
-                log.error("DB releaseOutflowSecMsgId failure,msg id is not exist,{},{}",clientId,msgId);
+                LogUtil.warn(log,"DB releaseOutflowSecMsgId failure,msg id is not exist,{},{}",clientId,msgId);
                 return false;
             }
             outflowSecMessageMapper.delOutflowSecMessage(outflowSecMessageDO.getId());
         } catch (Exception ex) {
-            log.error("DB cacheInflowMsg error,{}",ex);
+            LogUtil.error(log,"DB cacheInflowMsg error,{}",ex);
             sqlSession.rollback();
         }
         return true;
@@ -255,7 +256,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
     @Override
     public boolean clearOfflineMsg(String clientId) {
         Integer effectNum = (Integer) operate(sqlSession -> getMapper(sqlSession,offlineMessageMapperClass).clearOfflineMessage(clientId));
-        log.debug("RDB clearOfflineMsg del nums:{}",effectNum);
+        LogUtil.debug(log,"RDB clearOfflineMsg del nums:{}",effectNum);
         return true;
     }
 }
