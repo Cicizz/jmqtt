@@ -4,7 +4,8 @@ package org.jmqtt.broker.remoting.util;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,14 +15,14 @@ import java.util.Enumeration;
 
 public class RemotingHelper {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.REMOTING);
+    private static final Logger log = JmqttLogger.remotingLog;
 
     public static void closeChannel(Channel channel){
         String remoteAddr = getRemoteAddr(channel);
         channel.close().addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                log.info("[closeChannel] -> close the connection,addr={},result={}",remoteAddr,channelFuture.isSuccess());
+                LogUtil.info(log,"[closeChannel] -> close the connection,addr={},result={}",remoteAddr,channelFuture.isSuccess());
             }
         });
     }
@@ -70,7 +71,7 @@ public class RemotingHelper {
             final InetAddress localHost = InetAddress.getLocalHost();
             return normalizeHostAddress(localHost);
         } catch (Exception e) {
-            log.error("failed to get local addr",e);
+            LogUtil.error(log,"failed to get local addr",e);
         }
         return null;
     }

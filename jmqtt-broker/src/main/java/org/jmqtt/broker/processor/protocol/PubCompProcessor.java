@@ -3,7 +3,8 @@ package org.jmqtt.broker.processor.protocol;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.MqttMessage;
 import org.jmqtt.broker.BrokerController;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.processor.RequestProcessor;
 import org.jmqtt.broker.remoting.util.MessageUtil;
 import org.jmqtt.broker.remoting.util.NettyUtil;
@@ -15,7 +16,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PubCompProcessor extends AbstractMessageProcessor implements RequestProcessor {
 
-    private Logger       log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
+    private Logger       log = JmqttLogger.messageTraceLog;
 
     public PubCompProcessor(BrokerController brokerController){
         super(brokerController);
@@ -26,9 +27,9 @@ public class PubCompProcessor extends AbstractMessageProcessor implements Reques
         String clientId = NettyUtil.getClientId(ctx.channel());
         int messageId = MessageUtil.getMessageId(mqttMessage);
         boolean flag = releaseOutflowSecMsgId(clientId,messageId);
-        log.debug("[PubComp] -> Receive PubCom and remove the flow message,clientId={},msgId={}",clientId,messageId);
+        LogUtil.debug(log,"[PubComp] -> Receive PubCom and remove the flow message,clientId={},msgId={}",clientId,messageId);
         if(!flag){
-            log.warn("[PubComp] -> The message is not in Flow cache,clientId={},msgId={}",clientId,messageId);
+            LogUtil.warn(log,"[PubComp] -> The message is not in Flow cache,clientId={},msgId={}",clientId,messageId);
         }
     }
 }

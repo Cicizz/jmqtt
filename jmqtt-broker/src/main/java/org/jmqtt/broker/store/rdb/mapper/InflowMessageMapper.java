@@ -10,7 +10,8 @@ import java.util.List;
 
 public interface InflowMessageMapper {
 
-    @Insert("INSERT INTO jmqtt_inflow_message(client_id,msg_id,content,gmt_create) VALUES(#{clientId},#{msgId},#{content},#{gmtCreate})")
+    @Insert("INSERT INTO jmqtt_inflow_message(client_id,msg_id,content,gmt_create) VALUES(#{clientId},#{msgId},#{content},#{gmtCreate})"
+            + " on DUPLICATE key update content = #{content},gmt_create = #{gmtCreate}")
     Long cacheInflowMessage(InflowMessageDO inflowMessageDO);
 
     @Select("SELECT id,client_id,msg_id,content,gmt_create FROM jmqtt_inflow_message WHERE client_id = #{clientId} and msg_id = #{msgId}")

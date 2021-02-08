@@ -37,8 +37,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <netty.version>4.1.54.Final</netty.version>
         <fastjson.version>1.2.75</fastjson.version>
-        <slf4j.version>1.7.25</slf4j.version>
-        <logback.version>1.2.3</logback.version>
+        <slf4j.version>1.7.30</slf4j.version>
         <commons-cli.version>1.4</commons-cli.version>
         <commons-lang3.version>3.7</commons-lang3.version>
         <junit.version>4.13.1</junit.version>
@@ -48,6 +47,7 @@
         <mybatis.version>3.4.6</mybatis.version>
         <druid.version>1.2.4</druid.version>
         <jdbc.version>5.1.25</jdbc.version>
+        <log4j2.version>2.13.3</log4j2.version>
     </properties>
 
     <dependencyManagement>
@@ -88,6 +88,16 @@
                 <version>${jdbc.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>top.hserver</groupId>
                 <artifactId>HServer</artifactId>
                 <version>${HServer.version}</version>
@@ -118,15 +128,21 @@
             <version>${slf4j.version}</version>
         </dependency>
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>${log4j2.version}</version>
         </dependency>
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <version>${logback.version}</version>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j2.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j2.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>commons-cli</groupId>
             <artifactId>commons-cli</artifactId>

@@ -3,7 +3,8 @@ package org.jmqtt.broker.processor.recover;
 import io.netty.handler.codec.mqtt.MqttMessage;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.helper.ThreadFactoryImpl;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
 import org.jmqtt.broker.processor.HighPerformanceMessageHandler;
@@ -25,7 +26,7 @@ import java.util.concurrent.locks.LockSupport;
  */
 public class ReSendMessageService extends HighPerformanceMessageHandler {
 
-    private Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
+    private Logger log = JmqttLogger.messageTraceLog;
 
     private Thread                thread;
     private boolean               stoped  = false;
@@ -52,7 +53,7 @@ public class ReSendMessageService extends HighPerformanceMessageHandler {
 
     public boolean put(String clientId) {
         if (this.clients.size() > maxSize) {
-            log.warn("ReSend message busy! the client queue size is over {}", maxSize);
+            LogUtil.warn(log,"ReSend message busy! the client queue size is over {}", maxSize);
             return false;
         }
         this.clients.offer(clientId);
@@ -83,7 +84,7 @@ public class ReSendMessageService extends HighPerformanceMessageHandler {
         ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
         // client off line again
         if (clientSession == null) {
-            log.warn("The client offline again, put the message to the offline queue,clientId:{}", clientId);
+            LogUtil.warn(log,"The client offline again, put the message to the offline queue,clientId:{}", clientId);
             return false;
         }
         MqttMessage mqttMessage = build.buildMqttMessage(message);
@@ -111,7 +112,7 @@ public class ReSendMessageService extends HighPerformanceMessageHandler {
                         return MessageUtil.getPubRelMessage(message.getMsgId());
                     }
                 })) {
-                    log.warn("ReSendMessageService resend inflow error,{}",waitPubRelMsg);
+                    LogUtil.warn(log,"ReSendMessageService resend inflow error,{}",waitPubRelMsg);
                 }
             }
 
@@ -131,7 +132,7 @@ public class ReSendMessageService extends HighPerformanceMessageHandler {
             Collection<Message> outflowMsgs = getAllOutflowMsg(clientId);
             for (Message message : outflowMsgs) {
                 if (!dispatcherMessage(clientId, message, publishMqttMsg)) {
-                    log.warn("ReSendMessageService resend outflow error,{}",message);
+                    LogUtil.warn(log,"ReSendMessageService resend outflow error,{}",message);
                 }
             }
 
@@ -176,19 +177,19 @@ public class ReSendMessageService extends HighPerformanceMessageHandler {
                 try {
                     boolean rs = sendMessageExecutor.submit(resendMessageTask).get(2000, TimeUnit.MILLISECONDS);
                     if (!rs) {
-                        log.warn("ReSend message is interrupted,the client offline again,clientId={}", clientId);
+                        LogUtil.warn(log,"ReSend message is interrupted,the client offline again,clientId={}", clientId);
                     }
                     long cost = System.currentTimeMillis() - start;
-                    log.debug("ReSend message clientId:{} cost time:{}", clientId, cost);
+                    LogUtil.debug(log,"ReSend message clientId:{} cost time:{}", clientId, cost);
                 } catch (Exception e) {
-                    log.warn("ReSend message failure,clientId:{}", clientId);
+                    LogUtil.warn(log,"ReSend message failure,clientId:{}", clientId);
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e1) {
                     }
                 }
             }
-            log.info("Shutdown re send message service success.");
+            LogUtil.info(log,"Shutdown re send message service success.");
         }
     }
 

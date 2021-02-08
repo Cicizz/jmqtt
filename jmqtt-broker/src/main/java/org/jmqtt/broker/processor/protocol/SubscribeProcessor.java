@@ -7,7 +7,9 @@ import io.netty.handler.codec.mqtt.MqttSubscribeMessage;
 import io.netty.handler.codec.mqtt.MqttTopicSubscription;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.acl.AuthValid;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.helper.MixAll;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
 import org.jmqtt.broker.common.model.Subscription;
@@ -21,7 +23,6 @@ import org.jmqtt.broker.store.MessageStore;
 import org.jmqtt.broker.store.SessionStore;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,7 +34,7 @@ import java.util.List;
  */
 public class SubscribeProcessor implements RequestProcessor {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.MESSAGE_TRACE);
+    private static final Logger log = JmqttLogger.messageTraceLog;
 
     private SubscriptionMatcher subscriptionMatcher;
     private AuthValid           authValid;
@@ -55,7 +56,7 @@ public class SubscribeProcessor implements RequestProcessor {
         ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
         List<Topic> validTopicList =validTopics(clientSession,subscribeMessage.payload().topicSubscriptions());
         if(validTopicList == null || validTopicList.size() == 0){
-            log.warn("[Subscribe] -> Valid all subscribe topic failure,clientId:{}",clientId);
+            LogUtil.warn(log,"[Subscribe] -> Valid all subscribe topic failure,clientId:{}",clientId);
             return;
         }
         List<Integer> ackQos = getTopicQos(validTopicList);
@@ -84,16 +85,18 @@ public class SubscribeProcessor implements RequestProcessor {
                 if(retainMessages == null){
                     retainMessages = messageStore.getAllRetainMsg(); // TODO 这里需要优化，不能一次获取所有retain消息，retain消息太多可能导致broker crash或者hang住
                 }
-                for(Message retainMsg : retainMessages){
-                    String pubTopic = (String) retainMsg.getHeader(MessageHeader.TOPIC);
-                    if(subscriptionMatcher.isMatch(pubTopic,subscription.getTopic())){
-                        int minQos = MessageUtil.getMinQos((int)retainMsg.getHeader(MessageHeader.QOS),topic.getQos());
-                        retainMsg.putHeader(MessageHeader.QOS,minQos);
-                        needDispatcher.add(retainMsg);
+                if (!MixAll.isEmpty(retainMessages)) {
+                    for(Message retainMsg : retainMessages){
+                        String pubTopic = (String) retainMsg.getHeader(MessageHeader.TOPIC);
+                        if(subscriptionMatcher.isMatch(pubTopic,subscription.getTopic())){
+                            int minQos = MessageUtil.getMinQos((int)retainMsg.getHeader(MessageHeader.QOS),topic.getQos());
+                            retainMsg.putHeader(MessageHeader.QOS,minQos);
+                            needDispatcher.add(retainMsg);
+                        }
                     }
                 }
-                this.sessionStore.storeSubscription(clientSession.getClientId(),subscription);
             }
+            this.sessionStore.storeSubscription(clientSession.getClientId(),subscription);
         }
         return needDispatcher;
     }
@@ -105,7 +108,7 @@ public class SubscribeProcessor implements RequestProcessor {
         List<Topic> topicList = new ArrayList<>();
         for(MqttTopicSubscription subscription : topics){
             if(!authValid.subscribeVerify(clientSession.getClientId(),subscription.topicName())){
-                log.warn("[SubPermission] this clientId:{} have no permission to subscribe this topic:{}",clientSession.getClientId(),subscription.topicName());
+                LogUtil.warn(log,"[SubPermission] this clientId:{} have no permission to subscribe this topic:{}",clientSession.getClientId(),subscription.topicName());
                 clientSession.getCtx().close();
                 return null;
             }

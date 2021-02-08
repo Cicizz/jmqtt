@@ -8,7 +8,8 @@ import io.netty.handler.codec.mqtt.MqttMessage;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.acl.AuthValid;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
 import org.jmqtt.broker.common.model.Subscription;
@@ -35,7 +36,7 @@ import java.util.Set;
  */
 public class ConnectProcessor implements RequestProcessor {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
+    private static final Logger log = JmqttLogger.clientTraceLog;
 
     private AuthValid            authValid;
     private ReSendMessageService reSendMessageService;
@@ -75,7 +76,7 @@ public class ConnectProcessor implements RequestProcessor {
                 // 1. 设置心跳
                 int heartbeatSec = connectMessage.variableHeader().keepAliveTimeSeconds();
                 if (!keepAlive(clientId, ctx, heartbeatSec)) {
-                    log.warn("[CONNECT] -> set heartbeat failure,clientId:{},heartbeatSec:{}", clientId, heartbeatSec);
+                    LogUtil.warn(log,"[CONNECT] -> set heartbeat failure,clientId:{},heartbeatSec:{}", clientId, heartbeatSec);
                     throw new Exception("set heartbeat failure");
                 }
 
@@ -125,14 +126,14 @@ public class ConnectProcessor implements RequestProcessor {
             ctx.writeAndFlush(ackMessage);
             if (returnCode != MqttConnectReturnCode.CONNECTION_ACCEPTED) {
                 ctx.close();
-                log.warn("[CONNECT] -> {} connect failure,returnCode={}", clientId, returnCode);
+                LogUtil.warn(log,"[CONNECT] -> {} connect failure,returnCode={}", clientId, returnCode);
                 return;
             }
-            log.info("[CONNECT] -> {} connect to this mqtt server", clientId);
+            LogUtil.info(log,"[CONNECT] -> {} connect to this mqtt server", clientId);
             reConnect2SendMessage(clientId);
             newClientNotify(clientSession);
         } catch (Exception ex) {
-            log.warn("[CONNECT] -> Service Unavailable: cause={}", ex);
+            LogUtil.warn(log,"[CONNECT] -> Service Unavailable: cause={}", ex);
             returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE;
             MqttConnAckMessage ackMessage = MessageUtil.getConnectAckMessage(returnCode, sessionPresent);
             ctx.writeAndFlush(ackMessage);
@@ -165,7 +166,7 @@ public class ConnectProcessor implements RequestProcessor {
         Message message = new Message(Message.Type.WILL, headers, willPayload);
         message.setClientId(clientId);
         messageStore.storeWillMessage(clientId, message);
-        log.info("[WillMessageStore] : {} store will message:{}", clientId, message);
+        LogUtil.info(log,"[WillMessageStore] : {} store will message:{}", clientId, message);
     }
 
     private ClientSession createNewClientSession(String clientId, ChannelHandlerContext ctx) {

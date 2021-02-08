@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+
+    <properties>
+        <!--<property name="user.dir" value="" />-->
+        <property name="level" value="INFO"/>
+        <property name="pattern" value="%d [%X{traceId}/%X{loginUserID}/%X{remoteAddr}/%X{clientId} - %X{requestURIWithQueryString}] %-5p %c{2} - %m%n"/>
+    </properties>
+
+    <Appenders>
+        <!-- console -->
+        <Console name="console" target="SYSTEM_OUT" follow="true">
+            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout>
+                <Pattern>${pattern}</Pattern>
+            </PatternLayout>
+        </Console>
+
+        <!-- error -->
+        <RollingFile name="error-appender" fileName="${user.dir}/log/jmqttlogs/error.log"
+                     filePattern="${user.dir}/log/jmqttlogs/error.log.%d{yyyy-MM-dd}"
+                     append="true">
+            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout
+                    pattern="${pattern}"
+                    charset="UTF-8"/>
+            <TimeBasedTriggeringPolicy/>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                    <IfFileName glob="*/common-error.log.*"/>
+                    <IfLastModified age="10d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- brokerLog -->
+        <RollingFile name="brokerLog-appender" fileName="${user.dir}/log/jmqttlogs/brokerLog.log"
+                     filePattern="${user.dir}/log/jmqttlogs/brokerLog.log.%d{yyyy-MM-dd}"
+                     append="true">
+            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout
+                    pattern="${pattern}"
+                    charset="UTF-8"/>
+            <TimeBasedTriggeringPolicy/>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                    <IfFileName glob="*/brokerLog.log.*"/>
+                    <IfLastModified age="10d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- clientTraceLog -->
+        <RollingFile name="clientTraceLog-appender" fileName="${user.dir}/log/jmqttlogs/clientTraceLog.log"
+                     filePattern="${user.dir}/log/jmqttlogs/clientTraceLog.log.%d{yyyy-MM-dd}"
+                     append="true">
+            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout
+                    pattern="${pattern}"
+                    charset="UTF-8"/>
+            <TimeBasedTriggeringPolicy/>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                    <IfFileName glob="*/clientTraceLog.log.*"/>
+                    <IfLastModified age="10d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- clientTraceLog -->
+        <RollingFile name="messageTraceLog-appender" fileName="${user.dir}/log/jmqttlogs/messageTraceLog.log"
+                     filePattern="${user.dir}/log/jmqttlogs/messageTraceLog.log.%d{yyyy-MM-dd}"
+                     append="true">
+            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout
+                    pattern="${pattern}"
+                    charset="UTF-8"/>
+            <TimeBasedTriggeringPolicy/>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                    <IfFileName glob="*/messageTraceLog.log.*"/>
+                    <IfLastModified age="10d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- eventLog -->
+        <RollingFile name="eventLog-appender" fileName="${user.dir}/log/jmqttlogs/eventLog.log"
+                     filePattern="${user.dir}/log/jmqttlogs/eventLog.log.%d{yyyy-MM-dd}"
+                     append="true">
+            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout
+                    pattern="${pattern}"
+                    charset="UTF-8"/>
+            <TimeBasedTriggeringPolicy/>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                    <IfFileName glob="*/eventLog.log.*"/>
+                    <IfLastModified age="10d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- remotingLog -->
+        <RollingFile name="remotingLog-appender" fileName="${user.dir}/log/jmqttlogs/remotingLog.log"
+                     filePattern="${user.dir}/log/jmqttlogs/remotingLog.log.%d{yyyy-MM-dd}"
+                     append="true">
+            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout
+                    pattern="${pattern}"
+                    charset="UTF-8"/>
+            <TimeBasedTriggeringPolicy/>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                    <IfFileName glob="*/remotingLog.log.*"/>
+                    <IfLastModified age="10d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- storeLog -->
+        <RollingFile name="storeLog-appender" fileName="${user.dir}/log/jmqttlogs/storeLog.log"
+                     filePattern="${user.dir}/log/jmqttlogs/storeLog.log.%d{yyyy-MM-dd}"
+                     append="true">
+            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout
+                    pattern="${pattern}"
+                    charset="UTF-8"/>
+            <TimeBasedTriggeringPolicy/>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                    <IfFileName glob="*/storeLog.log.*"/>
+                    <IfLastModified age="10d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- otherLog -->
+        <RollingFile name="otherLog-appender" fileName="${user.dir}/log/jmqttlogs/otherLog.log"
+                     filePattern="${user.dir}/log/jmqttlogs/otherLog.log.%d{yyyy-MM-dd}"
+                     append="true">
+            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout
+                    pattern="${pattern}"
+                    charset="UTF-8"/>
+            <TimeBasedTriggeringPolicy/>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                    <IfFileName glob="*/otherLog.log.*"/>
+                    <IfLastModified age="10d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <logger name="brokerLog" level="${level}" additivity="false">
+            <appender-ref ref="brokerLog-appender"/>
+            <appender-ref ref="error-appender"/>
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="clientTraceLog" level="${level}" additivity="false">
+            <appender-ref ref="clientTraceLog-appender"/>
+            <appender-ref ref="error-appender"/>
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="messageTraceLog" level="${level}" additivity="false">
+            <appender-ref ref="messageTraceLog-appender"/>
+            <appender-ref ref="error-appender"/>
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="eventLog" level="${level}" additivity="false">
+            <appender-ref ref="eventLog-appender"/>
+            <appender-ref ref="error-appender"/>
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="remotingLog" level="${level}" additivity="false">
+            <appender-ref ref="remotingLog-appender"/>
+            <appender-ref ref="error-appender"/>
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="storeLog" level="${level}" additivity="false">
+            <appender-ref ref="storeLog-appender"/>
+            <appender-ref ref="error-appender"/>
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="otherLog" level="${level}" additivity="false">
+            <appender-ref ref="otherLog-appender"/>
+            <appender-ref ref="error-appender"/>
+            <appender-ref ref="console"/>
+        </logger>
+
+        <root>
+            <level value="${level}"/>
+            <appender-ref ref="console"/>
+            <appender-ref ref="error-appender"/>
+        </root>
+    </Loggers>
+</configuration>

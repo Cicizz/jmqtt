@@ -10,6 +10,7 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.jmqtt.broker.common.config.BrokerConfig;
+import org.jmqtt.broker.store.highperformance.OutflowMessageHandler;
 import org.jmqtt.broker.store.rdb.mapper.*;
 
 import javax.sql.DataSource;
@@ -72,6 +73,8 @@ public class DBUtils {
             configuration.addMapper(InflowMessageMapper.class);
             configuration.addMapper(OutflowSecMessageMapper.class);
             configuration.addMapper(RetainMessageMapper.class);
+            configuration.addMapper(OutflowMessageMapper.class);
+            configuration.addMapper(WillMessageMapper.class);
 
             configuration.setMapUnderscoreToCamelCase(true);
             this.sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);

@@ -1,6 +1,7 @@
 package org.jmqtt.broker.remoting.netty;
 
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 public class NettyEventExecutor implements Runnable {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.REMOTING);
+    private static final Logger log = JmqttLogger.remotingLog;
 
     private LinkedBlockingQueue<NettyEvent> eventQueue = new LinkedBlockingQueue<>();
     private final int maxSize = 100000;
@@ -25,7 +26,7 @@ public class NettyEventExecutor implements Runnable {
         if (this.eventQueue.size() <= maxSize) {
             this.eventQueue.add(nettyEvent);
         } else {
-            log.warn("[NettyEvent] -> event queue size[{}] enough, so drop this event {}", this.eventQueue.size(), nettyEvent.toString());
+            LogUtil.warn(log,"[NettyEvent] -> event queue size[{}] enough, so drop this event {}", this.eventQueue.size(), nettyEvent.toString());
         }
     }
 
@@ -53,10 +54,10 @@ public class NettyEventExecutor implements Runnable {
                     }
                 }
             }catch(Throwable t){
-                log.warn("[NettyEvent] -> service has exception. ", t);
+                LogUtil.warn(log,"[NettyEvent] -> service has exception. ", t);
             }
         }
-        log.info("[NettyEvent] -> NettyEventExecutor service end");
+        LogUtil.info(log,"[NettyEvent] -> NettyEventExecutor service end");
     }
 
     public void start(){

@@ -22,7 +22,8 @@ import org.jmqtt.broker.common.config.NettyConfig;
 import org.jmqtt.broker.common.helper.MixAll;
 import org.jmqtt.broker.common.helper.Pair;
 import org.jmqtt.broker.common.helper.ThreadFactoryImpl;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.processor.RequestProcessor;
 import org.jmqtt.broker.remoting.RemotingService;
 import org.jmqtt.broker.remoting.netty.codec.ByteBuf2WebSocketEncoder;
@@ -38,7 +39,7 @@ import java.util.concurrent.RejectedExecutionException;
 
 public class NettyRemotingServer implements RemotingService {
     int coreThreadNum = Runtime.getRuntime().availableProcessors();
-    private static final Logger                                           log = LoggerFactory.getLogger(LoggerName.REMOTING);
+    private static final Logger                                           log = JmqttLogger.remotingLog;
     private NettyConfig                                                   nettyConfig;
     private EventLoopGroup                                                selectorGroup;
     private EventLoopGroup                                                ioGroup;
@@ -135,9 +136,9 @@ public class NettyRemotingServer implements RemotingService {
         }
         try {
             ChannelFuture future = bootstrap.bind(port).sync();
-            log.info("Start webSocket server {}  success,port = {}", useSsl ? "with ssl" : "", port);
+            LogUtil.info(log,"Start webSocket server {}  success,port = {}", useSsl ? "with ssl" : "", port);
         } catch (InterruptedException ex) {
-            log.error("Start webSocket server {} failure.cause={}", useSsl ? "with ssl" : "", ex);
+            LogUtil.error(log,"Start webSocket server {} failure.cause={}", useSsl ? "with ssl" : "", ex);
         }
     }
 
@@ -178,9 +179,9 @@ public class NettyRemotingServer implements RemotingService {
         }
         try {
             ChannelFuture future = bootstrap.bind(port).sync();
-            log.info("Start tcp server {} success,port = {}", useSsl ? "with ssl" : "", port);
+            LogUtil.info(log,"Start tcp server {} success,port = {}", useSsl ? "with ssl" : "", port);
         } catch (InterruptedException ex) {
-            log.error("Start tcp server {} failure.cause={}", useSsl ? "with ssl" : "", ex);
+            LogUtil.error(log,"Start tcp server {} failure.cause={}", useSsl ? "with ssl" : "", ex);
         }
     }
 
@@ -205,12 +206,12 @@ public class NettyRemotingServer implements RemotingService {
             MqttMessage mqttMessage = (MqttMessage) obj;
             if (mqttMessage != null && mqttMessage.decoderResult().isSuccess()) {
                 MqttMessageType messageType = mqttMessage.fixedHeader().messageType();
-                log.info("[Remoting] -> receive mqtt code,type:{},name:{}", messageType.value(), messageType.name());
+                LogUtil.debug(log,"[Remoting] -> receive mqtt code,type:{},name:{}", messageType.value(), messageType.name());
                 Runnable runnable = () -> processorTable.get(messageType).getObject1().processRequest(ctx, mqttMessage);
                 try {
                     processorTable.get(messageType).getObject2().submit(runnable);
                 } catch (RejectedExecutionException ex) {
-                    log.warn("Reject mqtt request,cause={}", ex.getMessage());
+                    LogUtil.warn(log,"Reject mqtt request,cause={}", ex.getMessage());
                 }
             } else {
                 ctx.close();

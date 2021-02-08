@@ -3,7 +3,8 @@ package org.jmqtt.broker.remoting.netty;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.ssl.*;
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +16,7 @@ import java.io.InputStream;
 import java.security.KeyStore;
 
 public class NettySslHandler {
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.REMOTING);
+    private static final Logger log = JmqttLogger.remotingLog;
 
     public static ChannelHandler getSslHandler(SocketChannel channel, boolean useClientCA, String sslKeyStoreType, String sslKeyFilePath, String sslManagerPwd, String sslStorePwd) {
 
@@ -52,7 +53,7 @@ public class NettySslHandler {
             }
             return contextBuilder.sslProvider(SslProvider.valueOf("JDK")).build();
         } catch (Exception ex) {
-            log.error("Create ssl context failure.cause={}", ex);
+            LogUtil.error(log,"Create ssl context failure.cause={}", ex);
             return null;
         }
     }

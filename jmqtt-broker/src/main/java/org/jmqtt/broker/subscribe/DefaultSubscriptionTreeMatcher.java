@@ -1,6 +1,7 @@
 package org.jmqtt.broker.subscribe;
 
-import org.jmqtt.broker.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.common.model.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
+    private static final Logger log = JmqttLogger.messageTraceLog;
 
     private final Object lock = new Object();
 
@@ -48,7 +49,7 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
             }
             currentNode.addSubscriber(subscription);
         }catch(Exception ex){
-            log.warn("[Subscription] -> Subscribe failed,clientId={},topic={},qos={}",subscription.getClientId(),subscription.getTopic(),subscription.getQos());
+            LogUtil.warn(log,"[Subscription] -> Subscribe failed,clientId={},topic={},qos={}",subscription.getClientId(),subscription.getTopic(),subscription.getQos());
             return true;
         }
         return true;

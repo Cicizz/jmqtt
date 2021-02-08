@@ -31,6 +31,9 @@ public class ConnectManager {
     }
 
     public ClientSession removeClient(String clientId){
-        return this.clientCache.remove(clientId);
+        if (clientId != null) {
+            return this.clientCache.remove(clientId);
+        }
+        return null;
     }
 }
