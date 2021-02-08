@@ -21,6 +21,9 @@ import org.jmqtt.broker.remoting.netty.ChannelEventListener;
 import org.jmqtt.broker.remoting.netty.NettyRemotingServer;
 import org.jmqtt.broker.store.MessageStore;
 import org.jmqtt.broker.store.SessionStore;
+import org.jmqtt.broker.store.highperformance.InflowMessageHandler;
+import org.jmqtt.broker.store.highperformance.OutflowMessageHandler;
+import org.jmqtt.broker.store.highperformance.OutflowSecMessageHandler;
 import org.jmqtt.broker.subscribe.DefaultSubscriptionTreeMatcher;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.slf4j.Logger;
@@ -63,6 +66,11 @@ public class BrokerController {
     private EventConsumeHandler eventConsumeHandler;
     private String currentIp;
 
+    // high performance message handle
+    private InflowMessageHandler     inflowMessageHandler;
+    private OutflowMessageHandler    outflowMessageHandler;
+    private OutflowSecMessageHandler outflowSecMessageHandler;
+
     public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig) {
         this.brokerConfig = brokerConfig;
         this.nettyConfig = nettyConfig;
@@ -84,6 +92,11 @@ public class BrokerController {
             // 集群事件转发加载
             this.clusterEventHandler = MixAll.pluginInit(brokerConfig.getClusterEventHandlerClass());
         }
+
+        // high performance message handler
+        this.inflowMessageHandler = new InflowMessageHandler();
+        this.outflowMessageHandler = new OutflowMessageHandler();
+        this.outflowSecMessageHandler = new OutflowSecMessageHandler();
 
         this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
         this.innerMessageDispatcher = new DefaultDispatcherInnerMessage(this);
@@ -308,5 +321,21 @@ public class BrokerController {
 
     public String getCurrentIp() {
         return currentIp;
+    }
+
+    public EventConsumeHandler getEventConsumeHandler() {
+        return eventConsumeHandler;
+    }
+
+    public InflowMessageHandler getInflowMessageHandler() {
+        return inflowMessageHandler;
+    }
+
+    public OutflowMessageHandler getOutflowMessageHandler() {
+        return outflowMessageHandler;
+    }
+
+    public OutflowSecMessageHandler getOutflowSecMessageHandler() {
+        return outflowSecMessageHandler;
     }
 }

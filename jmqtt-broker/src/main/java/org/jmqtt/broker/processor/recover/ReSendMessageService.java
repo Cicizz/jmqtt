@@ -2,6 +2,7 @@ package org.jmqtt.broker.processor.recover;
 
 import io.netty.handler.codec.mqtt.MqttMessage;
 import org.jmqtt.broker.BrokerController;
+import org.jmqtt.broker.common.helper.MixAll;
 import org.jmqtt.broker.common.helper.ThreadFactoryImpl;
 import org.jmqtt.broker.common.log.JmqttLogger;
 import org.jmqtt.broker.common.log.LogUtil;
@@ -14,7 +15,6 @@ import org.jmqtt.broker.remoting.util.MessageUtil;
 import org.jmqtt.broker.store.MessageStore;
 import org.jmqtt.broker.store.SessionStore;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.concurrent.*;
@@ -105,14 +105,16 @@ public class ReSendMessageService extends HighPerformanceMessageHandler {
 
             // 入栈报文：未处理的pubRel报文
             Collection<Message> waitPubRelMsgs = getAllInflowMsg(clientId);
-            for (Message waitPubRelMsg : waitPubRelMsgs) {
-                if (!dispatcherMessage(clientId, waitPubRelMsg, new Build() {
-                    @Override
-                    public MqttMessage buildMqttMessage(Message message) {
-                        return MessageUtil.getPubRelMessage(message.getMsgId());
+            if (!MixAll.isEmpty(waitPubRelMsgs)) {
+                for (Message waitPubRelMsg : waitPubRelMsgs) {
+                    if (!dispatcherMessage(clientId, waitPubRelMsg, new Build() {
+                        @Override
+                        public MqttMessage buildMqttMessage(Message message) {
+                            return MessageUtil.getPubRelMessage(message.getMsgId());
+                        }
+                    })) {
+                        LogUtil.warn(log,"ReSendMessageService resend inflow error,{}",waitPubRelMsg);
                     }
-                })) {
-                    LogUtil.warn(log,"ReSendMessageService resend inflow error,{}",waitPubRelMsg);
                 }
             }
 
@@ -130,32 +132,38 @@ public class ReSendMessageService extends HighPerformanceMessageHandler {
 
             // 出栈报文-qos1,qos2第一阶段：
             Collection<Message> outflowMsgs = getAllOutflowMsg(clientId);
-            for (Message message : outflowMsgs) {
-                if (!dispatcherMessage(clientId, message, publishMqttMsg)) {
-                    LogUtil.warn(log,"ReSendMessageService resend outflow error,{}",message);
+            if (!MixAll.isEmpty(outflowMsgs)) {
+                for (Message message : outflowMsgs) {
+                    if (!dispatcherMessage(clientId, message, publishMqttMsg)) {
+                        LogUtil.warn(log,"ReSendMessageService resend outflow error,{}",message);
+                    }
                 }
             }
 
             // 出栈报文-qos2第二阶段：
             Collection<Integer> qos2MsgIds = getAllOutflowSecMsgId(clientId);
-            for (Integer msgId : qos2MsgIds) {
-                Message temp = new Message();
-                temp.setMsgId(msgId);
-                if (!dispatcherMessage(clientId, temp, new Build() {
-                    @Override
-                    public MqttMessage buildMqttMessage(Message message) {
-                        return MessageUtil.getPubRelMessage(msgId);
+            if (!MixAll.isEmpty(outflowMsgs)) {
+                for (Integer msgId : qos2MsgIds) {
+                    Message temp = new Message();
+                    temp.setMsgId(msgId);
+                    if (!dispatcherMessage(clientId, temp, new Build() {
+                        @Override
+                        public MqttMessage buildMqttMessage(Message message) {
+                            return MessageUtil.getPubRelMessage(msgId);
+                        }
+                    })) {
+                        return false;
                     }
-                })) {
-                    return false;
                 }
             }
 
             // 出栈消息：离线消息，未分发的publish消息
             Collection<Message> messages = sessionStore.getAllOfflineMsg(clientId);
-            for (Message message : messages) {
-                if (!dispatcherMessage(clientId, message, publishMqttMsg)) {
-                    return false;
+            if (!MixAll.isEmpty(outflowMsgs)) {
+                for (Message message : messages) {
+                    if (!dispatcherMessage(clientId, message, publishMqttMsg)) {
+                        return false;
+                    }
                 }
             }
             sessionStore.clearOfflineMsg(clientId);
@@ -175,8 +183,8 @@ public class ReSendMessageService extends HighPerformanceMessageHandler {
                 ResendMessageTask resendMessageTask = new ResendMessageTask(clientId);
                 long start = System.currentTimeMillis();
                 try {
-                    boolean rs = sendMessageExecutor.submit(resendMessageTask).get(2000, TimeUnit.MILLISECONDS);
-                    if (!rs) {
+                    Boolean rs = sendMessageExecutor.submit(resendMessageTask).get(2000, TimeUnit.MILLISECONDS);
+                    if (rs == null || !rs) {
                         LogUtil.warn(log,"ReSend message is interrupted,the client offline again,clientId={}", clientId);
                     }
                     long cost = System.currentTimeMillis() - start;
