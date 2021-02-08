@@ -120,7 +120,7 @@ public class BrokerStartup {
             MixAll.properties2POJO(properties,brokerConfig);
             MixAll.properties2POJO(properties,nettyConfig);
         } catch (FileNotFoundException e) {
-            System.out.println("jmqtt.properties cannot find,cause = " + e);
+            System.out.println("jmqtt.properties cannot find,cause + " + e + ",path:"+jmqttConfigPath);
         } catch (IOException e) {
             System.out.println("Handle jmqttConfig IO exception,cause = " + e);
         } finally {
