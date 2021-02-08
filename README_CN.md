@@ -1,24 +1,17 @@
 [English](README.md) | **中文**
 ##  Jmqtt
 
-**注意**：`master` 分支在开发时可能不稳定，导致打包的文件不能运行甚至不能打包，请使用 [releases](https://github.com/Cicizz/jmqtt/releases) 版本
-
 ![Jmqtt logo](jmqtt.png)
 
 ## 功能特性
+* 完整支持mqtt3.1.1协议
+* 支持基于mysql的数据持久化和集群
+* 友好的支持二次开发，插件化开发：集群/存储/设备连接，发布订阅认证
+* 支持websocket,ssl,wss
+* 长期支持，持续优化
 
-* 基于Java及Netty开发，插件化模式，高性能，高扩展性
-* 支持mqtt协议qos0，qos1，qos2消息质量服务
-* 支持mqtt协议cleansession，retain，will等消息服务
-* 完整支持mqtt Topic匹配过滤
-* 支持websocket协议
-* 支持RocksDB进行数据本地存储，数据高可靠
-* 支持以redis为中央存储的集群（可用其他中央存储替换）
-
-## 快速开始
-
-### 在线测试
-在线测试环境：`120.24.69.113`，TCP端口：`1883`；Websocket端口：`1884`，欢迎使用！
+## 官方文档
+[快速开始](http://www.mangdagou.com/)
 
 ### 直接本地运行
 1. 下载 [release](https://github.com/Cicizz/jmqtt/releases) 或`clone`本项目
