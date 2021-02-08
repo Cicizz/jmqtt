@@ -2,8 +2,11 @@ package org.jmqtt.broker;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.config.NettyConfig;
 import org.jmqtt.broker.common.helper.MixAll;
@@ -60,11 +63,16 @@ public class BrokerStartup {
             LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
             File file = new File(jmqttHome + File.separator + "conf/log4j2.xml");
             context.setConfigLocation(file.toURI());
-            Map<String,String> property = context.getConfiguration().getProperties();
-            property.put("level",brokerConfig.getLogLevel());
-            if (StringUtils.isNotEmpty(logLevel)) {
-                property.put("level",logLevel);
+            Configuration configuration = context.getConfiguration();
+            Map<String, LoggerConfig> loggerConfigMap = configuration.getLoggers();
+            Level newLevel = Level.getLevel(logLevel);
+            if (newLevel == null) {
+                newLevel = Level.INFO;
             }
+            for (LoggerConfig value : loggerConfigMap.values()) {
+                value.setLevel(newLevel);
+            }
+            context.updateLoggers(configuration);
         } catch (Exception ex) {
             System.err.print("Log4j2 load error,ex:" + ex);
         }

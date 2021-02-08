@@ -1,6 +1,7 @@
 package org.jmqtt.broker.store.rdb;
 
 import com.alibaba.fastjson.JSONObject;
+import org.apache.ibatis.session.SqlSession;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.helper.MixAll;
 import org.jmqtt.broker.common.model.Message;
@@ -56,7 +57,12 @@ public class RDBMessageStore extends AbstractDBStore implements MessageStore {
         RetainMessageDO retainMessageDO = new RetainMessageDO();
         retainMessageDO.setTopic(topic);
         retainMessageDO.setContent(JSONObject.toJSONString(message));
-        Long id = (Long) operate(sqlSession -> getMapper(sqlSession,retainMessageMapperClass).storeRetainMessage(retainMessageDO));
+        Long id = (Long) operate(new DBCallback() {
+            @Override
+            public Object operate(SqlSession sqlSession) {
+                return getMapper(sqlSession,retainMessageMapperClass).storeRetainMessage(retainMessageDO);
+            }
+        });
         return id != 0;
     }
 

@@ -21,9 +21,9 @@ public abstract class HighPerformanceMessageHandler {
     public HighPerformanceMessageHandler(BrokerController brokerController){
         this.highPerformance = brokerController.getBrokerConfig().isHighPerformance();
         this.sessionStore = brokerController.getSessionStore();
-        this.inflowMessageHandler = new InflowMessageHandler();
-        this.outflowMessageHandler = new OutflowMessageHandler();
-        this.outflowSecMessageHandler = new OutflowSecMessageHandler();
+        this.inflowMessageHandler = brokerController.getInflowMessageHandler();
+        this.outflowMessageHandler = brokerController.getOutflowMessageHandler();
+        this.outflowSecMessageHandler = brokerController.getOutflowSecMessageHandler();
     }
 
     protected boolean cacheInflowMsg(String clientId, Message message) {

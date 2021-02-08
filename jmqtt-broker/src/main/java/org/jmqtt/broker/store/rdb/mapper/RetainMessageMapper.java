@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface RetainMessageMapper {
 
-    @Insert("INSERT INTO jmqtt_retain_message(topic,content) VALUES(#{clientId},#{content}"
+    @Insert("INSERT INTO jmqtt_retain_message(topic,content) VALUES(#{topic},#{content})"
             + " on DUPLICATE key update content = #{content}")
     Long storeRetainMessage(RetainMessageDO retainMessageDO);
 

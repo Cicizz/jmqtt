@@ -4,14 +4,13 @@
 
     <properties>
         <!--<property name="user.dir" value="" />-->
-        <property name="level" value="INFO"/>
+        <property name="level" value="DEBUG"/>
         <property name="pattern" value="%d [%X{traceId}/%X{loginUserID}/%X{remoteAddr}/%X{clientId} - %X{requestURIWithQueryString}] %-5p %c{2} - %m%n"/>
     </properties>
 
     <Appenders>
         <!-- console -->
         <Console name="console" target="SYSTEM_OUT" follow="true">
-            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
             <PatternLayout>
                 <Pattern>${pattern}</Pattern>
             </PatternLayout>
@@ -38,7 +37,6 @@
         <RollingFile name="brokerLog-appender" fileName="${user.dir}/log/jmqttlogs/brokerLog.log"
                      filePattern="${user.dir}/log/jmqttlogs/brokerLog.log.%d{yyyy-MM-dd}"
                      append="true">
-            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
             <PatternLayout
                     pattern="${pattern}"
                     charset="UTF-8"/>
@@ -55,7 +53,6 @@
         <RollingFile name="clientTraceLog-appender" fileName="${user.dir}/log/jmqttlogs/clientTraceLog.log"
                      filePattern="${user.dir}/log/jmqttlogs/clientTraceLog.log.%d{yyyy-MM-dd}"
                      append="true">
-            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
             <PatternLayout
                     pattern="${pattern}"
                     charset="UTF-8"/>
@@ -72,7 +69,6 @@
         <RollingFile name="messageTraceLog-appender" fileName="${user.dir}/log/jmqttlogs/messageTraceLog.log"
                      filePattern="${user.dir}/log/jmqttlogs/messageTraceLog.log.%d{yyyy-MM-dd}"
                      append="true">
-            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
             <PatternLayout
                     pattern="${pattern}"
                     charset="UTF-8"/>
@@ -89,7 +85,6 @@
         <RollingFile name="eventLog-appender" fileName="${user.dir}/log/jmqttlogs/eventLog.log"
                      filePattern="${user.dir}/log/jmqttlogs/eventLog.log.%d{yyyy-MM-dd}"
                      append="true">
-            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
             <PatternLayout
                     pattern="${pattern}"
                     charset="UTF-8"/>
@@ -106,7 +101,6 @@
         <RollingFile name="remotingLog-appender" fileName="${user.dir}/log/jmqttlogs/remotingLog.log"
                      filePattern="${user.dir}/log/jmqttlogs/remotingLog.log.%d{yyyy-MM-dd}"
                      append="true">
-            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
             <PatternLayout
                     pattern="${pattern}"
                     charset="UTF-8"/>
@@ -123,7 +117,6 @@
         <RollingFile name="storeLog-appender" fileName="${user.dir}/log/jmqttlogs/storeLog.log"
                      filePattern="${user.dir}/log/jmqttlogs/storeLog.log.%d{yyyy-MM-dd}"
                      append="true">
-            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
             <PatternLayout
                     pattern="${pattern}"
                     charset="UTF-8"/>
@@ -140,7 +133,6 @@
         <RollingFile name="otherLog-appender" fileName="${user.dir}/log/jmqttlogs/otherLog.log"
                      filePattern="${user.dir}/log/jmqttlogs/otherLog.log.%d{yyyy-MM-dd}"
                      append="true">
-            <ThresholdFilter level="${level}" onMatch="ACCEPT" onMismatch="DENY"/>
             <PatternLayout
                     pattern="${pattern}"
                     charset="UTF-8"/>
@@ -193,7 +185,6 @@
 
         <root>
             <level value="${level}"/>
-            <appender-ref ref="console"/>
             <appender-ref ref="error-appender"/>
         </root>
     </Loggers>

@@ -8,12 +8,16 @@ import io.netty.handler.codec.mqtt.MqttMessage;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.acl.AuthValid;
+import org.jmqtt.broker.common.helper.MixAll;
 import org.jmqtt.broker.common.log.JmqttLogger;
 import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
 import org.jmqtt.broker.common.model.Subscription;
 import org.jmqtt.broker.processor.RequestProcessor;
+import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
+import org.jmqtt.broker.processor.dispatcher.event.Event;
+import org.jmqtt.broker.processor.dispatcher.event.EventCode;
 import org.jmqtt.broker.processor.recover.ReSendMessageService;
 import org.jmqtt.broker.remoting.session.ClientSession;
 import org.jmqtt.broker.remoting.session.ConnectManager;
@@ -25,7 +29,6 @@ import org.jmqtt.broker.store.SessionState;
 import org.jmqtt.broker.store.SessionStore;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +46,7 @@ public class ConnectProcessor implements RequestProcessor {
     private SubscriptionMatcher  subscriptionMatcher;
     private SessionStore         sessionStore;
     private MessageStore         messageStore;
+    private ClusterEventHandler clusterEventHandler;
 
     public ConnectProcessor(BrokerController brokerController) {
         this.authValid = brokerController.getAuthValid();
@@ -50,6 +54,7 @@ public class ConnectProcessor implements RequestProcessor {
         this.subscriptionMatcher = brokerController.getSubscriptionMatcher();
         this.sessionStore = brokerController.getSessionStore();
         this.messageStore = brokerController.getMessageStore();
+        this.clusterEventHandler = brokerController.getClusterEventHandler();
     }
 
     @Override
@@ -106,7 +111,11 @@ public class ConnectProcessor implements RequestProcessor {
                     }
                 }
                 // 3. 存储 session 会话
-                sessionStore.storeSession(clientId,new SessionState(SessionState.StateEnum.ONLINE),notifyClearOtherSession);
+                sessionStore.storeSession(clientId,new SessionState(SessionState.StateEnum.ONLINE));
+                if (notifyClearOtherSession) {
+                    Event event = new Event(EventCode.CLEAR_SESSION.getCode(),clientId,System.currentTimeMillis(), MixAll.getLocalIp());
+                    clusterEventHandler.sendEvent(event);
+                }
 
                 // 4. 处理will 消息
                 boolean willFlag = connectMessage.variableHeader().isWillFlag();

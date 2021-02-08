@@ -34,7 +34,7 @@ KEY `idx_client_id` (`client_id`)
 -- ----------------------------
 DROP TABLE IF EXISTS `jmqtt_offline_message`;
 CREATE TABLE `jmqtt_offline_message` (
-  `id` bigint(20) NOT NULL,
+  `id` bigint(20) AUTO_INCREMENT NOT NULL,
 `client_id` varchar(64) NOT NULL COMMENT '客户端id',
 `content` text NOT NULL COMMENT '消息体',
 `gmt_create` bigint(20) NOT NULL COMMENT '创建时间',

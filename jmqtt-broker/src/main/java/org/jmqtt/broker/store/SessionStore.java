@@ -34,7 +34,7 @@ public interface SessionStore {
      * 1. 保存会话到 Jmqtt集群
      * 2. 通知集群其它服务器，把该连接的本地会话信息清理掉
      */
-    boolean storeSession(String clientId,SessionState sessionState,boolean notifyClearOtherSession);
+    boolean storeSession(String clientId,SessionState sessionState);
 
     /**
      * 清理会话信息：
@@ -44,7 +44,7 @@ public interface SessionStore {
      *  4. 订阅状态{@link SessionState}
      */
     default void clearSession(String clientId,boolean clearOfflineMsg){
-        storeSession(clientId,new SessionState(SessionState.StateEnum.NULL),false);
+        storeSession(clientId,new SessionState(SessionState.StateEnum.NULL));
         clearSubscription(clientId);
         if (clearOfflineMsg) {
             clearOfflineMsg(clientId);
