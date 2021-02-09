@@ -12,6 +12,7 @@ doc/
 *.tmp
 *~.nib
 local.properties
+*/dependency-reduced-pom.xml
 
 
 # Maven #
