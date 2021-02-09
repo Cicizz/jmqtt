@@ -29,7 +29,6 @@ import org.jmqtt.broker.remoting.RemotingService;
 import org.jmqtt.broker.remoting.netty.codec.ByteBuf2WebSocketEncoder;
 import org.jmqtt.broker.remoting.netty.codec.WebSocket2ByteBufDecoder;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -121,9 +120,9 @@ public class NettyRemotingServer implements RemotingService {
                                 .addLast("httpCodec", new HttpServerCodec())
                                 .addLast("aggregator", new HttpObjectAggregator(65535))
                                 .addLast("compressor ", new HttpContentCompressor())
-                                .addLast("webSocketHandler", new WebSocketServerProtocolHandler("/mqtt", MixAll.MQTT_VERSION_SUPPORT, true))
-                                .addLast("byteBuf2WebSocketEncoder", new ByteBuf2WebSocketEncoder())
+                                .addLast("webSocketHandler", new WebSocketServerProtocolHandler("/mqtt", MixAll.MQTT_VERSION_SUPPORT, false,65536))
                                 .addLast("webSocket2ByteBufDecoder", new WebSocket2ByteBufDecoder())
+                                .addLast("byteBuf2WebSocketEncoder", new ByteBuf2WebSocketEncoder())
                                 .addLast("mqttDecoder", new MqttDecoder(nettyConfig.getMaxMsgSize()))
                                 .addLast("mqttEncoder", MqttEncoder.INSTANCE)
                                 .addLast("nettyConnectionManager", new NettyConnectHandler(
