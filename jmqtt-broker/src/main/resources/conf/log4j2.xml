@@ -26,7 +26,7 @@
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/common-error.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>
@@ -42,7 +42,7 @@
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/brokerLog.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>
@@ -58,7 +58,7 @@
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/clientTraceLog.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>
@@ -74,7 +74,7 @@
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/messageTraceLog.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>
@@ -90,7 +90,7 @@
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/eventLog.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>
@@ -106,7 +106,7 @@
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/remotingLog.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>
@@ -122,7 +122,7 @@
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/storeLog.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>
@@ -138,7 +138,7 @@
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/otherLog.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>
