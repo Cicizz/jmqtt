@@ -1,6 +1,7 @@
 package org.jmqtt.broker.common.model;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 /**
  * 订阅关系
@@ -52,5 +53,14 @@ public class Subscription {
     @Override
     public int hashCode() {
         return Objects.hash(clientId, topic);
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", Subscription.class.getSimpleName() + "[", "]")
+            .add("clientId='" + clientId + "'")
+            .add("qos=" + qos)
+            .add("topic='" + topic + "'")
+            .toString();
     }
 }
