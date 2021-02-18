@@ -37,7 +37,7 @@ public class RedisSessionStore implements SessionStore {
     }
 
     @Override
-    public boolean storeSession(String clientId, SessionState sessionState, boolean notifyClearOtherSession) {
+    public boolean storeSession(String clientId, SessionState sessionState) {
         return RedisReplyUtils.isOk(redisSupport.operate(jedis -> jedis.set(RedisKeySupport.SESSION + clientId, JSONObject.toJSONString(sessionState))));
     }
 
