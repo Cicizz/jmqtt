@@ -61,7 +61,7 @@ public class BrokerStartup {
             context.setConfigLocation(file.toURI());
             Configuration configuration = context.getConfiguration();
             Map<String, LoggerConfig> loggerConfigMap = configuration.getLoggers();
-            Level newLevel = Level.getLevel(logLevel);
+            Level newLevel = logLevel == null? null : Level.getLevel(logLevel);
             if (newLevel == null) {
                 newLevel = Level.INFO;
             }

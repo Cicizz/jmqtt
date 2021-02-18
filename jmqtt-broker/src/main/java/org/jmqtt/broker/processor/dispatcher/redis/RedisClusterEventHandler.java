@@ -24,14 +24,16 @@ public class RedisClusterEventHandler implements ClusterEventHandler {
     public void start(BrokerConfig brokerConfig) {
         this.redisSupport = RedisUtils.getInstance().createSupport(brokerConfig);
         this.redisSupport.operate(jedis -> {
-            jedis.psubscribe(new JedisPubSub() {
-                @Override
-                public void onMessage(String channel, String message) {
-                    if(!Objects.equals(INSTANCE_CHANNEL_ID,channel)) {
-                        eventConsumeHandler.consumeEvent(JSONObject.parseObject(message, Event.class));
+            new Thread(()->{
+                jedis.psubscribe(new JedisPubSub() {
+                    @Override
+                    public void onMessage(String channel, String message) {
+                        if(!Objects.equals(INSTANCE_CHANNEL_ID,channel)) {
+                            eventConsumeHandler.consumeEvent(JSONObject.parseObject(message, Event.class));
+                        }
                     }
-                }
-            }, INSTANCE_CHANNEL_PATTERN);
+                }, INSTANCE_CHANNEL_PATTERN);
+            }).start();
             return true;
         });
     }
