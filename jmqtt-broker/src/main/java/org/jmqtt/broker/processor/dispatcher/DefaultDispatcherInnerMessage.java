@@ -116,7 +116,7 @@ public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler
             if (Objects.nonNull(messages)) {
                 try {
                     for (Message message : messages) {
-                        Set<Subscription> subscriptions = subscriptionMatcher.match((String) message.getHeader(MessageHeader.TOPIC));
+                        Set<Subscription> subscriptions = subscriptionMatcher.match((String) message.getHeader(MessageHeader.TOPIC),message.getClientId());
                         for (Subscription subscription : subscriptions) {
                             String clientId = subscription.getClientId();
                             ClientSession clientSession = ConnectManager.getInstance().getClient(subscription.getClientId());
