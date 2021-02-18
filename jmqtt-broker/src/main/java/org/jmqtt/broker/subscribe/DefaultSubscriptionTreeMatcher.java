@@ -1,19 +1,15 @@
 package org.jmqtt.broker.subscribe;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
+import org.jmqtt.broker.common.model.Subscription;
+import org.slf4j.Logger;
+
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.jmqtt.broker.common.log.JmqttLogger;
-import org.jmqtt.broker.common.model.Subscription;
-import org.slf4j.Logger;
 
 
 public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
@@ -57,7 +53,7 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
             }
             currentNode.addSubscriber(subscription);
         } catch (Exception ex) {
-            log.warn("[Subscription] -> Subscribe failed,clientId={},topic={},qos={}",
+            LogUtil.warn(log,"[Subscription] -> Subscribe failed,clientId={},topic={},qos={}",
                 subscription.getClientId(), subscription.getTopic(), subscription.getQos());
             return true;
         }
