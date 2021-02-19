@@ -6,12 +6,12 @@ import org.jmqtt.broker.processor.dispatcher.EventConsumeHandler;
 import org.jmqtt.broker.processor.dispatcher.event.Event;
 import org.jmqtt.broker.store.mem.AbstractMemStore;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
+ * TODO 基于内存的事件队列，最好控制下队列大小，在超过100000时，打warn日志，方便排查问题
  * @program: jmqtt
  * @description:
  * @author: Mr.Liu
@@ -39,6 +39,7 @@ public class MemEventHandler extends AbstractMemStore implements ClusterEventHan
 
     }
 
+    // TODO 这里考虑能否批量拉取，降低事件复杂度
     @Override
     public List<Event> pollEvent(int maxPollNum) {
         List<Event> e = new LinkedList<Event>();
