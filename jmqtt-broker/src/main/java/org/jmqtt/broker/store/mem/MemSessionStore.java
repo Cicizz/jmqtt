@@ -67,6 +67,7 @@ public class MemSessionStore extends AbstractMemStore implements SessionStore {
         return true;
     }
 
+    // TODO 并发下会产生问题，参考其他代码，加二次校验锁
     @Override
     public boolean storeSubscription(String clientId, Subscription subscription) {
         ConcurrentHashMap<String, Subscription> v = subscriptionCache.get(clientId);
@@ -80,6 +81,7 @@ public class MemSessionStore extends AbstractMemStore implements SessionStore {
         return true;
     }
 
+    // TODO 非正常情况，打warn日志，例如过程消息，release消息时，发现不存在，需要打印出相关日志，日志用英文
     @Override
     public boolean delSubscription(String clientId, String topic) {
         ConcurrentHashMap<String, Subscription> v = subscriptionCache.get(clientId);

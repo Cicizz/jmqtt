@@ -3,6 +3,7 @@ package org.jmqtt.broker.store.mem;
 import org.jmqtt.broker.common.config.BrokerConfig;
 
 /**
+ * TODO 类上不要保留开发者的信息
  * @program: jmqtt
  * @description:
  * @author: Mr.Liu
