@@ -1,20 +1,26 @@
 package org.jmqtt.broker;
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.joran.JoranConfigurator;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
-import org.jmqtt.broker.exception.BrokerException;
-import org.jmqtt.common.config.BrokerConfig;
-import org.jmqtt.common.config.NettyConfig;
-import org.jmqtt.common.helper.MixAll;
-import org.jmqtt.common.log.LoggerName;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.jmqtt.broker.common.config.BrokerConfig;
+import org.jmqtt.broker.common.config.NettyConfig;
+import org.jmqtt.broker.common.helper.MixAll;
 
 import java.io.*;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
+/**
+ * jmqtt 启动类,代码风格参考RocketMQ
+ * 代码阅读沟通，二次开发文档：请加 qq群：578185385 或 http://www.mangdagou.com/
+ * mqtt5.0协议 http://www.mangdagou.com/links
+ */
 public class BrokerStartup {
 
     public static void main(String[] args) {
@@ -28,20 +34,16 @@ public class BrokerStartup {
     }
 
     public static BrokerController start(String[] args) throws Exception {
-
         Options options = buildOptions();
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = parser.parse(options,args);
         String jmqttHome = null;
-        String jmqttConfigPath = null;
+        String logLevel = null;
         BrokerConfig brokerConfig = new BrokerConfig();
         NettyConfig nettyConfig = new NettyConfig();
         if(commandLine != null){
             jmqttHome = commandLine.getOptionValue("h");
-            jmqttConfigPath = commandLine.getOptionValue("c");
-        }
-        if(StringUtils.isNotEmpty(jmqttConfigPath)){
-            initConfig(jmqttConfigPath,brokerConfig,nettyConfig);
+            logLevel = commandLine.getOptionValue("l");
         }
         if(StringUtils.isEmpty(jmqttHome)){
             jmqttHome = brokerConfig.getJmqttHome();
@@ -49,12 +51,30 @@ public class BrokerStartup {
         if(StringUtils.isEmpty(jmqttHome)){
             throw new Exception("please set JMQTT_HOME.");
         }
-        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-        JoranConfigurator configurator = new JoranConfigurator();
-        configurator.setContext(lc);
-        lc.reset();
-        configurator.doConfigure(jmqttHome + "/conf/logback_broker.xml");
+        String jmqttConfigPath = jmqttHome + File.separator + "conf" + File.separator + "jmqtt.properties";
+        initConfig(jmqttConfigPath,brokerConfig,nettyConfig);
 
+        // 日志配置加载
+        try {
+            LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
+            File file = new File(jmqttHome + File.separator + "conf" + File.separator + "log4j2.xml");
+            context.setConfigLocation(file.toURI());
+            Configuration configuration = context.getConfiguration();
+            Map<String, LoggerConfig> loggerConfigMap = configuration.getLoggers();
+            Level newLevel = Level.getLevel(logLevel);
+            if (newLevel == null) {
+                newLevel = Level.INFO;
+            }
+            for (LoggerConfig value : loggerConfigMap.values()) {
+                value.setLevel(newLevel);
+            }
+            context.updateLoggers(configuration);
+        } catch (Exception ex) {
+            System.err.print("Log4j2 load error,ex:" + ex);
+        }
+
+
+        // 启动服务，线程等
         BrokerController brokerController = new BrokerController(brokerConfig,nettyConfig);
         brokerController.start();
 
@@ -78,10 +98,20 @@ public class BrokerStartup {
         opt.setRequired(false);
         options.addOption(opt);
 
+        opt = new Option("l",true,"DEBUG");
+        opt.setRequired(false);
+        options.addOption(opt);
+
         return options;
     }
 
-    private static void initConfig(String jmqttConfigPath,BrokerConfig brokerConfig,NettyConfig nettyConfig){
+    /**
+     * convert properties to java config class
+     * @param jmqttConfigPath
+     * @param brokerConfig
+     * @param nettyConfig
+     */
+    private static void initConfig(String jmqttConfigPath, BrokerConfig brokerConfig, NettyConfig nettyConfig){
         Properties properties = new Properties();
         BufferedReader  bufferedReader = null;
         try {
@@ -90,12 +120,14 @@ public class BrokerStartup {
             MixAll.properties2POJO(properties,brokerConfig);
             MixAll.properties2POJO(properties,nettyConfig);
         } catch (FileNotFoundException e) {
-            System.out.println("jmqtt.properties cannot find,cause = " + e);
+            System.out.println("jmqtt.properties cannot find,cause + " + e + ",path:"+jmqttConfigPath);
         } catch (IOException e) {
             System.out.println("Handle jmqttConfig IO exception,cause = " + e);
         } finally {
             try {
-                bufferedReader.close();
+                if(Objects.nonNull(bufferedReader)){
+                    bufferedReader.close();
+                }
             } catch (IOException e) {
                 System.out.println("Handle jmqttConfig IO exception,cause = " + e);
             }

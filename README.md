@@ -1,30 +1,25 @@
-#### 说明
+**English** | [中文](README_CN.md)
+#  Jmqtt
 
-JMQTT是用java语言开发的支持mqtt协议的高可用，高性能，高可扩展性的broker，采用netty作为通信层组件，支持插件化开发。
+![Jmqtt logo](jmqtt.png)
 
-#### 功能特性
+## Features
+* Full support of mqtt3.1.1 protocol
+* Support data persistence and clustering based on MySQL
+* Support friendly secondary development, plug-in development: cluster / storage / device connection, publish subscribe authentication
+* Support tcp, websocket, SSL, WSS
 
-1. 支持qos0,qos1,qos2消息。
-2. 完整支持mqtt topic匹配过滤功能。
+## Official documents
+[Official documents](http://www.mangdagou.com/)
 
-#### QuickStart
+## Quick start
+1. Download [release](https://github.com/Cicizz/jmqtt/releases) (Version above 3. X) Or `clone` this project
+2. Execute in the root directory:`mvn -Ppackage-all -DskipTests clean install -U`
+3. Configuration file for configuration response:`/jmqtt-broker/resources/conf`
+4. Execute the start command:`java -jar jmqtt-broker-3.0.0.jar -h ${conf文件目录}` -H is followed by the configuration file directory, which needs to contain jmqtt.properties And log4j2. XML
 
-1. clone本项目
 
-2. 输入`mvn -Ppackage-all -DskipTests clean install -U`打包
+## QQ technology exchange group
 
-3.  进入jmqtt-distrubution/target/jmqtt/bin下，直接运行jmqttstart脚本即可
+![jmqtt技术交流群](jmqtt_qq.png)
 
-#### RoadMap
-
-##### Version 2.x
-
-1. 支持集群化，多主机横向扩展
-2. 支持SSL/TLS
-
-##### Version 1.x
-
-1. 完整支持mqtt协议
-2. 支持Websocket协议
-3. 支持数据本地持久化
-4. 支持redis存储

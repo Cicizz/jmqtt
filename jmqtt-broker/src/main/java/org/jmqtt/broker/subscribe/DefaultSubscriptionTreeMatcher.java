@@ -1,46 +1,58 @@
 package org.jmqtt.broker.subscribe;
 
-import org.jmqtt.common.bean.Subscription;
-import org.jmqtt.common.log.LoggerName;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
+import org.jmqtt.broker.common.model.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+
 public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.CLIENT_TRACE);
+    private static final Logger log = JmqttLogger.messageTraceLog;
+
+    private final Object lock = new Object();
 
     private TreeNode root = new TreeNode(new Token("root"));
     private Token EMPTY = new Token("");
     private Token SINGLE = new Token("+");
-    private Token MULTY = new Token("*");
+    private Token MULTY = new Token("#");
 
-    public DefaultSubscriptionTreeMatcher(){};
+
+    public DefaultSubscriptionTreeMatcher(){
+    };
 
     @Override
-    public int subscribe(String topic, Subscription subscription) {
-        int rs;
+    public boolean subscribe(Subscription subscription) {
         try{
+            String topic = subscription.getTopic();
             TreeNode currentNode = recursionGetTreeNode(topic,root);
             Set<Subscription> subscriptions = currentNode.getSubscribers();
-            for(Subscription sub : subscriptions){
-                if(sub.equals(subscription)){
-                    if(sub.getQos() == subscription.getQos()){
-                        rs = 2;
-                        return rs;
+            if(subscriptions.contains(subscription)){
+                for(Subscription sub : subscriptions){
+                    if(sub.equals(subscription)){
+                        if(sub.getQos() == subscription.getQos()){
+                            return false;
+                        }else{
+                            sub.setQos(subscription.getQos());
+                            return true;
+                        }
                     }
                 }
             }
-            rs = 1;
             currentNode.addSubscriber(subscription);
         }catch(Exception ex){
-            log.warn("[Subscription] -> Subscribe failed,clientId={},topic={},qos={}",subscription.getClientId(),subscription.getTopic(),subscription.getQos());
-            rs = 0;
+            LogUtil.warn(log,"[Subscription] -> Subscribe failed,clientId={},topic={},qos={}",subscription.getClientId(),subscription.getTopic(),subscription.getQos());
+            return true;
         }
-        return rs;
+        return true;
     }
 
     @Override
@@ -54,16 +66,20 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
         String[] tokens = topic.split("/");
         Token token = new Token(tokens[0]);
         TreeNode matchNode = node.getChildNodeByToken(token);
-        TreeNode currentNode =  matchNode;
-        if(Objects.isNull(currentNode)){
-            currentNode = new TreeNode(token);
-            node.addChild(currentNode);
+        if(Objects.isNull(matchNode)){
+            synchronized (lock){
+                matchNode = node.getChildNodeByToken(token);
+                if(Objects.isNull(matchNode)){
+                    matchNode = new TreeNode(token);
+                    node.addChild(matchNode);
+                }
+            }
         }
         if(tokens.length > 1){
             String childTopic = topic.substring(topic.indexOf("/")+1);
-            return recursionGetTreeNode(childTopic,currentNode);
+            return recursionGetTreeNode(childTopic,matchNode);
         }else{
-            return currentNode;
+            return matchNode;
         }
     }
 
@@ -76,6 +92,9 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
 
     @Override
     public boolean isMatch(String pubTopic, String subTopic) {
+        if(pubTopic.equals(subTopic)){
+            return true;
+        }
         String[] pubTokenStr = pubTopic.split("/");
         String[] subTokenStr = subTopic.split("/");
         int pubLen = pubTokenStr.length;
@@ -95,7 +114,7 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
                 return false;
             }
             if(i == subLen-1){
-                return false;
+                return true;
             }
         }
         return false;
@@ -124,7 +143,6 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
         }
     }
 
-
     class Token{
         String token;
 
@@ -148,7 +166,7 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
 
     class TreeNode {
         private Token token;
-        private Set<Subscription /*  */> subscribers = new CopyOnWriteArraySet<>();
+        private Set<Subscription> subscribers = new CopyOnWriteArraySet<>();
         private List<TreeNode> children = new CopyOnWriteArrayList<>();
 
         public TreeNode(Token token){

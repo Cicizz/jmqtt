@@ -1,150 +1,241 @@
 package org.jmqtt.broker;
 
 import io.netty.handler.codec.mqtt.MqttMessageType;
+import org.jmqtt.broker.acl.AuthValid;
 import org.jmqtt.broker.client.ClientLifeCycleHookService;
-import org.jmqtt.broker.dispatcher.DefaultDispatcherMessage;
-import org.jmqtt.remoting.netty.ChannelEventListener;
-import org.jmqtt.store.*;
-import org.jmqtt.store.memory.*;
-import org.jmqtt.broker.dispatcher.MessageDispatcher;
-import org.jmqtt.broker.processor.*;
+import org.jmqtt.broker.common.config.BrokerConfig;
+import org.jmqtt.broker.common.config.NettyConfig;
+import org.jmqtt.broker.common.helper.MixAll;
+import org.jmqtt.broker.common.helper.RejectHandler;
+import org.jmqtt.broker.common.helper.ThreadFactoryImpl;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
+import org.jmqtt.broker.processor.RequestProcessor;
+import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
+import org.jmqtt.broker.processor.dispatcher.DefaultDispatcherInnerMessage;
+import org.jmqtt.broker.processor.dispatcher.EventConsumeHandler;
+import org.jmqtt.broker.processor.dispatcher.InnerMessageDispatcher;
+import org.jmqtt.broker.processor.protocol.*;
+import org.jmqtt.broker.processor.recover.ReSendMessageService;
+import org.jmqtt.broker.remoting.netty.ChannelEventListener;
+import org.jmqtt.broker.remoting.netty.NettyRemotingServer;
+import org.jmqtt.broker.store.MessageStore;
+import org.jmqtt.broker.store.SessionStore;
+import org.jmqtt.broker.store.highperformance.InflowMessageHandler;
+import org.jmqtt.broker.store.highperformance.OutflowMessageHandler;
+import org.jmqtt.broker.store.highperformance.OutflowSecMessageHandler;
 import org.jmqtt.broker.subscribe.DefaultSubscriptionTreeMatcher;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
-import org.jmqtt.common.config.BrokerConfig;
-import org.jmqtt.common.config.NettyConfig;
-import org.jmqtt.common.helper.MixAll;
-import org.jmqtt.common.helper.RejectHandler;
-import org.jmqtt.common.helper.ThreadFactoryImpl;
-import org.jmqtt.common.log.LoggerName;
-import org.jmqtt.remoting.netty.NettyRemotingServer;
-import org.jmqtt.remoting.netty.RequestProcessor;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 具体控制类：负责加载配置文件，初始化环境，启动服务等
+ */
 public class BrokerController {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerName.BROKER);
+    private static final Logger log = JmqttLogger.brokerlog;
 
     private BrokerConfig brokerConfig;
     private NettyConfig nettyConfig;
+
     private ExecutorService connectExecutor;
     private ExecutorService pubExecutor;
     private ExecutorService subExecutor;
     private ExecutorService pingExecutor;
-    private LinkedBlockingQueue connectQueue;
-    private LinkedBlockingQueue pubQueue;
-    private LinkedBlockingQueue subQueue;
-    private LinkedBlockingQueue pingQueue;
+
+    private LinkedBlockingQueue<Runnable> connectQueue;
+    private LinkedBlockingQueue<Runnable> pubQueue;
+    private LinkedBlockingQueue<Runnable> subQueue;
+    private LinkedBlockingQueue<Runnable> pingQueue;
+
     private ChannelEventListener channelEventListener;
     private NettyRemotingServer remotingServer;
-    private MessageDispatcher messageDispatcher;
-    private FlowMessageStore flowMessageStore;
-    private SubscriptionMatcher subscriptionMatcher;
-    private WillMessageStore willMessageStore;
-    private RetainMessageStore retainMessageStore;
-    private OfflineMessageStore offlineMessageStore;
-    private SubscriptionStore subscriptionStore;
-    private SessionStore sessionStore;
 
+    private InnerMessageDispatcher innerMessageDispatcher;
+    private SubscriptionMatcher    subscriptionMatcher;
+    private AuthValid              authValid;
+    private ReSendMessageService   reSendMessageService;
+    private SessionStore           sessionStore;
+    private MessageStore           messageStore;
+    private ClusterEventHandler clusterEventHandler;
+    private EventConsumeHandler eventConsumeHandler;
+    private String currentIp;
 
-    public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig){
+    // high performance message handle
+    private InflowMessageHandler     inflowMessageHandler;
+    private OutflowMessageHandler    outflowMessageHandler;
+    private OutflowSecMessageHandler outflowSecMessageHandler;
+
+    public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig) {
         this.brokerConfig = brokerConfig;
         this.nettyConfig = nettyConfig;
 
-        this.connectQueue = new LinkedBlockingQueue(100000);
-        this.pubQueue = new LinkedBlockingQueue(100000);
-        this.subQueue = new LinkedBlockingQueue(100000);
-        this.pingQueue = new LinkedBlockingQueue(10000);
+        this.connectQueue = new LinkedBlockingQueue<>(100000);
+        this.pubQueue = new LinkedBlockingQueue<>(100000);
+        this.subQueue = new LinkedBlockingQueue<>(100000);
+        this.pingQueue = new LinkedBlockingQueue<>(10000);
+        this.currentIp = MixAll.getLocalIp();
 
-        {//store pluggable
-            this.flowMessageStore = new DefaultFlowMessageStore();
-            this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
-            this.willMessageStore = new DefaultWillMessageStore();
-            this.retainMessageStore = new DefaultRetainMessageStore();
-            this.offlineMessageStore = new DefaultOfflineMessageStore();
-            this.subscriptionStore = new DefaultSubscriptionStore();
-            this.sessionStore = new DefaultSessionStore();
-            this.messageDispatcher = new DefaultDispatcherMessage(brokerConfig.getPollThreadNum(), subscriptionMatcher, flowMessageStore,offlineMessageStore);
+        {
+            // 会话状态，消息存储加载，可自己实现相关的类
+            this.sessionStore = MixAll.pluginInit(brokerConfig.getSessionStoreClass());
+            this.messageStore = MixAll.pluginInit(brokerConfig.getMessageStoreClass());
+
+            // 设备连接，发布，订阅消息权限控制
+            this.authValid = MixAll.pluginInit(brokerConfig.getAuthValidClass());
+
+            // 集群事件转发加载
+            this.clusterEventHandler = MixAll.pluginInit(brokerConfig.getClusterEventHandlerClass());
         }
-        this.channelEventListener = new ClientLifeCycleHookService(willMessageStore,messageDispatcher);
-        this.remotingServer = new NettyRemotingServer(nettyConfig,channelEventListener);
+
+        // high performance message handler
+        this.inflowMessageHandler = new InflowMessageHandler();
+        this.outflowMessageHandler = new OutflowMessageHandler();
+        this.outflowSecMessageHandler = new OutflowSecMessageHandler();
+
+        this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
+        this.innerMessageDispatcher = new DefaultDispatcherInnerMessage(this);
+        this.eventConsumeHandler = new EventConsumeHandler(this);
+
+        this.channelEventListener = new ClientLifeCycleHookService(messageStore, innerMessageDispatcher);
+        this.remotingServer = new NettyRemotingServer(brokerConfig, nettyConfig, channelEventListener);
+        this.reSendMessageService = new ReSendMessageService(this);
 
         int coreThreadNum = Runtime.getRuntime().availableProcessors();
-        this.connectExecutor = new ThreadPoolExecutor(coreThreadNum*2,
-                coreThreadNum*2,
+        this.connectExecutor = new ThreadPoolExecutor(coreThreadNum * 2,
+                coreThreadNum * 2,
                 60000,
                 TimeUnit.MILLISECONDS,
                 connectQueue,
                 new ThreadFactoryImpl("ConnectThread"),
-                new RejectHandler("connect",100000));
-        this.pubExecutor = new ThreadPoolExecutor(coreThreadNum*2,
-                coreThreadNum*2,
+                new RejectHandler("connect", 100000));
+        this.pubExecutor = new ThreadPoolExecutor(coreThreadNum * 2,
+                coreThreadNum * 2,
                 60000,
                 TimeUnit.MILLISECONDS,
                 pubQueue,
                 new ThreadFactoryImpl("PubThread"),
-                new RejectHandler("pub",100000));
-        this.subExecutor = new ThreadPoolExecutor(coreThreadNum*2,
-                coreThreadNum*2,
+                new RejectHandler("pub", 100000));
+        this.subExecutor = new ThreadPoolExecutor(coreThreadNum * 2,
+                coreThreadNum * 2,
                 60000,
                 TimeUnit.MILLISECONDS,
                 subQueue,
                 new ThreadFactoryImpl("SubThread"),
-                new RejectHandler("sub",100000));
+                new RejectHandler("sub", 100000));
         this.pingExecutor = new ThreadPoolExecutor(coreThreadNum,
                 coreThreadNum,
                 60000,
                 TimeUnit.MILLISECONDS,
                 pingQueue,
                 new ThreadFactoryImpl("PingThread"),
-                new RejectHandler("heartbeat",100000));
+                new RejectHandler("heartbeat", 100000));
 
     }
 
 
-    public void start(){
 
-        MixAll.printProperties(log,brokerConfig);
-        MixAll.printProperties(log,nettyConfig);
+    public void start() {
 
-        {//init and register processor
+        MixAll.printProperties(log, brokerConfig);
+        MixAll.printProperties(log, nettyConfig);
+
+        // 1. start store
+        this.sessionStore.start(brokerConfig);
+        this.messageStore.start(brokerConfig);
+
+        // 2. start cluster
+        this.clusterEventHandler.start(brokerConfig);
+        this.eventConsumeHandler.start();
+
+        // 3. start message service
+        if (this.innerMessageDispatcher != null) {
+            this.innerMessageDispatcher.start();
+        }
+        if (this.reSendMessageService != null) {
+            this.reSendMessageService.start();
+        }
+
+        {
+            // 4. init and register mqtt protocol processor
             RequestProcessor connectProcessor = new ConnectProcessor(this);
             RequestProcessor disconnectProcessor = new DisconnectProcessor(this);
             RequestProcessor pingProcessor = new PingProcessor();
-            RequestProcessor publishProcessor = new PublishProcessor(messageDispatcher, flowMessageStore,retainMessageStore);
-            RequestProcessor pubRelProcessor = new PubRelProcessor(messageDispatcher, flowMessageStore,retainMessageStore);
-            RequestProcessor subscribeProcessor = new SubscribeProcessor(subscriptionMatcher,retainMessageStore,flowMessageStore);
-            RequestProcessor unSubscribeProcessor = new UnSubscribeProcessor(subscriptionMatcher);
-            RequestProcessor pubRecProcessor = new PubRecProcessor(flowMessageStore);
-            RequestProcessor pubCompProcessor = new PubCompProcessor(flowMessageStore);
+            RequestProcessor publishProcessor = new PublishProcessor(this);
+            RequestProcessor pubRelProcessor = new PubRelProcessor(this);
+            RequestProcessor subscribeProcessor = new SubscribeProcessor(this);
+            RequestProcessor unSubscribeProcessor = new UnSubscribeProcessor(subscriptionMatcher, sessionStore);
+            RequestProcessor pubRecProcessor = new PubRecProcessor(this);
+            RequestProcessor pubAckProcessor = new PubAckProcessor(this);
+            RequestProcessor pubCompProcessor = new PubCompProcessor(this);
 
-            this.remotingServer.registerProcessor(MqttMessageType.CONNECT,connectProcessor,connectExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.DISCONNECT,disconnectProcessor,connectExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.PINGREQ,pingProcessor,pingExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.PUBLISH,publishProcessor,pubExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.PUBREL,pubRelProcessor,pubExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.SUBSCRIBE,subscribeProcessor,subExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.UNSUBSCRIBE,unSubscribeProcessor,subExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.PUBREC,pubRecProcessor,subExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.PUBCOMP,pubCompProcessor,subExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.CONNECT, connectProcessor, connectExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.DISCONNECT, disconnectProcessor, connectExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.PINGREQ, pingProcessor, pingExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.PUBLISH, publishProcessor, pubExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.PUBACK, pubAckProcessor, pubExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.PUBREL, pubRelProcessor, pubExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.SUBSCRIBE, subscribeProcessor, subExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.UNSUBSCRIBE, unSubscribeProcessor, subExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.PUBREC, pubRecProcessor, subExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.PUBCOMP, pubCompProcessor, subExecutor);
         }
 
-        this.remotingServer.start();
-        log.info("JMqtt Server start success and version = {}",brokerConfig.getVersion());
+        // 5. start auth
+        if (this.authValid != null) {
+            this.authValid.start();
+        }
+
+        // 6. start remoting
+        if (this.remotingServer != null) {
+            this.remotingServer.start();
+        }
+        LogUtil.info(log,"JMqtt Server start success and version = {}", brokerConfig.getVersion());
     }
 
-    public void shutdown(){
-        this.remotingServer.shutdown();
-        this.connectExecutor.shutdown();
-        this.pubExecutor.shutdown();
-        this.subExecutor.shutdown();
-        this.pingExecutor.shutdown();
-        this.messageDispatcher.shutdown();
+    public void shutdown() {
+        if (this.remotingServer != null) {
+            this.remotingServer.shutdown();
+        }
+        if (this.connectExecutor != null) {
+            this.connectExecutor.shutdown();
+        }
+        if (this.pubExecutor != null) {
+            this.pubExecutor.shutdown();
+        }
+        if (this.subExecutor != null) {
+            this.subExecutor.shutdown();
+        }
+        if (this.pingExecutor != null) {
+            this.pingExecutor.shutdown();
+        }
+        if (this.innerMessageDispatcher != null) {
+            this.innerMessageDispatcher.shutdown();
+        }
+        if (this.reSendMessageService != null) {
+            this.reSendMessageService.shutdown();
+        }
+        if (this.clusterEventHandler != null) {
+            this.clusterEventHandler.shutdown();
+        }
+        if (this.eventConsumeHandler != null) {
+            this.eventConsumeHandler.shutdown();
+        }
+        if (this.sessionStore != null) {
+            this.sessionStore.shutdown();
+        }
+        if (this.messageStore != null) {
+            this.messageStore.shutdown();
+        }
+        if (this.authValid != null) {
+            this.authValid.shutdown();
+        }
+
     }
 
     public BrokerConfig getBrokerConfig() {
@@ -171,19 +262,19 @@ public class BrokerController {
         return pingExecutor;
     }
 
-    public LinkedBlockingQueue getConnectQueue() {
+    public LinkedBlockingQueue<Runnable> getConnectQueue() {
         return connectQueue;
     }
 
-    public LinkedBlockingQueue getPubQueue() {
+    public LinkedBlockingQueue<Runnable> getPubQueue() {
         return pubQueue;
     }
 
-    public LinkedBlockingQueue getSubQueue() {
+    public LinkedBlockingQueue<Runnable> getSubQueue() {
         return subQueue;
     }
 
-    public LinkedBlockingQueue getPingQueue() {
+    public LinkedBlockingQueue<Runnable> getPingQueue() {
         return pingQueue;
     }
 
@@ -191,35 +282,60 @@ public class BrokerController {
         return remotingServer;
     }
 
-    public MessageDispatcher getMessageDispatcher() {
-        return messageDispatcher;
-    }
-
-    public FlowMessageStore getFlowMessageStore() {
-        return flowMessageStore;
+    public InnerMessageDispatcher getInnerMessageDispatcher() {
+        return innerMessageDispatcher;
     }
 
     public SubscriptionMatcher getSubscriptionMatcher() {
         return subscriptionMatcher;
     }
 
-    public WillMessageStore getWillMessageStore() {
-        return willMessageStore;
+
+    public AuthValid getAuthValid() {
+        return authValid;
     }
 
-    public RetainMessageStore getRetainMessageStore() {
-        return retainMessageStore;
-    }
-
-    public OfflineMessageStore getOfflineMessageStore() {
-        return offlineMessageStore;
-    }
-
-    public SubscriptionStore getSubscriptionStore() {
-        return subscriptionStore;
+    public ReSendMessageService getReSendMessageService() {
+        return reSendMessageService;
     }
 
     public SessionStore getSessionStore() {
         return sessionStore;
+    }
+
+    public MessageStore getMessageStore() {
+        return messageStore;
+    }
+
+    public ChannelEventListener getChannelEventListener() {
+        return channelEventListener;
+    }
+
+    public ClusterEventHandler getClusterEventHandler() {
+        return clusterEventHandler;
+    }
+
+    public void setClusterEventHandler(ClusterEventHandler clusterEventHandler) {
+        this.clusterEventHandler = clusterEventHandler;
+    }
+
+    public String getCurrentIp() {
+        return currentIp;
+    }
+
+    public EventConsumeHandler getEventConsumeHandler() {
+        return eventConsumeHandler;
+    }
+
+    public InflowMessageHandler getInflowMessageHandler() {
+        return inflowMessageHandler;
+    }
+
+    public OutflowMessageHandler getOutflowMessageHandler() {
+        return outflowMessageHandler;
+    }
+
+    public OutflowSecMessageHandler getOutflowSecMessageHandler() {
+        return outflowSecMessageHandler;
     }
 }

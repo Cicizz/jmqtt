@@ -15,25 +15,25 @@ public class Producer {
 
     public static void main(String[] args) throws MqttException, InterruptedException {
         MqttClient pubClient = getMqttClient();
-        for(int i = 0; i < 3; i++){
+        for (int i = 0; i < 3; i++) {
             MqttMessage mqttMessage = getMqttMessage();
-            pubClient.publish(topic,mqttMessage);
+            pubClient.publish(topic, mqttMessage);
             System.out.println("Send message success.");
         }
     }
 
-    private static MqttMessage getMqttMessage(){
+    private static MqttMessage getMqttMessage() {
         MqttMessage mqttMessage = new MqttMessage(content.getBytes());
         mqttMessage.setQos(qos);
         return mqttMessage;
     }
 
-    private static MqttClient getMqttClient(){
+    private static MqttClient getMqttClient() {
         try {
-            MqttClient pubClient = new MqttClient(broker,clientId,new MemoryPersistence());
+            MqttClient pubClient = new MqttClient(broker, clientId, new MemoryPersistence());
             MqttConnectOptions connectOptions = new MqttConnectOptions();
-            connectOptions.setWill("lwt","this is a will message".getBytes(),1,false);
-            connectOptions.setCleanSession(true);
+            connectOptions.setWill("lwt", "this is a will message".getBytes(), 1, false);
+            connectOptions.setCleanSession(false);
             System.out.println("Connecting to broker: " + broker);
             pubClient.connect(connectOptions);
             return pubClient;
