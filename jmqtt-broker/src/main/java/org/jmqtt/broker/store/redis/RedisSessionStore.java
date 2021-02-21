@@ -33,7 +33,11 @@ public class RedisSessionStore implements SessionStore {
 
     @Override
     public SessionState getSession(String clientId) {
-        return redisSupport.operate(jedis -> JSONObject.parseObject(jedis.get(RedisKeySupport.SESSION + clientId), SessionState.class));
+        SessionState sessionState = redisSupport.operate(jedis -> JSONObject.parseObject(jedis.get(RedisKeySupport.SESSION + clientId), SessionState.class));
+        if (sessionState == null) {
+            return new SessionState(SessionState.StateEnum.NULL);
+        }
+        return sessionState;
     }
 
     @Override
