@@ -23,19 +23,26 @@ public class RedisClusterEventHandler implements ClusterEventHandler {
     @Override
     public void start(BrokerConfig brokerConfig) {
         this.redisSupport = RedisUtils.getInstance().createSupport(brokerConfig);
-        this.redisSupport.operate(jedis -> {
-            new Thread(()->{
+
+        new Thread(() -> {
+            this.redisSupport.operate(jedis -> {
                 jedis.psubscribe(new JedisPubSub() {
                     @Override
-                    public void onMessage(String channel, String message) {
-                        if(!Objects.equals(INSTANCE_CHANNEL_ID,channel)) {
-                            eventConsumeHandler.consumeEvent(JSONObject.parseObject(message, Event.class));
+                    public void onPMessage(String pattern, String channel, String message) {
+                        try {
+                            if (!Objects.equals(INSTANCE_CHANNEL_ID, channel)) {
+                                eventConsumeHandler.consumeEvent(JSONObject.parseObject(message, Event.class));
+                            } else {
+                                eventConsumeHandler.consumeEvent(JSONObject.parseObject(message, Event.class));
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }
                 }, INSTANCE_CHANNEL_PATTERN);
-            }).start();
-            return true;
-        });
+                return true;
+            });
+        }).start();
     }
 
     @Override
@@ -45,7 +52,7 @@ public class RedisClusterEventHandler implements ClusterEventHandler {
 
     @Override
     public boolean sendEvent(Event event) {
-        redisSupport.operate(jedis -> jedis.publish(INSTANCE_CHANNEL_ID,JSONObject.toJSONString(event)));
+        redisSupport.operate(jedis -> jedis.publish(INSTANCE_CHANNEL_ID, JSONObject.toJSONString(event)));
         return true;
     }
 
