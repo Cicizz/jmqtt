@@ -8,12 +8,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * @program: jmqtt
- * @description:
- * @author: Mr.Liu
- * @create: 2021-02-12 21:42
- **/
+
 public class MemMessageStore extends AbstractMemStore implements MessageStore {
     /**
      * 遗嘱消息

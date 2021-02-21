@@ -1,36 +1,37 @@
 package org.jmqtt.broker.store.mem;
 
 import org.jmqtt.broker.common.config.BrokerConfig;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.Subscription;
 import org.jmqtt.broker.store.SessionState;
 import org.jmqtt.broker.store.SessionStore;
+import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
-/**
- * @program: jmqtt
- * @description:
- * @author: Mr.Liu
- * @create: 2021-02-12 21:42
- **/
+
 public class MemSessionStore extends AbstractMemStore implements SessionStore {
-    private static final Object o = new Object();
+    private static final Object OBJECT = new Object();
+    private static final Logger log = JmqttLogger.storeLog;
     /**
      * 离线消息
      */
-    private Map<String,/*clientId*/ BlockingQueue<Message>> offlineTable = new ConcurrentHashMap<>();
-    // 离线消息最大数量，暂未考虑设置
+    private final Map<String,/*clientId*/ BlockingQueue<Message>> offlineTable = new ConcurrentHashMap<>();
+    /**
+     * 离线消息警告阈值，超过当前数量的客户端会出警告
+     */
     private int msgMaxNum = 1000;
     /**
      * 过程消息
      */
-    private Map<String,/*clientId*/ ConcurrentHashMap<Integer,/*msgId*/Message>> recCache = new ConcurrentHashMap<>();
-    private Map<String,/*clientId*/ ConcurrentHashMap<Integer,/*msgId*/Message>> sendCache = new ConcurrentHashMap<>();
-    private Map<String,/*clientId*/ ConcurrentHashMap<Integer,/*msgId*/Object>> secTwoCache = new ConcurrentHashMap<>();
+    private final Map<String,/*clientId*/ ConcurrentHashMap<Integer,/*msgId*/Message>> recCache = new ConcurrentHashMap<>();
+    private final Map<String,/*clientId*/ ConcurrentHashMap<Integer,/*msgId*/Message>> sendCache = new ConcurrentHashMap<>();
+    private final Map<String,/*clientId*/ ConcurrentHashMap<Integer,/*msgId*/Object>> secTwoCache = new ConcurrentHashMap<>();
 
     /**
      * session
@@ -39,7 +40,7 @@ public class MemSessionStore extends AbstractMemStore implements SessionStore {
     /**
      * sub
      */
-    private Map<String, ConcurrentHashMap<String, Subscription>> subscriptionCache = new ConcurrentHashMap<>();
+    private final Map<String, ConcurrentHashMap<String, Subscription>> subscriptionCache = new ConcurrentHashMap<>();
 
     @Override
     public void start(BrokerConfig brokerConfig) {
@@ -67,26 +68,29 @@ public class MemSessionStore extends AbstractMemStore implements SessionStore {
         return true;
     }
 
-    // TODO 并发下会产生问题，参考其他代码，加二次校验锁
     @Override
     public boolean storeSubscription(String clientId, Subscription subscription) {
         ConcurrentHashMap<String, Subscription> v = subscriptionCache.get(clientId);
         if(v == null){
-            v = new ConcurrentHashMap<>();
-            v.put(subscription.getTopic(),subscription);
-            subscriptionCache.put(clientId,v);
-        }else{
-            v.put(subscription.getTopic(), subscription);
+            synchronized (subscriptionCache){
+                v = subscriptionCache.get(clientId);
+                if(v == null){
+                    v = new ConcurrentHashMap<>();
+                    subscriptionCache.put(clientId,v);
+                }
+            }
         }
+        v.put(subscription.getTopic(), subscription);
         return true;
     }
 
-    // TODO 非正常情况，打warn日志，例如过程消息，release消息时，发现不存在，需要打印出相关日志，日志用英文
     @Override
     public boolean delSubscription(String clientId, String topic) {
         ConcurrentHashMap<String, Subscription> v = subscriptionCache.get(clientId);
         if(v != null){
             v.remove(topic);
+        }else{
+            LogUtil.warn(log,"[MemStore] -> Client:{} does not have a subscription for this topic:{}",clientId,topic);
         }
         return true;
     }
@@ -111,12 +115,15 @@ public class MemSessionStore extends AbstractMemStore implements SessionStore {
     public boolean cacheInflowMsg(String clientId, Message message) {
         ConcurrentHashMap<Integer, Message> v =  recCache.get(clientId);
         if(v == null){
-            v = new ConcurrentHashMap<>();
-            v.put(message.getMsgId(),message);
-            recCache.put(clientId,v);
-        }else{
-            v.put(message.getMsgId(),message);
+            synchronized (recCache){
+                v = recCache.get(clientId);
+                if(v==null){
+                    v = new ConcurrentHashMap<>();
+                    recCache.put(clientId,v);
+                }
+            }
         }
+        v.put(message.getMsgId(),message);
         return true;
     }
 
@@ -124,6 +131,7 @@ public class MemSessionStore extends AbstractMemStore implements SessionStore {
     public Message releaseInflowMsg(String clientId, int msgId) {
         ConcurrentHashMap<Integer, Message> v =  recCache.get(clientId);
         if(v == null){
+            LogUtil.warn(log,"[MemStore] -> The inflow message:{} does not exist",msgId);
             return null;
         }
         return v.remove(msgId);
@@ -142,12 +150,15 @@ public class MemSessionStore extends AbstractMemStore implements SessionStore {
     public boolean cacheOutflowMsg(String clientId, Message message) {
         ConcurrentHashMap<Integer, Message> v =  sendCache.get(clientId);
         if(v == null){
-            v = new ConcurrentHashMap<>(16);
-            v.put(message.getMsgId(),message);
-            sendCache.put(clientId,v);
-        }else{
-            v.put(message.getMsgId(),message);
+            synchronized (sendCache){
+                v = sendCache.get(clientId);
+                if(v == null){
+                    v = new ConcurrentHashMap<>();
+                    sendCache.put(clientId,v);
+                }
+            }
         }
+        v.put(message.getMsgId(),message);
         return true;
     }
 
@@ -164,6 +175,7 @@ public class MemSessionStore extends AbstractMemStore implements SessionStore {
     public Message releaseOutflowMsg(String clientId, int msgId) {
         ConcurrentHashMap<Integer, Message> v =  sendCache.get(clientId);
         if(v == null){
+            LogUtil.warn(log,"[MemStore] -> The out of the stack message:{} does not exist",msgId);
             return null;
         }
         return v.remove(msgId);
@@ -173,22 +185,29 @@ public class MemSessionStore extends AbstractMemStore implements SessionStore {
     public boolean cacheOutflowSecMsgId(String clientId, int msgId) {
         ConcurrentHashMap<Integer,Object> v =  secTwoCache.get(clientId);
         if(v == null){
-            v = new ConcurrentHashMap<>();
-            v.put(msgId,o);
-            secTwoCache.put(clientId,v);
-        }else {
-            v.put(msgId,o);
+            synchronized (secTwoCache){
+                v = secTwoCache.get(clientId);
+                if(v == null){
+                    v = new ConcurrentHashMap<>();
+                    secTwoCache.put(clientId,v);
+                }
+            }
         }
+        v.put(msgId,OBJECT);
         return true;
     }
 
     @Override
     public boolean releaseOutflowSecMsgId(String clientId, int msgId) {
         ConcurrentHashMap<Integer,Object> v =  secTwoCache.get(clientId);
-        if(v == null || v.isEmpty()){
+        if(v == null){
+            LogUtil.warn(log,"[MemStore] -> The out flow QOS2 phase 2, client:{} outflow cache does not exist",clientId);
             return false;
         }
         Object os =  v.remove(msgId);
+        if(os == null){
+            LogUtil.warn(log,"[MemStore] -> The out flow QOS2 phase 2, msg:{} for client:{} does not exist",clientId,msgId);
+        }
         return os != null;
     }
 
@@ -209,12 +228,18 @@ public class MemSessionStore extends AbstractMemStore implements SessionStore {
     public boolean storeOfflineMsg(String clientId, Message message) {
         BlockingQueue<Message> off = offlineTable.get(clientId);
         if(off == null){
-            off = new LinkedBlockingQueue<>();
-            off.add(message);
-            offlineTable.put(clientId,off);
-        }else {
-            off.add(message);
+            synchronized (offlineTable){
+                off = offlineTable.get(clientId);
+                if(off == null){
+                    off = new LinkedBlockingQueue<>();
+                    offlineTable.put(clientId,off);
+                }
+            }
         }
+        off.add(message);
+//        if(off.size() > msgMaxNum){ //影响性能
+//            LogUtil.warn(log,"[MemStore] -> Client {} has more than {} offline messages",clientId,msgMaxNum);
+//        }
         return true;
     }
 
