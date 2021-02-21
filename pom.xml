@@ -12,6 +12,7 @@
         <module>jmqtt-broker</module>
         <module>jmqtt-example</module>
         <module>jmqtt-admin</module>
+        <module>jmqtt-acceptance</module>
     </modules>
 
     <name>jmqtt</name>
