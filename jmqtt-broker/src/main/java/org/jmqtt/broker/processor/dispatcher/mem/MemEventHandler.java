@@ -1,24 +1,27 @@
 package org.jmqtt.broker.processor.dispatcher.mem;
 
 import org.jmqtt.broker.common.config.BrokerConfig;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
 import org.jmqtt.broker.processor.dispatcher.EventConsumeHandler;
 import org.jmqtt.broker.processor.dispatcher.event.Event;
 import org.jmqtt.broker.store.mem.AbstractMemStore;
+import org.slf4j.Logger;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * TODO 基于内存的事件队列，最好控制下队列大小，在超过100000时，打warn日志，方便排查问题
- * @program: jmqtt
- * @description:
- * @author: Mr.Liu
- * @create: 2021-02-14 21:59
+ * 基于内存的事件队列
  **/
 public class MemEventHandler extends AbstractMemStore implements ClusterEventHandler {
+    private static final Logger log = JmqttLogger.eventLog;
     private ConcurrentLinkedDeque<Event> events = new ConcurrentLinkedDeque<Event>();
+    private AtomicLong size = new AtomicLong(0);
+
     @Override
     public void start(BrokerConfig brokerConfig) {
         super.start(brokerConfig);
@@ -31,6 +34,10 @@ public class MemEventHandler extends AbstractMemStore implements ClusterEventHan
 
     @Override
     public boolean sendEvent(Event event) {
+        long maxCap = 100000;
+        if (size.getAndAdd(1) > maxCap){
+            LogUtil.warn(log,"event queue capacity exceeds {}", maxCap);
+        }
         return events.offerLast(event);
     }
 
