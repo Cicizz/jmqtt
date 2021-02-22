@@ -53,7 +53,7 @@ public class MemMessageStore extends AbstractMemStore implements MessageStore {
     }
 
     @Override
-    public boolean clearRetaionMessage(String topic) {
+    public boolean clearRetainMessage(String topic) {
         retainTable.remove(topic);
         return true;
     }
