@@ -196,6 +196,13 @@ public class BrokerController {
             this.remotingServer.start();
         }
         LogUtil.info(log,"JMqtt Server start success and version = {}", brokerConfig.getVersion());
+
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            @Override
+            public void run() {
+                shutdown();
+            }
+        }));
     }
 
     public void shutdown() {
