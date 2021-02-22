@@ -37,7 +37,7 @@ public abstract class AbstractMessageProcessor extends HighPerformanceMessageHan
             String topic = (String) message.getHeader(MessageHeader.TOPIC);
             //qos == 0 or payload is none,then clear previous retain message
             if (qos == 0 || payload == null || payload.length == 0) {
-                this.messageStore.clearRetaionMessage(topic);
+                this.messageStore.clearRetainMessage(topic);
             } else {
                 this.messageStore.storeRetainMessage(topic, message);
             }
