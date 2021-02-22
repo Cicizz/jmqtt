@@ -40,7 +40,7 @@ public interface MessageStore {
     /**
      * 清理该topic的 retain消息
      */
-    boolean clearRetaionMessage(String topic);
+    boolean clearRetainMessage(String topic);
 
     /**
      * 获取所有retain消息

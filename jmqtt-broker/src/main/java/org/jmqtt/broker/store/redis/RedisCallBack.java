@@ -2,7 +2,7 @@ package org.jmqtt.broker.store.redis;
 
 import redis.clients.jedis.Jedis;
 
-public interface RedisCallBack {
+public interface RedisCallBack<T> {
 
-    <T> T operate(Jedis jedis);
+    T operate(Jedis jedis);
 }
