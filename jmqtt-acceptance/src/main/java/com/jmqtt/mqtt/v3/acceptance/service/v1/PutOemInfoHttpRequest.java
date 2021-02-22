@@ -3,6 +3,7 @@ package com.jmqtt.mqtt.v3.acceptance.service.v1;
 import com.jmqtt.mqtt.v3.acceptance.model.MqttDeviceInfo;
 import com.jmqtt.mqtt.v3.acceptance.util.CommonUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class PutOemInfoHttpRequest extends HttpRequest {
@@ -23,12 +24,11 @@ public class PutOemInfoHttpRequest extends HttpRequest {
 
     @Override
     public Map<String, String> getPayload() {
-        return Map.of(
-            "oem", super.mqttDeviceInfo.getOemId()
-            ,"oem_key", super.mqttDeviceInfo.getOemSecret()
-            ,"oem_model", super.mqttDeviceInfo.getOemModel()
-            ,"template_version", super.mqttDeviceInfo.getTemplateVersion()
-
-        );
+        HashMap<String, String> payLoad = new HashMap<>();
+        payLoad.put("oem", super.mqttDeviceInfo.getOemId());
+        payLoad.put("oem_key", super.mqttDeviceInfo.getOemSecret());
+        payLoad.put("oem_model", super.mqttDeviceInfo.getOemModel());
+        payLoad.put("template_version", super.mqttDeviceInfo.getTemplateVersion());
+        return payLoad;
     }
 }

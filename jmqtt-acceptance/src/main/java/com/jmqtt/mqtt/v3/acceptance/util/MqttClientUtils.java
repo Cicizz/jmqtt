@@ -12,7 +12,8 @@ import com.hivemq.client.mqtt.mqtt5.exceptions.Mqtt5SubAckException;
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5PublishResult;
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.suback.Mqtt5SubAck;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -20,8 +21,8 @@ import java.util.function.Consumer;
 /***
  * Provide the utilities for the common used consumer, supplier...etc
  */
-@Slf4j
 public class MqttClientUtils {
+    public static final Logger log = LoggerFactory.getLogger(MqttClientUtils.class);
 
     public static Mqtt5SubAck subscribeMessage(Mqtt5Client subscriber,String topicFilter, MqttQos qos, Consumer<Mqtt5Publish> callback){
         return subscriber.toAsync()

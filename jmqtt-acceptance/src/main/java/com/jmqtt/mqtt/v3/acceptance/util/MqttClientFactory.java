@@ -5,11 +5,10 @@ import com.hivemq.client.mqtt.mqtt3.Mqtt3Client;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3ClientBuilder;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5ClientBuilder;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
 
-@Slf4j
+
 public class MqttClientFactory {
 
     protected MqttServer mqttServer;
@@ -93,4 +92,7 @@ public class MqttClientFactory {
         return UUID.randomUUID().toString();
     }
 
+    public void setMqttServer(MqttServer mqttServer) {
+        this.mqttServer = mqttServer;
+    }
 }

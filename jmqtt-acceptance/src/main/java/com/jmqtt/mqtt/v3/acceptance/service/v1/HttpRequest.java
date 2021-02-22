@@ -2,14 +2,17 @@ package com.jmqtt.mqtt.v3.acceptance.service.v1;
 
 import com.jmqtt.mqtt.v3.acceptance.model.MqttDeviceInfo;
 import com.jmqtt.mqtt.v3.acceptance.util.JSONUtil;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-@Slf4j
+
 public abstract class HttpRequest {
+
+    Logger log = LoggerFactory.getLogger(HttpRequest.class);
 
     public HttpRequest(String urlPattern, String method, MqttDeviceInfo mqttDeviceInfo) {
         this.urlPattern = urlPattern;

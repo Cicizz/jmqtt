@@ -13,9 +13,8 @@ import com.jmqtt.mqtt.v3.acceptance.util.MqttV1ClientFactory;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient;
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,10 +22,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-@Slf4j
-@Getter
-@Setter
 public class MqttV1Device {
+
+    Logger log = LoggerFactory.getLogger(MqttV1Device.class);
 
     private MqttDeviceInfo mqttDeviceInfo;
 

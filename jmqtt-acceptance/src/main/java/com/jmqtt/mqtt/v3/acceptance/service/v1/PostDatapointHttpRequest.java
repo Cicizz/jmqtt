@@ -3,6 +3,7 @@ package com.jmqtt.mqtt.v3.acceptance.service.v1;
 import com.jmqtt.mqtt.v3.acceptance.model.MqttDeviceInfo;
 import com.jmqtt.mqtt.v3.acceptance.util.CommonUtils;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,10 +36,7 @@ public class PostDatapointHttpRequest extends HttpRequest {
         if(metadata == null){
             datapoint.put("metadata", metadata);
         }
-
-        return Map.of(
-            "datapoint", datapoint
-        );
+        return Collections.singletonMap("datapoint", datapoint);
     }
 
     public String getName() {
