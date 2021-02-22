@@ -1,13 +1,13 @@
 package com.jmqtt.mqtt.v3.acceptance.model;
 
 import com.jmqtt.mqtt.v3.acceptance.util.AuthenticationUtil;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
-@Data
 public class MqttDeviceInfo {
+
+    Logger log = LoggerFactory.getLogger(MqttDeviceInfo.class);
 
     private String dsn;
 
@@ -32,6 +32,93 @@ public class MqttDeviceInfo {
     private String authProof;
     private String oemSecret;
 
+    public Logger getLog() {
+        return log;
+    }
+
+    public void setLog(Logger log) {
+        this.log = log;
+    }
+
+    public String getDsn() {
+        return dsn;
+    }
+
+    public void setDsn(String dsn) {
+        this.dsn = dsn;
+    }
+
+    public String getPubicKey() {
+        return pubicKey;
+    }
+
+    public void setPubicKey(String pubicKey) {
+        this.pubicKey = pubicKey;
+    }
+
+    public String getOemId() {
+        return oemId;
+    }
+
+    public void setOemId(String oemId) {
+        this.oemId = oemId;
+    }
+
+    public String getOemKey() {
+        return oemKey;
+    }
+
+    public void setOemKey(String oemKey) {
+        this.oemKey = oemKey;
+    }
+
+    public String getOemModel() {
+        return oemModel;
+    }
+
+    public void setOemModel(String oemModel) {
+        this.oemModel = oemModel;
+    }
+
+    public String getTemplateVersion() {
+        return templateVersion;
+    }
+
+    public void setTemplateVersion(String templateVersion) {
+        this.templateVersion = templateVersion;
+    }
+
+    public String getAuthToken() {
+        return authToken;
+    }
+
+    public void setAuthToken(String authToken) {
+        this.authToken = authToken;
+    }
+
+    public Integer getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(Integer deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public String getAuthProof() {
+        return authProof;
+    }
+
+    public void setAuthProof(String authProof) {
+        this.authProof = authProof;
+    }
+
+    public String getOemSecret() {
+        return oemSecret;
+    }
+
+    public void setOemSecret(String oemSecret) {
+        this.oemSecret = oemSecret;
+    }
 
     public static Builder builder(){
         return new Builder();

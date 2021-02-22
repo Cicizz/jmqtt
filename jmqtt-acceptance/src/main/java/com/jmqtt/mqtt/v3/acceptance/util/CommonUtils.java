@@ -1,6 +1,6 @@
 package com.jmqtt.mqtt.v3.acceptance.util;
 
-import lombok.extern.slf4j.Slf4j;
+
 import org.slf4j.helpers.MessageFormatter;
 import org.springframework.util.CollectionUtils;
 
@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
 public final class CommonUtils {
 
     private static final char SPLIT_CHAR = ',';

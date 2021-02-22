@@ -3,7 +3,6 @@ package com.jmqtt.mqtt.v3.acceptance.util;
 import com.jmqtt.mqtt.v3.acceptance.model.MqttServer;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import com.hivemq.client.mqtt.mqtt5.message.auth.Mqtt5SimpleAuth;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +23,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
-@Slf4j
+
 public class MqttAclClientFactory extends MqttClientFactory{
 
     private static final Logger logger = LoggerFactory.getLogger(MqttAclClientFactory.class);

@@ -1,14 +1,11 @@
 package com.jmqtt.mqtt.v3.acceptance.constant;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PostConstruct;
 
-@Getter
-@Setter
+
 @Configuration
 @ConfigurationProperties(prefix="device.v1")
 public class MqttV1ClientConstant {
@@ -58,6 +55,35 @@ public class MqttV1ClientConstant {
         }
     }
 
+    public String getProofUserName() {
+        return proofUserName;
+    }
 
+    public void setProofUserName(String proofUserName) {
+        this.proofUserName = proofUserName;
+    }
 
+    public String getPublishTopic() {
+        return publishTopic;
+    }
+
+    public void setPublishTopic(String publishTopic) {
+        this.publishTopic = publishTopic;
+    }
+
+    public String getSubscribeTopicFilter() {
+        return subscribeTopicFilter;
+    }
+
+    public void setSubscribeTopicFilter(String subscribeTopicFilter) {
+        this.subscribeTopicFilter = subscribeTopicFilter;
+    }
+
+    public static int getIdPrefixOffset() {
+        return ID_PREFIX_OFFSET;
+    }
+
+    public static void setIdPrefixOffset(int idPrefixOffset) {
+        ID_PREFIX_OFFSET = idPrefixOffset;
+    }
 }
