@@ -39,10 +39,8 @@ class ClearSessionTest extends AbstractMqtt3Specification{
             def checkPoint = new AtomicInteger(0)
         when:
             publisher.connectWith()
-                    .sessionExpiryInterval(30)
                     .send().join()
             subscriber.connectWith()
-                    .sessionExpiryInterval(30)
                     .send().join()
 
             subscribeMessage(subscriber, topic, qos, {
