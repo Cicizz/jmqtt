@@ -31,8 +31,6 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
     public DefaultSubscriptionTreeMatcher() {
     }
 
-    ;
-
     @Override
     public boolean subscribe(Subscription subscription) {
         try {

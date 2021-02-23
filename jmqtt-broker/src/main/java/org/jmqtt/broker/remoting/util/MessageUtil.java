@@ -81,6 +81,12 @@ public class MessageUtil {
         return mqttMessage;
     }
 
+    public static MqttMessage getPubRecMessage(int messageId,boolean isDup){
+        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBREC,isDup,MqttQoS.AT_MOST_ONCE,false,0);
+        MqttMessage mqttMessage = new MqttMessage(fixedHeader,MqttMessageIdVariableHeader.from(messageId));
+        return mqttMessage;
+    }
+
     public static MqttPubAckMessage getPubAckMessage(int messageId){
         MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBACK,false,MqttQoS.AT_MOST_ONCE,false,0);
         MqttMessageIdVariableHeader idVariableHeader = MqttMessageIdVariableHeader.from(messageId);
