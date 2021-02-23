@@ -15,9 +15,19 @@
 ## 快速开始
 1. 下载 [release](https://github.com/Cicizz/jmqtt/releases)(3.x以上版本) 或`clone`本项目
 2. 在根目录执行：`mvn -Ppackage-all -DskipTests clean install -U`
-3. 配置响应的配置文件:`/jmqtt-broker/resources/conf`目录下
+3. 配置配置文件并初始化db的sql:`/jmqtt-broker/resources/conf`目录下
 4. 执行启动命令：`java -jar jmqtt-broker-3.0.0.jar -h ${conf文件目录}` -h后是配置文件目录，里面需要包含jmqtt.properties和log4j2.xml等配置文件
 
+## 线上试用
+服务器地址：81.69.46.38
+
+tcp端口：1883
+
+websocket端口：8883
+
+ssl端口：1884
+
+wss端口：8884
 
 ## 技术交流群
 

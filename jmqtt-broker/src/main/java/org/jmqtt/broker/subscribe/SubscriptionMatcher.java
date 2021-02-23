@@ -24,8 +24,11 @@ public interface SubscriptionMatcher {
 
     /**
      * 获取匹配该topic下的所有订阅者
+     * @param topic
+     * @param clientId
+     * @return
      */
-    Set<Subscription> match(String topic);
+    Set<Subscription> match(String topic, String clientId);
 
     /**
      * 发布消息的Topic与订阅的topic是否匹配

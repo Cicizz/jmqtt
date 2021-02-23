@@ -67,7 +67,7 @@ public class RDBMessageStore extends AbstractDBStore implements MessageStore {
     }
 
     @Override
-    public boolean clearRetaionMessage(String topic) {
+    public boolean clearRetainMessage(String topic) {
         operate(sqlSession -> getMapper(sqlSession,retainMessageMapperClass).delRetainMessage(topic));
         return true;
     }
