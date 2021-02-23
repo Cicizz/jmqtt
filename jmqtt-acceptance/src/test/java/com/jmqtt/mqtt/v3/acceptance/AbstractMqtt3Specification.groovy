@@ -57,19 +57,18 @@ class AbstractMqtt3Specification extends Specification{
         sleep(100)
     }
 
-    protected void connectWithSessionExpiry(Mqtt3AsyncClient client, Integer sessionExpiryInSecond, boolean clearStart = true){
+    protected void connectWithClearSession(Mqtt3AsyncClient client, boolean clearSession = true){
         client.connectWith()
-                .sessionExpiryInterval(sessionExpiryInSecond)
-                .cleanStart(clearStart)
+                .cleanSession(clearSession)
                 .send().join()
         sleep(100)
     }
 
-    protected void reconnect(Mqtt3AsyncClient client, boolean clearStart = true){
+    protected void reconnect(Mqtt3AsyncClient client, boolean clearSession = true){
         client.disconnect().join()
         sleep(100)
         client.connectWith()
-                .cleanStart(clearStart)
+                .cleanSession(clearSession)
                 .send()
                 .whenComplete(MqttClientUtils.getDefaultPublishWhenCompleteConsumer())
                 .join()

@@ -222,8 +222,8 @@ class RetainFlagTest extends AbstractMqtt3Specification{
         and:
             def subscriberCheckPoint = new AtomicInteger(0)
         when:
-            connectWithSessionExpiry(publisher, 30)
-            connectWithSessionExpiry(subscriber, 30)
+            connectWithClearSession(publisher, 30)
+            connectWithClearSession(subscriber, 30)
 
             subscribeMessage(subscriber, "UP/" + topic, qos, { Mqtt3Publish pub ->
                 subscriberCheckPoint.addAndGet(1)
@@ -234,7 +234,7 @@ class RetainFlagTest extends AbstractMqtt3Specification{
             publishRetainedMessage(publisher, "UP/" + topic, qos, message)
             publishRetainedMessage(publisher, "UP/" + topic, qos, newMessage)
 
-            connectWithSessionExpiry(subscriber, 30, false)
+            connectWithClearSession(subscriber, 30, false)
 
 
             disconnectAndClearSession(publisher, subscriber)

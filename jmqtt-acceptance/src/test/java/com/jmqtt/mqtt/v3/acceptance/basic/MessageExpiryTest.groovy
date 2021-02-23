@@ -35,8 +35,8 @@ class MessageExpiryTest extends AbstractMqtt3Specification{
             def publisher = basicClientFactory.createMqtt3Client().toAsync()
             def checkPoint = new AtomicInteger(0)
         when:
-            connectWithSessionExpiry(publisher, 30)
-            connectWithSessionExpiry(subscriber, 30)
+            connectWithClearSession(publisher)
+            connectWithClearSession(subscriber)
 
             subscribeMessage(subscriber, topic, qos, {
                 pub ->
@@ -48,7 +48,7 @@ class MessageExpiryTest extends AbstractMqtt3Specification{
             sleep(100)
             publishMessage(publisher, "UP/" + topic, qos, message, 2)
             sleep(3000)
-            subscriber.connectWith().cleanStart(false).send().join()
+            subscriber.connectWith().cleanSession(false).send().join()
 
             disconnectAndClearSession(publisher, subscriber)
 
