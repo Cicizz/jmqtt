@@ -103,17 +103,17 @@ public class ReSendMessageService extends HighPerformanceMessageHandler {
         @Override
         public Boolean call() {
 
-            // 入栈报文：未处理的pubRel报文
-            Collection<Message> waitPubRelMsgs = getAllInflowMsg(clientId);
-            if (!MixAll.isEmpty(waitPubRelMsgs)) {
-                for (Message waitPubRelMsg : waitPubRelMsgs) {
-                    if (!dispatcherMessage(clientId, waitPubRelMsg, new Build() {
+            // 入栈报文：未处理的pubRec报文
+            Collection<Message> waitPubRecMsgs = getAllInflowMsg(clientId);
+            if (!MixAll.isEmpty(waitPubRecMsgs)) {
+                for (Message waitPubRecMsg : waitPubRecMsgs) {
+                    if (!dispatcherMessage(clientId, waitPubRecMsg, new Build() {
                         @Override
                         public MqttMessage buildMqttMessage(Message message) {
-                            return MessageUtil.getPubRelMessage(message.getMsgId());
+                            return MessageUtil.getPubRecMessage(message.getMsgId(),true);
                         }
                     })) {
-                        LogUtil.warn(log,"ReSendMessageService resend inflow error,{}",waitPubRelMsg);
+                        LogUtil.warn(log,"ReSendMessageService resend inflow error,{}",waitPubRecMsg);
                     }
                 }
             }
@@ -123,9 +123,6 @@ public class ReSendMessageService extends HighPerformanceMessageHandler {
                 public MqttMessage buildMqttMessage(Message message) {
                     int qos = (int) message.getHeader(MessageHeader.QOS);
                     int messageId = message.getMsgId();
-                    if (qos > 0) {
-                        cacheInflowMsg(clientId, message);
-                    }
                     return MessageUtil.getPubMessage(message, false, qos, messageId);
                 }
             };
