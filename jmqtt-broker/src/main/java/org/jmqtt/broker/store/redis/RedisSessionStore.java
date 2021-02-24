@@ -136,6 +136,7 @@ public class RedisSessionStore implements SessionStore {
 
     @Override
     public boolean clearOfflineMsg(String clientId) {
-        return RedisReplyUtils.isOk(redisSupport.operate(jedis -> jedis.del(RedisKeySupport.OFFLINE + clientId)));
+        redisSupport.operate(jedis -> jedis.del(RedisKeySupport.OFFLINE + clientId));
+        return true;
     }
 }
