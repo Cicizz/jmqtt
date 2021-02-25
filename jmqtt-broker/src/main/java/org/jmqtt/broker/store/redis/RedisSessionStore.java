@@ -77,7 +77,9 @@ public class RedisSessionStore implements SessionStore {
 
     @Override
     public Message releaseInflowMsg(String clientId, int msgId) {
-        return JSONObject.parseObject(redisSupport.operate(jedis -> jedis.hdel(RedisKeySupport.REC_FLOW_MESSAGE, String.valueOf(msgId))), Message.class);
+        Message message = JSONObject.parseObject(redisSupport.operate(jedis -> jedis.hget(RedisKeySupport.REC_FLOW_MESSAGE, String.valueOf(msgId))), Message.class);
+        redisSupport.operate(jedis -> jedis.del(RedisKeySupport.REC_FLOW_MESSAGE, String.valueOf(msgId)));
+        return message;
     }
 
     @Override
