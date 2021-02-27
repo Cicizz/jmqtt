@@ -9,9 +9,6 @@ import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.config.NettyConfig;
 import org.jmqtt.broker.common.helper.MixAll;
-import org.jmqtt.starter.properties.BrokerProperties;
-import org.jmqtt.starter.properties.NettyProperties;
-import org.springframework.beans.BeanUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -24,24 +21,28 @@ import java.util.Properties;
 
 public class BrokerStartupService {
 
-	private BrokerProperties brokerProperties;
-	private NettyProperties nettyProperties;
+	private BrokerConfig brokerConfig;
+	private NettyConfig nettyConfig;
 
-	public BrokerStartupService(BrokerProperties brokerProperties,
-			NettyProperties nettyProperties) {
-		this.brokerProperties = brokerProperties;
-		this.nettyProperties = nettyProperties;
+	public BrokerStartupService() {
+		super();
 	}
 
-	private static void initConfig(String jmqttConfigPath, BrokerProperties brokerProperties,
-			NettyProperties nettyProperties) {
+	public BrokerStartupService(BrokerConfig brokerConfig,
+			NettyConfig nettyConfig) {
+		this.brokerConfig = brokerConfig;
+		this.nettyConfig = nettyConfig;
+	}
+
+	private static void initConfig(String jmqttConfigPath, BrokerConfig brokerConfig,
+			NettyConfig nettyConfig) {
 		Properties properties = new Properties();
 		BufferedReader bufferedReader = null;
 		try {
 			bufferedReader = new BufferedReader(new FileReader(jmqttConfigPath));
 			properties.load(bufferedReader);
-			MixAll.properties2POJO(properties, brokerProperties);
-			MixAll.properties2POJO(properties, nettyProperties);
+			MixAll.properties2POJO(properties, brokerConfig);
+			MixAll.properties2POJO(properties, nettyConfig);
 		} catch (FileNotFoundException e) {
 			System.out.println("jmqtt.properties cannot find,cause + " + e + ",path:" + jmqttConfigPath);
 		} catch (IOException e) {
@@ -59,15 +60,15 @@ public class BrokerStartupService {
 
 	public BrokerController getBrokerController() {
 		String jmqttConfigPath =
-				brokerProperties.getJmqttHome() + File.separator + "conf" + File.separator + "jmqtt.properties";
-		initConfig(jmqttConfigPath, brokerProperties, nettyProperties);
+				brokerConfig.getJmqttHome() + File.separator + "conf" + File.separator + "jmqtt.properties";
+		initConfig(jmqttConfigPath, brokerConfig, nettyConfig);
 		try {
 			LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
-			File file = new File(brokerProperties.getJmqttHome() + File.separator + "conf" + File.separator + "log4j2.xml");
+			File file = new File(brokerConfig.getJmqttHome() + File.separator + "conf" + File.separator + "log4j2.xml");
 			context.setConfigLocation(file.toURI());
 			Configuration configuration = context.getConfiguration();
 			Map<String, LoggerConfig> loggerConfigMap = configuration.getLoggers();
-			Level newLevel = Level.getLevel(brokerProperties.getLogLevel());
+			Level newLevel = Level.getLevel(brokerConfig.getLogLevel());
 			if (newLevel == null) {
 				newLevel = Level.INFO;
 			}
@@ -78,10 +79,6 @@ public class BrokerStartupService {
 		} catch (Exception ex) {
 			System.err.print("Log4j2 load error,ex:" + ex);
 		}
-		BrokerConfig brokerConfig = new BrokerConfig();
-		NettyConfig nettyConfig = new NettyConfig();
-		BeanUtils.copyProperties(brokerProperties, brokerConfig);
-		BeanUtils.copyProperties(nettyProperties, nettyConfig);
 		return new BrokerController(brokerConfig, nettyConfig);
 	}
 }
