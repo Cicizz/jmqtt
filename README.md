@@ -8,6 +8,10 @@
 * Support data persistence and clustering based on MySQL
 * Support friendly secondary development, plug-in development: cluster / storage / device connection, publish subscribe authentication
 * Support tcp, websocket, SSL, WSS
+* Support cluster based on redis
+* Support embedded start use memory but not support cluster
+* Support sprint-boot-jmqtt-starter
+* Support test cases
 
 ## Official documents
 [Official documents](http://www.mangdagou.com/)
