@@ -122,11 +122,10 @@ public class ReSendMessageService extends HighPerformanceMessageHandler {
                 @Override
                 public MqttMessage buildMqttMessage(Message message) {
                     int qos = (int) message.getHeader(MessageHeader.QOS);
-                    int messageId = message.getMsgId();
                     if (qos > 0) {
                         cacheInflowMsg(clientId, message);
                     }
-                    return MessageUtil.getPubMessage(message, false, qos, messageId);
+                    return MessageUtil.getPubMessage(message, false);
                 }
             };
 

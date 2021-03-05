@@ -22,7 +22,7 @@ public class Message {
 
     private long storeTime;
 
-    public Message(){};
+    public Message(){}
 
     public Message(Type type,Map<String,Object> headers,byte[] payload){
         this.type = type;
@@ -35,7 +35,7 @@ public class Message {
             headers = new HashMap<>();
         }
         return headers.put(key,value);
-    };
+    }
 
 
     public Object removeHeader(String key){
