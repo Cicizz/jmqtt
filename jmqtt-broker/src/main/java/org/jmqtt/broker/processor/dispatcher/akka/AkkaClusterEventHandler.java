@@ -8,14 +8,14 @@ import akka.actor.typed.pubsub.Topic;
 import akka.actor.typed.pubsub.Topic.Command;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import java.util.List;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.log.JmqttLogger;
-import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
 import org.jmqtt.broker.processor.dispatcher.EventConsumeHandler;
 import org.jmqtt.broker.processor.dispatcher.event.Event;
 import org.slf4j.Logger;
+
+import java.util.List;
 
 public class AkkaClusterEventHandler implements ClusterEventHandler {
 

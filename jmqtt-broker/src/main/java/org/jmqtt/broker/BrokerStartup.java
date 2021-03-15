@@ -50,7 +50,7 @@ public class BrokerStartup {
         if(StringUtils.isEmpty(jmqttHome)){
             throw new Exception("please set JMQTT_HOME.");
         }
-        String jmqttConfigPath = jmqttHome + File.separator + "conf" + File.separator + "jmqtt2.properties";
+        String jmqttConfigPath = jmqttHome + File.separator + "conf" + File.separator + "jmqtt.properties";
         initConfig(jmqttConfigPath,brokerConfig,nettyConfig);
 
         // 日志配置加载

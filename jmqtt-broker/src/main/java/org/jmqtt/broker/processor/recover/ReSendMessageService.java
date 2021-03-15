@@ -123,7 +123,7 @@ public class ReSendMessageService extends HighPerformanceMessageHandler {
                 public MqttMessage buildMqttMessage(Message message) {
                     int qos = (int) message.getHeader(MessageHeader.QOS);
                     int messageId = message.getMsgId();
-                    return MessageUtil.getPubMessage(message, false, qos, messageId);
+                    return MessageUtil.getPubMessage(message, false);
                 }
             };
 
