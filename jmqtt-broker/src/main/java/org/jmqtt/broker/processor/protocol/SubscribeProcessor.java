@@ -129,7 +129,8 @@ public class SubscribeProcessor implements RequestProcessor {
             if(qos > 0){
                 sessionStore.cacheInflowMsg(clientSession.getClientId(),message);
             }
-            MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message,false,qos,clientSession.generateMessageId());
+            message.setMsgId(clientSession.generateMessageId());
+            MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message,false);
             clientSession.getCtx().writeAndFlush(publishMessage);
         }
     }

@@ -44,9 +44,9 @@ public class MessageUtil {
         return new MqttMessage(fixedHeader,idVariableHeader);
     }
 
-    public static MqttPublishMessage getPubMessage(Message message, boolean dup, int qos, int messageId){
-        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH,dup,MqttQoS.valueOf(qos),false,0);
-        MqttPublishVariableHeader publishVariableHeader = new MqttPublishVariableHeader((String) message.getHeader(MessageHeader.TOPIC),messageId);
+    public static MqttPublishMessage getPubMessage(Message message, boolean dup){
+        MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PUBLISH,dup,MqttQoS.valueOf((int)message.getHeader(MessageHeader.QOS)),false,0);
+        MqttPublishVariableHeader publishVariableHeader = new MqttPublishVariableHeader((String) message.getHeader(MessageHeader.TOPIC),message.getMsgId());
         ByteBuf heapBuf;
         if(message.getPayload() == null){
             heapBuf = Unpooled.EMPTY_BUFFER;

@@ -13,7 +13,6 @@ import org.jmqtt.broker.remoting.session.ConnectManager;
 import org.jmqtt.broker.store.SessionStore;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Set;
