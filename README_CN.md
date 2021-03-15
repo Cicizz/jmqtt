@@ -34,5 +34,10 @@ ssl端口：1884
 wss端口：8884
 
 ## 技术交流群
+欢迎小伙伴们给个star并使用。
 
 ![jmqtt技术交流群](jmqtt_qq.png)
+## 微信公众号
+关注我，一起学习成长
+
+![vx_mangdagou](vx_mangdagou.jpg)
