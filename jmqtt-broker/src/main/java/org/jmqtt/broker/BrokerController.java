@@ -150,8 +150,8 @@ public class BrokerController {
         this.messageStore.start(brokerConfig);
 
         // 2. start cluster
-        this.clusterEventHandler.start(brokerConfig);
         this.eventConsumeHandler.start();
+        this.clusterEventHandler.start(brokerConfig);
 
         // 3. start message service
         if (this.innerMessageDispatcher != null) {
@@ -196,6 +196,13 @@ public class BrokerController {
             this.remotingServer.start();
         }
         LogUtil.info(log,"JMqtt Server start success and version = {}", brokerConfig.getVersion());
+
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            @Override
+            public void run() {
+                shutdown();
+            }
+        }));
     }
 
     public void shutdown() {

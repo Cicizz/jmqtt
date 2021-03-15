@@ -119,8 +119,8 @@ public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler
                         Set<Subscription> subscriptions = subscriptionMatcher.match((String) message.getHeader(MessageHeader.TOPIC),message.getClientId());
                         for (Subscription subscription : subscriptions) {
                             String clientId = subscription.getClientId();
-                            ClientSession clientSession = ConnectManager.getInstance().getClient(subscription.getClientId());
                             if (ConnectManager.getInstance().containClient(clientId)) {
+                                ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
                                 int qos = MessageUtil.getMinQos((int) message.getHeader(MessageHeader.QOS), subscription.getQos());
                                 int messageId = clientSession.generateMessageId();
                                 message.putHeader(MessageHeader.QOS, qos);
@@ -128,7 +128,7 @@ public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler
                                 if (qos > 0) {
                                     cacheOutflowMsg(clientId, message);
                                 }
-                                MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message, false, qos, messageId);
+                                MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message, false);
                                 clientSession.getCtx().writeAndFlush(publishMessage);
                             } else {
                                 sessionStore.storeOfflineMsg(clientId, message);

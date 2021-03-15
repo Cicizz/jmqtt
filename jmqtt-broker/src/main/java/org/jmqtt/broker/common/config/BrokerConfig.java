@@ -14,8 +14,6 @@ public class BrokerConfig {
 
     private int pollThreadNum = Runtime.getRuntime().availableProcessors() * 2;
 
-    /* 集群模式：1.基于发布订阅，集群主动push消息给Jmqtt; 2.基于poll，jmqtt主动从集群拉消息 */
-    private int clusterMode      = 1;
     // 采用拉消息方式时，一次最多拉的消息数目
     private int maxPollEventNum  = 10;
     private int pollWaitInterval = 10;//ms
@@ -39,7 +37,7 @@ public class BrokerConfig {
     /* db相关配置 */
     private String driver   = "com.mysql.jdbc.Driver";
     private String url
-                            = "jdbc:mysql://localhost:3306/game?characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false"
+                            = "jdbc:mysql://localhost:3306/jmqtt?characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false"
             + "&maxReconnects=10&useSSL=false";
     private String username = "root";
     private String password = "123456";
@@ -233,14 +231,6 @@ public class BrokerConfig {
 
     public void setPollWaitInterval(int pollWaitInterval) {
         this.pollWaitInterval = pollWaitInterval;
-    }
-
-    public int getClusterMode() {
-        return clusterMode;
-    }
-
-    public void setClusterMode(int clusterMode) {
-        this.clusterMode = clusterMode;
     }
 
     public String getLogLevel() {

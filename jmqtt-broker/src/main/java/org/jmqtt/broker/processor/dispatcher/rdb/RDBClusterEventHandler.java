@@ -1,5 +1,6 @@
 package org.jmqtt.broker.processor.dispatcher.rdb;
 
+import org.apache.ibatis.session.SqlSession;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.helper.MixAll;
 import org.jmqtt.broker.common.log.JmqttLogger;
@@ -8,6 +9,7 @@ import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
 import org.jmqtt.broker.processor.dispatcher.EventConsumeHandler;
 import org.jmqtt.broker.processor.dispatcher.event.Event;
 import org.jmqtt.broker.store.rdb.AbstractDBStore;
+import org.jmqtt.broker.store.rdb.DBCallback;
 import org.jmqtt.broker.store.rdb.daoobject.EventDO;
 import org.slf4j.Logger;
 
@@ -25,7 +27,12 @@ public class RDBClusterEventHandler extends AbstractDBStore implements ClusterEv
     @Override
     public void start(BrokerConfig brokerConfig) {
         super.start(brokerConfig);
-        Long maxId = (Long) operate(sqlSession -> getMapper(sqlSession,eventMapperClass).getMaxOffset());
+        Long maxId = (Long) operate(new DBCallback() {
+            @Override
+            public Object operate(SqlSession sqlSession) {
+                return getMapper(sqlSession,eventMapperClass).getMaxOffset();
+            }
+        });
         if (maxId == null) {
             offset.set(0);
         } else {
