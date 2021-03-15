@@ -150,8 +150,8 @@ public class BrokerController {
         this.messageStore.start(brokerConfig);
 
         // 2. start cluster
-        this.clusterEventHandler.start(brokerConfig);
         this.eventConsumeHandler.start();
+        this.clusterEventHandler.start(brokerConfig);
 
         // 3. start message service
         if (this.innerMessageDispatcher != null) {
