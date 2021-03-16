@@ -30,7 +30,7 @@ public class AkkaClusterEventHandler implements ClusterEventHandler {
 
     @Override
     public void start(BrokerConfig brokerConfig) {
-        Config config = ConfigFactory.load("akka2");
+        Config config = ConfigFactory.load("akka");
         // Create an Akka system
         Behavior<Void> initBehavior = Behaviors.setup(
             context -> {
