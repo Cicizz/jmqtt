@@ -1,46 +1,45 @@
 package org.jmqtt.broker.akka;
 
-import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.pubsub.Topic;
-import akka.actor.typed.pubsub.Topic.Command;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import java.sql.Time;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
-import org.jmqtt.broker.processor.dispatcher.event.Event;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AkkaMain {
 
     public static void main(String[] args) {
+        if (args.length == 0) {
+            startup(25251);
+            startup(25252);
+            startup(0);
+        } else
+            Arrays.stream(args).map(Integer::parseInt).forEach(AkkaMain::startup);
+    }
 
-        Config config = ConfigFactory.load("akka");
+    private static Behavior<Void> rootBehavior() {
+        return Behaviors.setup(context -> {
+
+            // Create an actor that handles cluster domain events
+            context.spawn(ClusterListener.create(), "ClusterListener");
+
+            return Behaviors.empty();
+        });
+    }
+
+    private static void startup(int port) {
+        // Override the configuration of the port
+        // Override the configuration of the port
+        Map<String, Object> overrides = new HashMap<>();
+        overrides.put("akka.remote.artery.canonical.port", port);
+
+        Config config = ConfigFactory.parseMap(overrides)
+            .withFallback(ConfigFactory.load());
+
         // Create an Akka system
-        Behavior<Void> initBehavior = Behaviors.setup(
-            context -> {
-                ActorRef<Command<Event>> topic =
-                    context.spawn(Topic.create(Event.class, "jmqtt-event"), "JMqttEvent");
-                ActorRef<Event> pubSub = context
-                    .spawn(PubSubExample.create(new ConsumerExample()), "JMqttPubSub");
-
-                topic.tell(Topic.subscribe(pubSub));
-
-                for (int i = 0; i < 10; i++) {
-                    TimeUnit.SECONDS.sleep(3);
-                    Event event = new Event(new Random().nextInt(),
-                        "xxx" + new Random().nextLong(),
-                        new Random().nextLong(), "");
-                    System.out.println("begin publish " + event);
-                    topic.tell(Topic.publish(event));
-                }
-
-                return Behaviors.empty();
-            });
-
-        ActorSystem
-            .create(initBehavior, "JMqttDispatcherSystem", config);
+        ActorSystem<Void> system = ActorSystem.create(rootBehavior(), "ClusterSystem", config);
     }
 }

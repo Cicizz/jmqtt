@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * cluster event model
  */
-public class Event implements Serializable {
+public class Event implements Serializable, AkkaDefaultSerializable {
 
     private static final long serialVersionUID = -12893791131231231L;
 

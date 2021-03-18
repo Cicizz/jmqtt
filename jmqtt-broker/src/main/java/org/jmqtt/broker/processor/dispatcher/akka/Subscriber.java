@@ -24,7 +24,9 @@ public class Subscriber extends AbstractBehavior<Event> {
     }
 
     public static Behavior<Event> create(EventConsumeHandler eventConsumeHandler) {
-        return Behaviors.setup(context -> new Subscriber(context, eventConsumeHandler));
+        return Behaviors.setup(
+            context -> new Subscriber(context, eventConsumeHandler)
+        );
     }
 
     @Override
@@ -33,7 +35,7 @@ public class Subscriber extends AbstractBehavior<Event> {
     }
 
     private Behavior<Event> onReceive(Event event) {
-        LogUtil.info(log, "[Subscriber:{}] onReceive:{}",getContext().getSelf().path(), event);
+        LogUtil.info(log, "[Subscriber:{}] onReceive:{}",getContext().getSystem().address(), event);
         this.eventConsumeHandler.consumeEvent(event);
         return this;
     }
