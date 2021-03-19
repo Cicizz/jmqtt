@@ -10,7 +10,6 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.jmqtt.broker.common.config.BrokerConfig;
-import org.jmqtt.broker.store.highperformance.OutflowMessageHandler;
 import org.jmqtt.broker.store.rdb.mapper.*;
 
 import javax.sql.DataSource;
@@ -29,7 +28,7 @@ public class DBUtils {
 
     private SqlSessionFactory sqlSessionFactory;
 
-    private  AtomicBoolean start = new AtomicBoolean(false);
+    private AtomicBoolean start = new AtomicBoolean(false);
 
     public static DBUtils getInstance(){
         return dbUtils;
