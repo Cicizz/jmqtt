@@ -18,8 +18,7 @@ import java.util.Properties;
 
 /**
  * jmqtt 启动类,代码风格参考RocketMQ
- * 代码阅读沟通，二次开发文档：请加 qq群：578185385 或 http://www.mangdagou.com/
- * mqtt5.0协议 http://www.mangdagou.com/links
+ * 代码阅读沟通，二次开发文档：请加 qq群：578185385 或 参考官网 http://www.mangdagou.com/
  */
 public class BrokerStartup {
 
@@ -61,7 +60,7 @@ public class BrokerStartup {
             context.setConfigLocation(file.toURI());
             Configuration configuration = context.getConfiguration();
             Map<String, LoggerConfig> loggerConfigMap = configuration.getLoggers();
-            Level newLevel = Level.getLevel(logLevel);
+            Level newLevel = logLevel == null? null : Level.getLevel(logLevel);
             if (newLevel == null) {
                 newLevel = Level.INFO;
             }

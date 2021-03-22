@@ -3,8 +3,9 @@
 <configuration>
 
     <properties>
-        <!--<property name="user.dir" value="" />-->
-        <property name="level" value="DEBUG"/>
+        <!-- log file path -->
+        <property name="user.dir" value="./" />
+        <property name="level" value="INFO"/>
         <property name="pattern" value="%d [%X{traceId}/%X{loginUserID}/%X{remoteAddr}/%X{clientId} - %X{requestURIWithQueryString}] %-5p %c{2} - %m%n"/>
     </properties>
 
@@ -17,8 +18,8 @@
         </Console>
 
         <!-- error -->
-        <RollingFile name="error-appender" fileName="${user.dir}/log/jmqttlogs/error.log"
-                     filePattern="${user.dir}/log/jmqttlogs/error.log.%d{yyyy-MM-dd}"
+        <RollingFile name="error-appender" fileName="${user.dir}/jmqttlogs/error.log"
+                     filePattern="${user.dir}/jmqttlogs/error.log.%d{yyyy-MM-dd}"
                      append="true">
             <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
             <PatternLayout
@@ -26,7 +27,7 @@
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/common-error.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>
@@ -34,15 +35,15 @@
         </RollingFile>
 
         <!-- brokerLog -->
-        <RollingFile name="brokerLog-appender" fileName="${user.dir}/log/jmqttlogs/brokerLog.log"
-                     filePattern="${user.dir}/log/jmqttlogs/brokerLog.log.%d{yyyy-MM-dd}"
+        <RollingFile name="brokerLog-appender" fileName="${user.dir}/jmqttlogs/brokerLog.log"
+                     filePattern="${user.dir}/jmqttlogs/brokerLog.log.%d{yyyy-MM-dd}"
                      append="true">
             <PatternLayout
                     pattern="${pattern}"
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/brokerLog.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>
@@ -50,15 +51,15 @@
         </RollingFile>
 
         <!-- clientTraceLog -->
-        <RollingFile name="clientTraceLog-appender" fileName="${user.dir}/log/jmqttlogs/clientTraceLog.log"
-                     filePattern="${user.dir}/log/jmqttlogs/clientTraceLog.log.%d{yyyy-MM-dd}"
+        <RollingFile name="clientTraceLog-appender" fileName="${user.dir}/jmqttlogs/clientTraceLog.log"
+                     filePattern="${user.dir}/jmqttlogs/clientTraceLog.log.%d{yyyy-MM-dd}"
                      append="true">
             <PatternLayout
                     pattern="${pattern}"
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/clientTraceLog.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>
@@ -66,15 +67,15 @@
         </RollingFile>
 
         <!-- clientTraceLog -->
-        <RollingFile name="messageTraceLog-appender" fileName="${user.dir}/log/jmqttlogs/messageTraceLog.log"
-                     filePattern="${user.dir}/log/jmqttlogs/messageTraceLog.log.%d{yyyy-MM-dd}"
+        <RollingFile name="messageTraceLog-appender" fileName="${user.dir}/jmqttlogs/messageTraceLog.log"
+                     filePattern="${user.dir}/jmqttlogs/messageTraceLog.log.%d{yyyy-MM-dd}"
                      append="true">
             <PatternLayout
                     pattern="${pattern}"
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/messageTraceLog.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>
@@ -82,15 +83,15 @@
         </RollingFile>
 
         <!-- eventLog -->
-        <RollingFile name="eventLog-appender" fileName="${user.dir}/log/jmqttlogs/eventLog.log"
-                     filePattern="${user.dir}/log/jmqttlogs/eventLog.log.%d{yyyy-MM-dd}"
+        <RollingFile name="eventLog-appender" fileName="${user.dir}/jmqttlogs/eventLog.log"
+                     filePattern="${user.dir}/jmqttlogs/eventLog.log.%d{yyyy-MM-dd}"
                      append="true">
             <PatternLayout
                     pattern="${pattern}"
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/eventLog.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>
@@ -98,15 +99,15 @@
         </RollingFile>
 
         <!-- remotingLog -->
-        <RollingFile name="remotingLog-appender" fileName="${user.dir}/log/jmqttlogs/remotingLog.log"
-                     filePattern="${user.dir}/log/jmqttlogs/remotingLog.log.%d{yyyy-MM-dd}"
+        <RollingFile name="remotingLog-appender" fileName="${user.dir}/jmqttlogs/remotingLog.log"
+                     filePattern="${user.dir}/jmqttlogs/remotingLog.log.%d{yyyy-MM-dd}"
                      append="true">
             <PatternLayout
                     pattern="${pattern}"
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/remotingLog.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>
@@ -114,15 +115,15 @@
         </RollingFile>
 
         <!-- storeLog -->
-        <RollingFile name="storeLog-appender" fileName="${user.dir}/log/jmqttlogs/storeLog.log"
-                     filePattern="${user.dir}/log/jmqttlogs/storeLog.log.%d{yyyy-MM-dd}"
+        <RollingFile name="storeLog-appender" fileName="${user.dir}/jmqttlogs/storeLog.log"
+                     filePattern="${user.dir}/jmqttlogs/storeLog.log.%d{yyyy-MM-dd}"
                      append="true">
             <PatternLayout
                     pattern="${pattern}"
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/storeLog.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>
@@ -130,15 +131,15 @@
         </RollingFile>
 
         <!-- otherLog -->
-        <RollingFile name="otherLog-appender" fileName="${user.dir}/log/jmqttlogs/otherLog.log"
-                     filePattern="${user.dir}/log/jmqttlogs/otherLog.log.%d{yyyy-MM-dd}"
+        <RollingFile name="otherLog-appender" fileName="${user.dir}/jmqttlogs/otherLog.log"
+                     filePattern="${user.dir}/jmqttlogs/otherLog.log.%d{yyyy-MM-dd}"
                      append="true">
             <PatternLayout
                     pattern="${pattern}"
                     charset="UTF-8"/>
             <TimeBasedTriggeringPolicy/>
             <DefaultRolloverStrategy>
-                <Delete basePath="${ctx:log_root}/${ctx:app_name}" maxDepth="1">
+                <Delete basePath="${user.dir}" maxDepth="1">
                     <IfFileName glob="*/otherLog.log.*"/>
                     <IfLastModified age="10d"/>
                 </Delete>

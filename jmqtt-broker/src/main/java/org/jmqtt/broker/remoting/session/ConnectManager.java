@@ -12,7 +12,7 @@ public class ConnectManager {
 
     private static final  ConnectManager INSTANCE  =  new ConnectManager();
 
-    private ConnectManager(){};
+    private ConnectManager(){}
 
     public static  ConnectManager getInstance(){
         return INSTANCE;

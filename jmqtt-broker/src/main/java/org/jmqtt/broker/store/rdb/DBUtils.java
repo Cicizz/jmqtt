@@ -10,7 +10,10 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.jmqtt.broker.common.config.BrokerConfig;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.store.rdb.mapper.*;
+import org.slf4j.Logger;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -22,13 +25,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class DBUtils {
 
+    private static final Logger log = JmqttLogger.storeLog;
+
     private static final DBUtils dbUtils = new DBUtils();
 
     private DBUtils(){}
 
     private SqlSessionFactory sqlSessionFactory;
 
-    private AtomicBoolean start = new AtomicBoolean(false);
+    private  AtomicBoolean start = new AtomicBoolean(false);
 
     public static DBUtils getInstance(){
         return dbUtils;
@@ -36,6 +41,7 @@ public class DBUtils {
 
     public void start(BrokerConfig brokerConfig){
         if (this.start.compareAndSet(false,true)) {
+            LogUtil.info(log,"DB store start...");
             DataSource dataSource = new DataSourceFactory() {
                 @Override
                 public void setProperties(Properties properties) {
@@ -49,7 +55,11 @@ public class DBUtils {
                     dds.setUsername(brokerConfig.getUsername());
                     dds.setPassword(brokerConfig.getPassword());
                     // 其他配置可自行补充
-
+                    dds.setKeepAlive(true);
+                    dds.setMinEvictableIdleTimeMillis(180000);
+                    dds.setMaxWait(60000);
+                    dds.setInitialSize(5);
+                    dds.setMinIdle(5);
                     try {
                         dds.init();
                     } catch (SQLException e) {
@@ -77,6 +87,7 @@ public class DBUtils {
 
             configuration.setMapUnderscoreToCamelCase(true);
             this.sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
+            LogUtil.info(log,"DB store start success...");
         }
     }
 
