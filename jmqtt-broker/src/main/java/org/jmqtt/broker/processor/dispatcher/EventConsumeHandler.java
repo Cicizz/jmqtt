@@ -104,7 +104,7 @@ public class EventConsumeHandler {
             return;
         }
         String clientId = event.getBody();
-        if (ConnectManager.getInstance().containClient(clientId)) {
+        if (!ConnectManager.getInstance().containClient(clientId)) {
             return;
         }
         ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
