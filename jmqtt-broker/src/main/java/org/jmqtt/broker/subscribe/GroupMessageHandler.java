@@ -43,6 +43,7 @@ public class GroupMessageHandler extends AbstractBehavior<GroupMessageAction> {
         return newReceiveBuilder()
             .onMessage(RoutedMessageAction.class, routedMessage -> {
                 try {
+                    //只处理本节点信息
                     if (remoteAddress.equals(routedMessage.remoteAddress)) {
                         Message message = routedMessage.getMessage();
                         innerMessageDispatcher.appendMessage(message);

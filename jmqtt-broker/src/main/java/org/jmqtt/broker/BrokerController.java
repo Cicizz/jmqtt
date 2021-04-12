@@ -159,14 +159,15 @@ public class BrokerController {
         MixAll.printProperties(log, brokerConfig);
         MixAll.printProperties(log, nettyConfig);
 
-        this.akkaController.start(this);
+        // akka 初始化
+        this.akkaController.start(brokerConfig,innerMessageDispatcher,eventConsumeHandler);
 
         // 1. start store
         this.sessionStore.start(brokerConfig);
         this.messageStore.start(brokerConfig);
 
         // 2. start cluster
-        this.clusterEventHandler.start(this);
+        this.clusterEventHandler.start(brokerConfig);
         this.eventConsumeHandler.start();
 
         // 3. start message service

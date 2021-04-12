@@ -26,11 +26,6 @@ public class RDBClusterEventHandler extends AbstractDBStore implements ClusterEv
     private static final String currentIp = MixAll.getLocalIp();
 
     @Override
-    public void start(BrokerController controller) {
-        
-    }
-
-    @Override
     public void start(BrokerConfig brokerConfig) {
         super.start(brokerConfig);
         Long maxId = (Long) operate(new DBCallback() {

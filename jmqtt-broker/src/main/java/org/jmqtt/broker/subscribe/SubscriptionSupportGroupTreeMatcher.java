@@ -5,7 +5,9 @@ import org.jmqtt.broker.common.log.JmqttLogger;
 import org.jmqtt.broker.common.model.Subscription;
 import org.slf4j.Logger;
 
-
+/**
+ * 支持共享订阅的匹配器
+ */
 public class SubscriptionSupportGroupTreeMatcher implements SubscriptionMatcher {
 
     private static final Logger log = JmqttLogger.messageTraceLog;

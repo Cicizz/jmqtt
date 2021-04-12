@@ -24,11 +24,6 @@ public class MemEventHandler extends AbstractMemStore implements ClusterEventHan
     private AtomicLong size = new AtomicLong(0);
 
     @Override
-    public void start(BrokerController controller) {
-
-    }
-
-    @Override
     public void start(BrokerConfig brokerConfig) {
         super.start(brokerConfig);
     }

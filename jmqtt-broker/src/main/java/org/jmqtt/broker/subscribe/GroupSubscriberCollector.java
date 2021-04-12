@@ -60,14 +60,16 @@ public class GroupSubscriberCollector extends AbstractBehavior<GroupSubscription
     public Receive<GroupSubscriptionAction> createReceive() {
         return newReceiveBuilder().onMessage(SubOrUnsubAction.class, subOrUnsubAction -> {
             if (subOrUnsubAction.isSub) {
+                //订阅
                 Subscription sub = subOrUnsubAction.subscription;
                 String remoteAddr = subOrUnsubAction.remoteAddress;
-
                 boolean subscribe = subscriptionMatcher.subscribe(sub);
+                //记录订阅者节点地址
                 if (subscribe) {
                     subMapRemoteAddr.put(sub, remoteAddr);
                 }
             } else {
+                //取消订阅
                 Subscription sub = subOrUnsubAction.subscription;
                 boolean unSubscribe = subscriptionMatcher
                     .unSubscribe(sub.getTopic(), sub.getClientId());
@@ -89,7 +91,6 @@ public class GroupSubscriberCollector extends AbstractBehavior<GroupSubscription
                         RoutedMessageAction data = RoutedMessageAction
                             .createFrom(message, s, remoteAddr);
                         result.add(data);
-
                     }
                 }
                 msg.replyTo.tell(new RoutedMessageActionResult(result));

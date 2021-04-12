@@ -26,11 +26,6 @@ public class AkkaClusterEventHandler implements ClusterEventHandler, AkkaActorLi
     }
 
     @Override
-    public void start(BrokerController controller) {
-
-    }
-
-    @Override
     public void start(BrokerConfig brokerConfig) {
         //与共享订阅akka共同初始化
     }

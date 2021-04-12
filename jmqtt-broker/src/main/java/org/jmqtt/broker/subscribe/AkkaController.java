@@ -14,10 +14,13 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.CompletionStage;
 import org.jmqtt.broker.BrokerController;
+import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.log.JmqttLogger;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.Message.Stage;
 import org.jmqtt.broker.common.model.Subscription;
+import org.jmqtt.broker.processor.dispatcher.EventConsumeHandler;
+import org.jmqtt.broker.processor.dispatcher.InnerMessageDispatcher;
 import org.jmqtt.broker.processor.dispatcher.akka.AkkaActorListener;
 import org.jmqtt.broker.processor.dispatcher.akka.ClusterEventSubscriber;
 import org.jmqtt.broker.processor.dispatcher.akka.ClusterEventSubscriber.ClusterEvent;
@@ -57,19 +60,21 @@ public class AkkaController implements GroupSubscriptionAndMessageListener {
         return system;
     }
 
-    public void start(BrokerController brokerController) {
-        Config config = ConfigFactory.load(brokerController.getBrokerConfig().getAkkaConfigName());
+    public void start(BrokerConfig brokerConfig, InnerMessageDispatcher innerMessageDispatcher,
+        EventConsumeHandler eventConsumeHandler) {
+        Config config = ConfigFactory.load(brokerConfig.getAkkaConfigName());
         Behavior<SpawnProtocol.Command> initBehavior = Behaviors.setup(
             context -> {
 
                 //集群事件处理器配置
+                //TODO 初始化优化
                 //TODO 无论用以下方式还是AskPattern.ask方式创建的topic和subscriber，无法达到pub/sub的效果。
                 if (!Objects.isNull(akkaActorListener)) {
                     clusterEventTopic =
                         context.spawn(Topic.create(ClusterEvent.class, "JMqttTopicClusterEvent"),
                             "JMqttTopicClusterEvent");
                     clusterEventSubscriber = context
-                        .spawn(ClusterEventSubscriber.create(brokerController.getEventConsumeHandler()),
+                        .spawn(ClusterEventSubscriber.create(eventConsumeHandler),
                             "JMqttClusterEventSubscriber");
 
                     clusterEventTopic.tell(Topic.subscribe(clusterEventSubscriber));
@@ -89,9 +94,8 @@ public class AkkaController implements GroupSubscriptionAndMessageListener {
                         .spawn(Topic
                                 .create(GroupMessageAction.class, "JMqttTopicGroupMessage"),
                             "JMqttTopicGroupMessage");
-
                 messageHandler = context
-                    .spawn(GroupMessageHandler.create(brokerController.getInnerMessageDispatcher(),
+                    .spawn(GroupMessageHandler.create(innerMessageDispatcher,
                         context.getSystem().address().toString()),
                         "JMqttGroupMessageHandler");
                 subscriberCollector = context
@@ -126,6 +130,7 @@ public class AkkaController implements GroupSubscriptionAndMessageListener {
     public void receiveNewMessage(Message message) {
         message.setStage(Stage.GROUP_DISPATHER);
 
+        //根据共享订阅者所在的节点地址
         CompletionStage<RoutedMessageActionResult> completionStage = AskPattern.ask(
             subscriberCollector,
             replyTo -> new UnRoutedMessage(message, replyTo),
@@ -135,7 +140,8 @@ public class AkkaController implements GroupSubscriptionAndMessageListener {
         completionStage.whenCompleteAsync((result, err) -> {
             if (null == err) {
                 result.messages.forEach(msg -> {
-                    //TODO 无法直接通过"地址+路径"获取ActorSelection直接路由到连接订阅者的节点，待调试优化
+                    //路由至共享订阅者所在的节点地址
+                    //TODO 无法直接通过"地址+路径"获取ActorSelection直接路由到连接订阅者的节点，暂时以pub/sub方式让全部节点接受，再根据地址判断是否处理
                     messageTopic.tell(Topic.publish(msg));
                 });
             }
