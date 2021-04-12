@@ -9,6 +9,7 @@ import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
 import org.jmqtt.broker.processor.dispatcher.event.Event;
 import org.jmqtt.broker.processor.dispatcher.event.EventCode;
 import org.jmqtt.broker.store.MessageStore;
+import org.jmqtt.broker.subscribe.GroupSubscriptionAndMessageListener;
 
 /**
  * 通用消息分发处理器
@@ -18,6 +19,7 @@ public abstract class AbstractMessageProcessor extends HighPerformanceMessageHan
 
     private MessageStore messageStore;
     private ClusterEventHandler clusterEventHandler;
+    private GroupSubscriptionAndMessageListener groupSubscriptionAndMessageListener;
     private String currentIp;
 
     public AbstractMessageProcessor(BrokerController brokerController) {
@@ -25,6 +27,7 @@ public abstract class AbstractMessageProcessor extends HighPerformanceMessageHan
         this.messageStore = brokerController.getMessageStore();
         this.clusterEventHandler = brokerController.getClusterEventHandler();
         this.currentIp = brokerController.getCurrentIp();
+        this.groupSubscriptionAndMessageListener = brokerController.getAkkaController();
     }
 
     protected void processMessage(Message message) {
@@ -52,6 +55,7 @@ public abstract class AbstractMessageProcessor extends HighPerformanceMessageHan
     private void sendMessage2Cluster(Message message) {
         Event event = new Event(EventCode.DISPATCHER_CLIENT_MESSAGE.getCode(), JSONObject.toJSONString(message),System.currentTimeMillis(),currentIp);
         this.clusterEventHandler.sendEvent(event);
+        this.groupSubscriptionAndMessageListener.receiveNewMessage(message);
     }
 
 }

@@ -19,6 +19,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <akka.version>2.6.13</akka.version>
+        <scala.binary.version>2.13</scala.binary.version>
 
     </properties>
 
@@ -55,12 +56,17 @@
         <!-- akka -->
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-actor-typed_2.13</artifactId>
+            <artifactId>akka-actor-typed_${scala.binary.version}</artifactId>
             <version>${akka.version}</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-cluster-typed_2.13</artifactId>
+            <artifactId>akka-cluster-typed_${scala.binary.version}</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-remote_${scala.binary.version}</artifactId>
             <version>${akka.version}</version>
         </dependency>
         <dependency>

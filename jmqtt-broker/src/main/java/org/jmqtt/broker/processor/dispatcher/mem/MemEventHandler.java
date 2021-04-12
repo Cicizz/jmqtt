@@ -1,5 +1,6 @@
 package org.jmqtt.broker.processor.dispatcher.mem;
 
+import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.log.JmqttLogger;
 import org.jmqtt.broker.common.log.LogUtil;
@@ -21,6 +22,11 @@ public class MemEventHandler extends AbstractMemStore implements ClusterEventHan
     private static final Logger log = JmqttLogger.eventLog;
     private ConcurrentLinkedDeque<Event> events = new ConcurrentLinkedDeque<Event>();
     private AtomicLong size = new AtomicLong(0);
+
+    @Override
+    public void start(BrokerController controller) {
+
+    }
 
     @Override
     public void start(BrokerConfig brokerConfig) {

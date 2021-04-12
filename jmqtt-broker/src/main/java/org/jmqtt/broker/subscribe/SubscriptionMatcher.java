@@ -1,5 +1,8 @@
 package org.jmqtt.broker.subscribe;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
 import org.jmqtt.broker.common.model.Subscription;
 
 import java.util.Set;
@@ -23,7 +26,7 @@ public interface SubscriptionMatcher {
     boolean unSubscribe(String topic,String clientId);
 
     /**
-     * 获取匹配该topic下的所有订阅者
+     * 获取匹配该topic下的非共享订阅者
      * @param topic
      * @param clientId
      * @return
@@ -31,7 +34,38 @@ public interface SubscriptionMatcher {
     Set<Subscription> match(String topic, String clientId);
 
     /**
+     * 获取匹配该topic下的共享订阅者
+     * @param topic
+     * @param clientId
+     * @return
+     */
+    Set<Subscription> matchGroup(String topic, String clientId);
+
+    /**
      * 发布消息的Topic与订阅的topic是否匹配
      */
     boolean isMatch(String pubTopic,String subTopic);
+
+    static boolean isGroupTopic(String topic) {
+        if (StringUtils.isNotEmpty(groupTopic(topic))) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 获取指定共享主题中的订阅主题
+     *
+     * @param topic 待解析主题
+     * @return 非共享主题，返回null
+     */
+    static String groupTopic(String topic) {
+        Pattern pattern = Pattern.compile("(\\$share/[a-zA-Z0-9]+/)(\\S+)");
+        Matcher m = pattern.matcher(topic);
+        if (m.find()) {
+            return m.group(2);
+        }
+        return null;
+    }
+
 }

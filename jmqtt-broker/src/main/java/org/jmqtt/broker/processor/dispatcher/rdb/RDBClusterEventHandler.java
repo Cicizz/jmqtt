@@ -1,6 +1,7 @@
 package org.jmqtt.broker.processor.dispatcher.rdb;
 
 import org.apache.ibatis.session.SqlSession;
+import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.helper.MixAll;
 import org.jmqtt.broker.common.log.JmqttLogger;
@@ -23,6 +24,11 @@ public class RDBClusterEventHandler extends AbstractDBStore implements ClusterEv
     private static final Logger log = JmqttLogger.eventLog;
     private static final AtomicLong offset = new AtomicLong();
     private static final String currentIp = MixAll.getLocalIp();
+
+    @Override
+    public void start(BrokerController controller) {
+        
+    }
 
     @Override
     public void start(BrokerConfig brokerConfig) {

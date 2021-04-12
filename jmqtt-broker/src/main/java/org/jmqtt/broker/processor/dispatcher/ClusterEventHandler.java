@@ -1,5 +1,6 @@
 package org.jmqtt.broker.processor.dispatcher;
 
+import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.processor.dispatcher.event.Event;
 
@@ -16,6 +17,8 @@ import java.util.List;
  *          b. 第二阶段:主动拉取 jmqtt B,C,D broker 定时批量拉取 —> 从消息存储服务拉取 —> 拉取后推送给 B,C,D上连接的设备
  */
 public interface ClusterEventHandler {
+
+    void start(BrokerController controller);
 
     void start(BrokerConfig brokerConfig);
 

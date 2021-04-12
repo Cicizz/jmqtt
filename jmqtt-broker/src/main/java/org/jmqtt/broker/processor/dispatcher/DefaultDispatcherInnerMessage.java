@@ -1,12 +1,23 @@
 package org.jmqtt.broker.processor.dispatcher;
 
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.helper.RejectHandler;
 import org.jmqtt.broker.common.helper.ThreadFactoryImpl;
 import org.jmqtt.broker.common.log.JmqttLogger;
 import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.common.model.Message;
+import org.jmqtt.broker.common.model.Message.Stage;
 import org.jmqtt.broker.common.model.MessageHeader;
 import org.jmqtt.broker.common.model.Subscription;
 import org.jmqtt.broker.processor.HighPerformanceMessageHandler;
@@ -16,27 +27,20 @@ import org.jmqtt.broker.remoting.util.MessageUtil;
 import org.jmqtt.broker.store.SessionStore;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.*;
 
 /**
  * 默认的消息分发实现类
  */
-public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler implements InnerMessageDispatcher {
+public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler implements
+    InnerMessageDispatcher {
 
     private static final Logger log = JmqttLogger.messageTraceLog;
-    private boolean stoped = false;
     private static final BlockingQueue<Message> messageQueue = new LinkedBlockingQueue<>(100000);
+    private boolean stoped = false;
     private ThreadPoolExecutor pollThread;
     private int pollThreadNum;
     private SubscriptionMatcher subscriptionMatcher;
     private SessionStore sessionStore;
-    private ClusterEventHandler clusterEventHandler;
 
 
     public DefaultDispatcherInnerMessage(BrokerController brokerController) {
@@ -44,18 +48,17 @@ public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler
         this.pollThreadNum = brokerController.getBrokerConfig().getPollThreadNum();
         this.subscriptionMatcher = brokerController.getSubscriptionMatcher();
         this.sessionStore = brokerController.getSessionStore();
-        this.clusterEventHandler = brokerController.getClusterEventHandler();
     }
 
     @Override
     public void start() {
         this.pollThread = new ThreadPoolExecutor(pollThreadNum,
-                pollThreadNum,
-                60 * 1000,
-                TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<>(100000),
-                new ThreadFactoryImpl("pollMessage2Subscriber"),
-                new RejectHandler("pollMessage", 100000));
+            pollThreadNum,
+            60 * 1000,
+            TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>(100000),
+            new ThreadFactoryImpl("pollMessage2Subscriber"),
+            new RejectHandler("pollMessage", 100000));
 
         new Thread(() -> {
             int waitTime = 1000;
@@ -80,9 +83,9 @@ public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler
                         pollThread.submit(dispatcher).get();
                     }
                 } catch (InterruptedException e) {
-                    LogUtil.warn(log,"poll message wrong.");
+                    LogUtil.warn(log, "poll message wrong.");
                 } catch (ExecutionException e) {
-                    LogUtil.warn(log,"AsyncDispatcher get() wrong.");
+                    LogUtil.warn(log, "AsyncDispatcher get() wrong.");
                 }
             }
         }).start();
@@ -92,7 +95,7 @@ public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler
     public boolean appendMessage(Message message) {
         boolean isNotFull = messageQueue.offer(message);
         if (!isNotFull) {
-            LogUtil.warn(log,"[PubMessage] -> the buffer queue is full");
+            LogUtil.warn(log, "[PubMessage] -> the buffer queue is full");
         }
         return isNotFull;
     }
@@ -116,19 +119,34 @@ public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler
             if (Objects.nonNull(messages)) {
                 try {
                     for (Message message : messages) {
-                        Set<Subscription> subscriptions = subscriptionMatcher.match((String) message.getHeader(MessageHeader.TOPIC),message.getClientId());
+                        Set<Subscription> subscriptions = null;
+                        if (message.getStage() == Stage.NEW_ARRIVED) {
+                            //新消息，按照本地非共享订阅关系进行匹配调度
+                            subscriptions = subscriptionMatcher
+                                .match((String) message.getHeader(MessageHeader.TOPIC),
+                                    message.getClientId());
+                        } else if (message.getStage() == Stage.GROUP_DISPATHER) {
+                            //路由后的消息，直接按已在共享订阅关系中设置的匹配调度
+                            subscriptions = new HashSet<>();
+                            subscriptions.add(message.getDispatcher());
+                        }
+
                         for (Subscription subscription : subscriptions) {
                             String clientId = subscription.getClientId();
                             if (ConnectManager.getInstance().containClient(clientId)) {
-                                ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
-                                int qos = MessageUtil.getMinQos((int) message.getHeader(MessageHeader.QOS), subscription.getQos());
+                                ClientSession clientSession = ConnectManager.getInstance()
+                                    .getClient(clientId);
+                                int qos = MessageUtil
+                                    .getMinQos((int) message.getHeader(MessageHeader.QOS),
+                                        subscription.getQos());
                                 int messageId = clientSession.generateMessageId();
                                 message.putHeader(MessageHeader.QOS, qos);
                                 message.setMsgId(messageId);
                                 if (qos > 0) {
                                     cacheOutflowMsg(clientId, message);
                                 }
-                                MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message, false);
+                                MqttPublishMessage publishMessage = MessageUtil
+                                    .getPubMessage(message, false);
                                 clientSession.getCtx().writeAndFlush(publishMessage);
                             } else {
                                 sessionStore.storeOfflineMsg(clientId, message);
@@ -136,7 +154,7 @@ public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler
                         }
                     }
                 } catch (Exception ex) {
-                    LogUtil.warn(log,"Dispatcher message failure,cause={}", ex);
+                    LogUtil.warn(log, "Dispatcher message failure,cause={}", ex);
                 }
             }
         }

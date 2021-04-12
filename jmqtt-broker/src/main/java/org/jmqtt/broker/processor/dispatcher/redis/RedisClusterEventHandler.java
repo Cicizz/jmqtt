@@ -1,6 +1,7 @@
 package org.jmqtt.broker.processor.dispatcher.redis;
 
 import com.alibaba.fastjson.JSONObject;
+import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.log.JmqttLogger;
 import org.jmqtt.broker.common.log.LogUtil;
@@ -25,6 +26,11 @@ public class RedisClusterEventHandler implements ClusterEventHandler {
     private static final String INSTANCE_CHANNEL_PATTERN = RedisKeySupport.PREFIX + "_CLUSTER_CHANNEL_*";
     private EventConsumeHandler eventConsumeHandler;
     private RedisSupport redisSupport;
+
+    @Override
+    public void start(BrokerController controller) {
+
+    }
 
     @Override
     public void start(BrokerConfig brokerConfig) {

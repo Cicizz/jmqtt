@@ -1,11 +1,12 @@
 package org.jmqtt.broker.processor.dispatcher.event;
 
 import java.io.Serializable;
+import org.jmqtt.broker.common.model.AkkaDefaultSerializable;
 
 /**
  * cluster event model
  */
-public class Event implements Serializable, AkkaDefaultSerializable {
+public class Event implements Serializable {
 
     private static final long serialVersionUID = -12893791131231231L;
 
