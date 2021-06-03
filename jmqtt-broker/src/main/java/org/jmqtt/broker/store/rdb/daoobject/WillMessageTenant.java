@@ -2,8 +2,7 @@ package org.jmqtt.broker.store.rdb.daoobject;
 
 import java.io.Serializable;
 
-
-public class SubscriptionDO implements Serializable {
+public class WillMessageTenant extends TenantBase implements Serializable {
 
     private static final long serialVersionUID = 12213131231231L;
 
@@ -11,9 +10,9 @@ public class SubscriptionDO implements Serializable {
 
     private String clientId;
 
-    private String topic;
+    private String content;
 
-    private Integer qos;
+    private Long gmtCreate;
 
     public Long getId() {
         return id;
@@ -31,19 +30,19 @@ public class SubscriptionDO implements Serializable {
         this.clientId = clientId;
     }
 
-    public String getTopic() {
-        return topic;
+    public String getContent() {
+        return content;
     }
 
-    public void setTopic(String topic) {
-        this.topic = topic;
+    public void setContent(String content) {
+        this.content = content;
     }
 
-    public Integer getQos() {
-        return qos;
+    public Long getGmtCreate() {
+        return gmtCreate;
     }
 
-    public void setQos(Integer qos) {
-        this.qos = qos;
+    public void setGmtCreate(Long gmtCreate) {
+        this.gmtCreate = gmtCreate;
     }
 }

@@ -2,15 +2,15 @@ package org.jmqtt.broker.store.rdb.daoobject;
 
 import java.io.Serializable;
 
-public class OfflineMessageDO implements Serializable {
+public class OutflowSecMessageTenant extends TenantBase implements Serializable {
 
-    private static final long serialVersionUID = 143413131231231L;
+    private static final long serialVersionUID = 543213131231231L;
 
     private Long id;
 
     private String clientId;
 
-    private String content;
+    private Integer msgId;
 
     private Long gmtCreate;
 
@@ -30,12 +30,12 @@ public class OfflineMessageDO implements Serializable {
         this.clientId = clientId;
     }
 
-    public String getContent() {
-        return content;
+    public Integer getMsgId() {
+        return msgId;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setMsgId(Integer msgId) {
+        this.msgId = msgId;
     }
 
     public Long getGmtCreate() {

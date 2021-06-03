@@ -84,6 +84,8 @@ public class DBUtils {
             configuration.addMapper(RetainMessageMapper.class);
             configuration.addMapper(OutflowMessageMapper.class);
             configuration.addMapper(WillMessageMapper.class);
+            configuration.addMapper(DeviceMapper.class);
+            configuration.addMapper(ProductTopicMapper.class);
 
             configuration.setMapUnderscoreToCamelCase(true);
             this.sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);

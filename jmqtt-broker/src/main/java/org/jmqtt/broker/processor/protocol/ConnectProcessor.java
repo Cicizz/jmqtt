@@ -9,11 +9,13 @@ import io.netty.handler.timeout.IdleStateHandler;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.acl.AuthValid;
 import org.jmqtt.broker.common.helper.MixAll;
+import org.jmqtt.broker.common.helper.TenantContext;
 import org.jmqtt.broker.common.log.JmqttLogger;
 import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
 import org.jmqtt.broker.common.model.Subscription;
+import org.jmqtt.broker.common.model.TenantInfo;
 import org.jmqtt.broker.processor.RequestProcessor;
 import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
 import org.jmqtt.broker.processor.dispatcher.event.Event;
@@ -110,10 +112,18 @@ public class ConnectProcessor implements RequestProcessor {
                         sessionPresent = true;
                     }
                 }
+                TenantInfo tenantInfo = TenantContext.getAuthInfo();
+                clientSession.setTenantCode(tenantInfo.getTenantCode());
+                clientSession.setBizCode(tenantInfo.getBizCode());
+                tenantInfo.setChannel(ctx.channel());
+                TenantContext.setAuthInfo(tenantInfo);
+
                 // 3. 存储 session 会话
                 sessionStore.storeSession(clientId,new SessionState(SessionState.StateEnum.ONLINE));
                 if (notifyClearOtherSession) {
                     Event event = new Event(EventCode.CLEAR_SESSION.getCode(),clientId,System.currentTimeMillis(), MixAll.getLocalIp());
+                    event.setBizCode(tenantInfo.getBizCode());
+                    event.setTenantCode(tenantInfo.getTenantCode());
                     clusterEventHandler.sendEvent(event);
                 }
 
@@ -217,7 +227,7 @@ public class ConnectProcessor implements RequestProcessor {
     }
 
     private boolean versionValid(int mqttVersion) {
-        if (mqttVersion == 3 || mqttVersion == 4) {
+        if (mqttVersion == 3 || mqttVersion == 4 || mqttVersion == 5) {
             return true;
         }
         return false;

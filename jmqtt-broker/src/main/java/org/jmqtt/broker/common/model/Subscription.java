@@ -1,12 +1,17 @@
 package org.jmqtt.broker.common.model;
 
+import lombok.Data;
+import lombok.ToString;
+import org.jmqtt.broker.store.rdb.daoobject.TenantBase;
+
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /**
  * 订阅关系
  */
-public class Subscription {
+@Data
+@ToString
+public class Subscription extends TenantBase {
     private String clientId;
     private int qos;
     private String topic;
@@ -17,29 +22,6 @@ public class Subscription {
         this.qos = qos;
     }
 
-    public String getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
-
-    public int getQos() {
-        return qos;
-    }
-
-    public void setQos(int qos) {
-        this.qos = qos;
-    }
-
-    public String getTopic() {
-        return topic;
-    }
-
-    public void setTopic(String topic) {
-        this.topic = topic;
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -55,12 +37,5 @@ public class Subscription {
         return Objects.hash(clientId, topic);
     }
 
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", Subscription.class.getSimpleName() + "[", "]")
-            .add("clientId='" + clientId + "'")
-            .add("qos=" + qos)
-            .add("topic='" + topic + "'")
-            .toString();
-    }
+
 }

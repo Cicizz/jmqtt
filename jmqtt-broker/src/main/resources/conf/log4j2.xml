@@ -130,6 +130,22 @@
             </DefaultRolloverStrategy>
         </RollingFile>
 
+        <!-- authorityLog -->
+        <RollingFile name="authorityLog-appender" fileName="${user.dir}/jmqttlogs/authorityLog.log"
+                     filePattern="${user.dir}/jmqttlogs/authorityLog.log.%d{yyyy-MM-dd}"
+                     append="true">
+            <PatternLayout
+                    pattern="${pattern}"
+                    charset="UTF-8"/>
+            <TimeBasedTriggeringPolicy/>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${user.dir}" maxDepth="1">
+                    <IfFileName glob="*/authorityLog.log.*"/>
+                    <IfLastModified age="10d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
         <!-- otherLog -->
         <RollingFile name="otherLog-appender" fileName="${user.dir}/jmqttlogs/otherLog.log"
                      filePattern="${user.dir}/jmqttlogs/otherLog.log.%d{yyyy-MM-dd}"
@@ -175,6 +191,11 @@
         </logger>
         <logger name="storeLog" level="${level}" additivity="false">
             <appender-ref ref="storeLog-appender"/>
+            <appender-ref ref="error-appender"/>
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="authorityLog" level="${level}" additivity="false">
+            <appender-ref ref="authorityLog-appender"/>
             <appender-ref ref="error-appender"/>
             <appender-ref ref="console"/>
         </logger>

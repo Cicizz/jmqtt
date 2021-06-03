@@ -80,6 +80,8 @@ public class SubscribeProcessor implements RequestProcessor {
         List<Message> needDispatcher = new ArrayList<>();
         for(Topic topic : validTopicList){
             Subscription subscription = new Subscription(clientSession.getClientId(),topic.getTopicName(),topic.getQos());
+            subscription.setBizCode(clientSession.getBizCode());
+            subscription.setTenantCode(clientSession.getTenantCode());
             boolean subRs = this.subscriptionMatcher.subscribe(subscription);
             if(subRs){
                 if(retainMessages == null){
@@ -130,6 +132,8 @@ public class SubscribeProcessor implements RequestProcessor {
                 sessionStore.cacheInflowMsg(clientSession.getClientId(),message);
             }
             message.setMsgId(clientSession.generateMessageId());
+            message.setBizCode(clientSession.getBizCode());
+            message.setTenantCode(clientSession.getTenantCode());
             MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message,false);
             clientSession.getCtx().writeAndFlush(publishMessage);
         }

@@ -2,9 +2,6 @@ package org.jmqtt.broker;
 
 import io.netty.handler.codec.mqtt.MqttMessageType;
 import org.jmqtt.broker.acl.AuthValid;
-import org.jmqtt.broker.processor.dispatcher.akka.AkkaActorListener;
-import org.jmqtt.broker.processor.dispatcher.akka.AkkaClusterEventHandler;
-import org.jmqtt.broker.subscribe.AkkaController;
 import org.jmqtt.broker.client.ClientLifeCycleHookService;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.config.NettyConfig;
@@ -18,6 +15,8 @@ import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
 import org.jmqtt.broker.processor.dispatcher.DefaultDispatcherInnerMessage;
 import org.jmqtt.broker.processor.dispatcher.EventConsumeHandler;
 import org.jmqtt.broker.processor.dispatcher.InnerMessageDispatcher;
+import org.jmqtt.broker.processor.dispatcher.akka.AkkaActorListener;
+import org.jmqtt.broker.processor.dispatcher.akka.AkkaClusterEventHandler;
 import org.jmqtt.broker.processor.protocol.*;
 import org.jmqtt.broker.processor.recover.ReSendMessageService;
 import org.jmqtt.broker.remoting.netty.ChannelEventListener;
@@ -27,6 +26,7 @@ import org.jmqtt.broker.store.SessionStore;
 import org.jmqtt.broker.store.highperformance.InflowMessageHandler;
 import org.jmqtt.broker.store.highperformance.OutflowMessageHandler;
 import org.jmqtt.broker.store.highperformance.OutflowSecMessageHandler;
+import org.jmqtt.broker.subscribe.AkkaController;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.jmqtt.broker.subscribe.SubscriptionSupportGroupTreeMatcher;
 import org.slf4j.Logger;
@@ -216,7 +216,7 @@ public class BrokerController {
 
         // 5. start auth
         if (this.authValid != null) {
-            this.authValid.start();
+            this.authValid.start(brokerConfig);
         }
 
         // 6. start remoting
