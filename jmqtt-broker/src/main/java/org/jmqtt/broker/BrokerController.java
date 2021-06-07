@@ -10,6 +10,7 @@ import org.jmqtt.broker.common.helper.RejectHandler;
 import org.jmqtt.broker.common.helper.ThreadFactoryImpl;
 import org.jmqtt.broker.common.log.JmqttLogger;
 import org.jmqtt.broker.common.log.LogUtil;
+import org.jmqtt.broker.monitor.MonitorHandler;
 import org.jmqtt.broker.processor.RequestProcessor;
 import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
 import org.jmqtt.broker.processor.dispatcher.DefaultDispatcherInnerMessage;
@@ -77,6 +78,8 @@ public class BrokerController {
     private OutflowMessageHandler outflowMessageHandler;
     private OutflowSecMessageHandler outflowSecMessageHandler;
 
+    private MonitorHandler monitorHandler;
+
     public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig) {
         this.brokerConfig = brokerConfig;
         this.nettyConfig = nettyConfig;
@@ -86,6 +89,7 @@ public class BrokerController {
         this.subQueue = new LinkedBlockingQueue<>(100000);
         this.pingQueue = new LinkedBlockingQueue<>(10000);
         this.currentIp = MixAll.getLocalIp();
+        this.monitorHandler = new MonitorHandler(brokerConfig);
 
         {
             // 会话状态，消息存储加载，可自己实现相关的类
@@ -159,6 +163,9 @@ public class BrokerController {
         MixAll.printProperties(log, brokerConfig);
         MixAll.printProperties(log, nettyConfig);
 
+        // start monitor
+        this.monitorHandler.start();
+
         // akka 初始化
         this.akkaController.start(brokerConfig,innerMessageDispatcher,eventConsumeHandler);
 
@@ -187,7 +194,7 @@ public class BrokerController {
             RequestProcessor pubRelProcessor = new PubRelProcessor(this);
             RequestProcessor subscribeProcessor = new SubscribeProcessor(this);
             RequestProcessor unSubscribeProcessor = new UnSubscribeProcessor(subscriptionMatcher,
-                sessionStore);
+                sessionStore,monitorHandler);
             RequestProcessor pubRecProcessor = new PubRecProcessor(this);
             RequestProcessor pubAckProcessor = new PubAckProcessor(this);
             RequestProcessor pubCompProcessor = new PubCompProcessor(this);
@@ -223,6 +230,7 @@ public class BrokerController {
         if (this.remotingServer != null) {
             this.remotingServer.start();
         }
+
         LogUtil.info(log, "JMqtt Server start success and version = {}", brokerConfig.getVersion());
 
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
@@ -269,6 +277,9 @@ public class BrokerController {
         }
         if (this.authValid != null) {
             this.authValid.shutdown();
+        }
+        if (this.monitorHandler != null) {
+            this.monitorHandler.shutdown();
         }
 
     }
@@ -376,6 +387,10 @@ public class BrokerController {
 
     public AkkaController getAkkaController() {
         return akkaController;
+    }
+
+    public MonitorHandler getMonitorHandler() {
+        return monitorHandler;
     }
 
     public void setAkkaController(AkkaController akkaController) {

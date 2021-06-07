@@ -21,4 +21,6 @@ public interface JmqttLogger {
 
     Logger otherLog = LoggerFactory.getLogger("otherLog");
 
+    Logger monitorLog = LoggerFactory.getLogger("monitorLog");
+
 }

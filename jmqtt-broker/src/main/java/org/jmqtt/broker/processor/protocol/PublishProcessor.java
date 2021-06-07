@@ -12,6 +12,7 @@ import org.jmqtt.broker.common.log.JmqttLogger;
 import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
+import org.jmqtt.broker.monitor.MonitorHandler;
 import org.jmqtt.broker.processor.RequestProcessor;
 import org.jmqtt.broker.remoting.session.ClientSession;
 import org.jmqtt.broker.remoting.session.ConnectManager;
@@ -29,9 +30,11 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
     private static final Logger log     = JmqttLogger.messageTraceLog;
 
     private AuthValid authValid;
+    private MonitorHandler monitorHandler;
 
     public PublishProcessor(BrokerController controller) {
         super(controller);
+        this.monitorHandler = controller.getMonitorHandler();
         this.authValid = controller.getAuthValid();
     }
 
@@ -42,6 +45,7 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
             MqttQoS qos = publishMessage.fixedHeader().qosLevel();
             Message innerMsg = new Message();
             String clientId = NettyUtil.getClientId(ctx.channel());
+            monitorHandler.recordActiveClient(clientId);
             ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
             String topic = publishMessage.variableHeader().topicName();
             if (!this.authValid.publishVerify(clientId, topic)) {
@@ -62,6 +66,7 @@ public class PublishProcessor extends AbstractMessageProcessor implements Reques
             innerMsg.setBizCode(clientSession.getBizCode());
             innerMsg.setTenantCode(clientSession.getTenantCode());
 
+            monitorHandler.recordPubMsg(clientId);
             switch (qos) {
                 case AT_MOST_ONCE:
                     processMessage(innerMsg);

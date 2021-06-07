@@ -16,6 +16,7 @@ import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
 import org.jmqtt.broker.common.model.Subscription;
 import org.jmqtt.broker.common.model.TenantInfo;
+import org.jmqtt.broker.monitor.MonitorHandler;
 import org.jmqtt.broker.processor.RequestProcessor;
 import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
 import org.jmqtt.broker.processor.dispatcher.event.Event;
@@ -49,6 +50,7 @@ public class ConnectProcessor implements RequestProcessor {
     private SessionStore         sessionStore;
     private MessageStore         messageStore;
     private ClusterEventHandler clusterEventHandler;
+    private MonitorHandler monitorHandler;
 
     public ConnectProcessor(BrokerController brokerController) {
         this.authValid = brokerController.getAuthValid();
@@ -57,6 +59,7 @@ public class ConnectProcessor implements RequestProcessor {
         this.sessionStore = brokerController.getSessionStore();
         this.messageStore = brokerController.getMessageStore();
         this.clusterEventHandler = brokerController.getClusterEventHandler();
+        this.monitorHandler = brokerController.getMonitorHandler();
     }
 
     @Override
@@ -117,6 +120,7 @@ public class ConnectProcessor implements RequestProcessor {
                 clientSession.setBizCode(tenantInfo.getBizCode());
                 tenantInfo.setChannel(ctx.channel());
                 TenantContext.setAuthInfo(tenantInfo);
+                monitorHandler.recordConnReq(tenantInfo);
 
                 // 3. 存储 session 会话
                 sessionStore.storeSession(clientId,new SessionState(SessionState.StateEnum.ONLINE));
@@ -150,7 +154,7 @@ public class ConnectProcessor implements RequestProcessor {
             }
             LogUtil.info(log,"[CONNECT] -> {} connect to this mqtt server", clientId);
             reConnect2SendMessage(clientId);
-            newClientNotify(clientSession);
+            monitorHandler.recordConnSuccReq(clientId);
         } catch (Exception ex) {
             LogUtil.warn(log,"[CONNECT] -> Service Unavailable: cause={}", ex);
             returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE;
@@ -160,9 +164,6 @@ public class ConnectProcessor implements RequestProcessor {
         }
     }
 
-    private void newClientNotify(ClientSession clientSession) {
-
-    }
 
     private boolean keepAlive(String clientId, ChannelHandlerContext ctx, int heatbeatSec) {
         if (this.authValid.verifyHeartbeatTime(clientId, heatbeatSec)) {

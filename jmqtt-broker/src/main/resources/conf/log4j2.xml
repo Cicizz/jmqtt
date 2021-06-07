@@ -146,6 +146,22 @@
             </DefaultRolloverStrategy>
         </RollingFile>
 
+        <!-- monitorLog -->
+        <RollingFile name="monitorLog-appender" fileName="${user.dir}/jmqttlogs/monitorLog.log"
+                     filePattern="${user.dir}/jmqttlogs/monitorLog.log.%d{yyyy-MM-dd}"
+                     append="true">
+            <PatternLayout
+                    pattern="${pattern}"
+                    charset="UTF-8"/>
+            <TimeBasedTriggeringPolicy/>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${user.dir}" maxDepth="1">
+                    <IfFileName glob="*/monitorLog.log.*"/>
+                    <IfLastModified age="10d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
         <!-- otherLog -->
         <RollingFile name="otherLog-appender" fileName="${user.dir}/jmqttlogs/otherLog.log"
                      filePattern="${user.dir}/jmqttlogs/otherLog.log.%d{yyyy-MM-dd}"
@@ -200,6 +216,12 @@
             <appender-ref ref="console"/>
         </logger>
         <logger name="otherLog" level="${level}" additivity="false">
+            <appender-ref ref="otherLog-appender"/>
+            <appender-ref ref="error-appender"/>
+            <appender-ref ref="console"/>
+        </logger>
+
+        <logger name="monitorLog" level="${level}" additivity="false">
             <appender-ref ref="otherLog-appender"/>
             <appender-ref ref="error-appender"/>
             <appender-ref ref="console"/>
