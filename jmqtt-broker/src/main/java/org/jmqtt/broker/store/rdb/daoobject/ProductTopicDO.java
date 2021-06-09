@@ -7,7 +7,7 @@ import java.io.Serializable;
 
 @Data
 @ToString
-public class ProductTopicTenant extends TenantBase implements Serializable {
+public class ProductTopicDO extends TenantBase implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

@@ -33,7 +33,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public SessionState getSession(String clientId) {
-        SessionTenant sessionDO = (SessionTenant) operate(sqlSession -> getMapper(sqlSession, sessionMapperClass).getSession(clientId));
+        SessionDO sessionDO = (SessionDO) operate(sqlSession -> getMapper(sqlSession, sessionMapperClass).getSession(clientId));
         if (sessionDO == null) {
             return new SessionState(SessionState.StateEnum.NULL);
         }
@@ -42,28 +42,44 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public boolean storeSession(String clientId, SessionState sessionState) {
-        SessionTenant sessionDO = new SessionTenant();
+        SessionDO sessionDO = new SessionDO();
         sessionDO.setClientId(clientId);
+        ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
+        String tenantCode = null;
+        String bizCode = null;
+        Channel channel = null;
+        if (clientSession != null) {
+            tenantCode = clientSession.getTenantCode();
+            bizCode = clientSession.getBizCode();
+            channel = clientSession.getCtx().channel();
+        } else {
+            tenantCode = TenantContext.getTenantCode();
+            bizCode = TenantContext.getBizCode();
+            channel = TenantContext.getAuthInfo().getChannel();
+        }
+
         sessionDO.setState(sessionState.getState().getCode());
         sessionDO.setOfflineTime(sessionState.getOfflineTime());
-        sessionDO.setBizCode(TenantContext.getBizCode());
-        sessionDO.setTenantCode(TenantContext.getTenantCode());
+        sessionDO.setBizCode(bizCode);
+        sessionDO.setTenantCode(tenantCode);
         SqlSession sqlSession = getSqlSessionWithTrans();
         try {
             getMapper(sqlSession, sessionMapperClass).storeSession(sessionDO);
-            DeviceTenant deviceDO = new DeviceTenant();
-            deviceDO.setDeviceCoding(clientId);
-            deviceDO.setTenantCode(TenantContext.getTenantCode());
-            deviceDO.setLatestOnlineTime(new Date());
-            Channel channel = TenantContext.getAuthInfo().getChannel();
-            deviceDO.setLatestNetworkAddress(RemotingHelper.getRemoteAddr(channel));
-            // 上线
-            if (sessionState.online()) {
-                deviceDO.setIsOnline(0);
-            } else { // 下线
-                deviceDO.setIsOnline(1);
+            if (sessionState.getState() != SessionState.StateEnum.NULL) {
+                DeviceDO deviceDO = new DeviceDO();
+                deviceDO.setDeviceCoding(ConnectManager.getDeviceCoding(clientId));
+                deviceDO.setTenantCode(tenantCode);
+                deviceDO.setLatestOnlineTime(new Date());
+                deviceDO.setLatestNetworkAddress(RemotingHelper.getRemoteAddr(channel));
+                // 上线
+                if (sessionState.online()) {
+                    deviceDO.setIsOnline(0);
+                } else { // 下线
+                    deviceDO.setIsOnline(1);
+                }
+                getMapper(sqlSession, deviceMapperClass).updateDevice(deviceDO);
             }
-            getMapper(sqlSession, deviceMapperClass).updateDevice(deviceDO);
+            sqlSession.commit();
         } catch (Exception ex) {
             LogUtil.error(log, "Store session failed ", ex);
             sqlSession.rollback();
@@ -76,7 +92,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public boolean storeSubscription(String clientId, Subscription subscription) {
-        SubscriptionTenant subscriptionDO = new SubscriptionTenant();
+        SubscriptionDO subscriptionDO = new SubscriptionDO();
         subscriptionDO.setClientId(clientId);
         subscriptionDO.setTopic(subscription.getTopic());
         subscriptionDO.setQos(subscription.getQos());
@@ -107,10 +123,10 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public Set<Subscription> getSubscriptions(String clientId) {
-        List<SubscriptionTenant> subscriptionDOList = (List<SubscriptionTenant>) operate(
+        List<SubscriptionDO> subscriptionDOList = (List<SubscriptionDO>) operate(
                 sqlSession -> getMapper(sqlSession, subscriptionMapperClass).querySubscription(clientId));
         Set<Subscription> set = new HashSet<>();
-        for (SubscriptionTenant item : subscriptionDOList) {
+        for (SubscriptionDO item : subscriptionDOList) {
             Subscription subscription = new Subscription(item.getClientId(), item.getTopic(), item.getQos());
             set.add(subscription);
         }
@@ -119,7 +135,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public boolean cacheInflowMsg(String clientId, Message message) {
-        InflowMessageTenant inflowMessageDO = new InflowMessageTenant();
+        InflowMessageDO inflowMessageDO = new InflowMessageDO();
         inflowMessageDO.setClientId(clientId);
         inflowMessageDO.setMsgId(message.getMsgId());
         inflowMessageDO.setContent(JSONObject.toJSONString(message));
@@ -132,7 +148,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public Message releaseInflowMsg(String clientId, int msgId) {
-        InflowMessageTenant inflowMessageDO = (InflowMessageTenant) operate(
+        InflowMessageDO inflowMessageDO = (InflowMessageDO) operate(
                 sqlSession -> getMapper(sqlSession, inflowMessageMapperClass).getInflowMessage(clientId, msgId));
         if (inflowMessageDO == null) {
             return null;
@@ -147,13 +163,13 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public Collection<Message> getAllInflowMsg(String clientId) {
-        List<InflowMessageTenant> messageList = (List<InflowMessageTenant>) operate(
+        List<InflowMessageDO> messageList = (List<InflowMessageDO>) operate(
                 sqlSession -> getMapper(sqlSession, inflowMessageMapperClass).getAllInflowMessage(clientId));
         if (MixAll.isEmpty(messageList)) {
             return null;
         }
         List<Message> mqttMessages = new ArrayList<>(messageList.size());
-        for (InflowMessageTenant inflowMessageDO : messageList) {
+        for (InflowMessageDO inflowMessageDO : messageList) {
             Message message = JSONObject.parseObject(inflowMessageDO.getContent(), Message.class);
             mqttMessages.add(message);
         }
@@ -162,7 +178,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public boolean cacheOutflowMsg(String clientId, Message message) {
-        OutflowMessageTenant outflowMessageDO = new OutflowMessageTenant();
+        OutflowMessageDO outflowMessageDO = new OutflowMessageDO();
         outflowMessageDO.setClientId(clientId);
         outflowMessageDO.setMsgId(message.getMsgId());
         outflowMessageDO.setContent(JSONObject.toJSONString(message));
@@ -175,13 +191,13 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public Collection<Message> getAllOutflowMsg(String clientId) {
-        List<OutflowMessageTenant> messageList = (List<OutflowMessageTenant>) operate(
+        List<OutflowMessageDO> messageList = (List<OutflowMessageDO>) operate(
                 sqlSession -> getMapper(sqlSession, outflowMessageMapperClass).getAllOutflowMessage(clientId));
         if (MixAll.isEmpty(messageList)) {
             return null;
         }
         List<Message> mqttMessages = new ArrayList<>(messageList.size());
-        for (OutflowMessageTenant outflowMessageDO : messageList) {
+        for (OutflowMessageDO outflowMessageDO : messageList) {
             Message message = JSONObject.parseObject(outflowMessageDO.getContent(), Message.class);
             mqttMessages.add(message);
         }
@@ -190,7 +206,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public Message releaseOutflowMsg(String clientId, int msgId) {
-        OutflowMessageTenant outflowMessageDO = (OutflowMessageTenant) operate(
+        OutflowMessageDO outflowMessageDO = (OutflowMessageDO) operate(
                 sqlSession -> getMapper(sqlSession, outflowMessageMapperClass).getOutflowMessage(clientId, msgId));
         if (outflowMessageDO == null) {
             return null;
@@ -205,7 +221,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public boolean cacheOutflowSecMsgId(String clientId, int msgId) {
-        OutflowSecMessageTenant outflowSecMessageDO = new OutflowSecMessageTenant();
+        OutflowSecMessageDO outflowSecMessageDO = new OutflowSecMessageDO();
         outflowSecMessageDO.setClientId(clientId);
         outflowSecMessageDO.setMsgId(msgId);
         outflowSecMessageDO.setGmtCreate(System.currentTimeMillis());
@@ -218,7 +234,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public boolean releaseOutflowSecMsgId(String clientId, int msgId) {
-        OutflowSecMessageTenant outflowSecMessageDO = (OutflowSecMessageTenant) operate(
+        OutflowSecMessageDO outflowSecMessageDO = (OutflowSecMessageDO) operate(
                 sqlSession -> getMapper(sqlSession, outflowSecMessageMapperClass).getOutflowSecMessage(clientId, msgId));
         if (outflowSecMessageDO == null) {
             return false;
@@ -238,7 +254,7 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public boolean storeOfflineMsg(String clientId, Message message) {
-        OfflineMessageTenant offlineMessageDO = new OfflineMessageTenant();
+        OfflineMessageDO offlineMessageDO = new OfflineMessageDO();
         offlineMessageDO.setClientId(clientId);
         offlineMessageDO.setContent(JSONObject.toJSONString(message));
         offlineMessageDO.setGmtCreate(message.getStoreTime());
@@ -248,13 +264,13 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
 
     @Override
     public Collection<Message> getAllOfflineMsg(String clientId) {
-        List<OfflineMessageTenant> offlineMessageDOList = (List<OfflineMessageTenant>) operate(
+        List<OfflineMessageDO> offlineMessageDOList = (List<OfflineMessageDO>) operate(
                 sqlSession -> getMapper(sqlSession, offlineMessageMapperClass).getAllOfflineMessage(clientId));
         if (MixAll.isEmpty(offlineMessageDOList)) {
             return null;
         }
         List<Message> messageList = new ArrayList<>();
-        for (OfflineMessageTenant offlineMessageDO : offlineMessageDOList) {
+        for (OfflineMessageDO offlineMessageDO : offlineMessageDOList) {
             Message message = JSONObject.parseObject(offlineMessageDO.getContent(), Message.class);
             messageList.add(message);
         }

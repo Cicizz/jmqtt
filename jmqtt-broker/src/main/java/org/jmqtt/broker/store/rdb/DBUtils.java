@@ -73,6 +73,7 @@ public class DBUtils {
             TransactionFactory transactionFactory = new JdbcTransactionFactory();
             Environment environment = new Environment("development", transactionFactory, dataSource);
             Configuration configuration = new Configuration(environment);
+            //configuration.setLogImpl(org.apache.ibatis.logging.stdout.StdOutImpl.class);
 
             // 初始化所有mapper
             configuration.addMapper(SessionMapper.class);
@@ -86,6 +87,7 @@ public class DBUtils {
             configuration.addMapper(WillMessageMapper.class);
             configuration.addMapper(DeviceMapper.class);
             configuration.addMapper(ProductTopicMapper.class);
+
 
             configuration.setMapUnderscoreToCamelCase(true);
             this.sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);

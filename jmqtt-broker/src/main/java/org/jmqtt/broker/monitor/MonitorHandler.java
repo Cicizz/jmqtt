@@ -35,72 +35,85 @@ public class MonitorHandler {
 
     private BrokerConfig brokerConfig;
 
-    public MonitorHandler(BrokerConfig brokerConfig){
+    public MonitorHandler(BrokerConfig brokerConfig) {
         this.brokerConfig = brokerConfig;
     }
 
     // 记录发送消息
-    public void recordPubMsg(String clientId){
-
-        if (!RedisReplyUtils.isOk(redisSupport.operate(new RedisCallBack() {
-            @Override
-            public Object operate(Jedis jedis) {
-                return jedis.incr(PUB_MSG_CNT_TREND+tenantAndBiz(clientId));
+    public void recordPubMsg(String clientId) {
+        try {
+            if (!RedisReplyUtils.isOk(redisSupport.operate(new RedisCallBack() {
+                @Override
+                public Object operate(Jedis jedis) {
+                    return jedis.incr(PUB_MSG_CNT_TREND + tenantAndBiz(clientId));
+                }
+            }))) {
+                LogUtil.error(log, "Monitor recordPubMsg error,clientId:{}", clientId);
             }
-        }))){
-            LogUtil.error(log,"Monitor recordPubMsg error,clientId:{}",clientId);
+        } catch (Exception ex) {
+            LogUtil.error(log, "recordPubMsg error,ex:{}", ex);
         }
     }
 
     // 记录连接请求次数
-    public void recordConnReq(TenantInfo tenantInfo){
-
-        if (!RedisReplyUtils.isOk(redisSupport.operate(new RedisCallBack() {
-            @Override
-            public Object operate(Jedis jedis) {
-                return jedis.incr(CONN_REQ_CNT_TREND+tenantInfo.getTenantCode() + "_" + tenantInfo.getBizCode());
+    public void recordConnReq(TenantInfo tenantInfo) {
+        try {
+            if (!RedisReplyUtils.isOk(redisSupport.operate(new RedisCallBack() {
+                @Override
+                public Object operate(Jedis jedis) {
+                    return jedis.incr(CONN_REQ_CNT_TREND + tenantInfo.getTenantCode() + "_" + tenantInfo.getBizCode());
+                }
+            }))) {
+                LogUtil.error(log, "Monitor recordConnReq error,clientId:{}", tenantInfo);
             }
-        }))){
-            LogUtil.error(log,"Monitor recordConnReq error,clientId:{}",tenantInfo);
+        } catch (Exception ex) {
+            LogUtil.error(log, "recordConnReq error,ex:{}", ex);
         }
+
     }
 
     // 记录连接请求成功次数
-    public void recordConnSuccReq(String clientId){
-
-        if (!RedisReplyUtils.isOk(redisSupport.operate(new RedisCallBack() {
-            @Override
-            public Object operate(Jedis jedis) {
-                return jedis.incr(CONN_REQ_CNT_SUCC_TREND+tenantAndBiz(clientId));
+    public void recordConnSuccReq(String clientId) {
+        try {
+            if (!RedisReplyUtils.isOk(redisSupport.operate(new RedisCallBack() {
+                @Override
+                public Object operate(Jedis jedis) {
+                    return jedis.incr(CONN_REQ_CNT_SUCC_TREND + tenantAndBiz(clientId));
+                }
+            }))) {
+                LogUtil.error(log, "Monitor recordConnSuccReq error,clientId:{}", clientId);
             }
-        }))){
-            LogUtil.error(log,"Monitor recordConnSuccReq error,clientId:{}",clientId);
+        } catch (Exception ex) {
+            LogUtil.error(log, "recordConnSuccReq error,ex:{}", ex);
         }
     }
 
     // 记录设备活跃状态：发送消息，订阅，消费消息都算活跃
-    public void recordActiveClient(String clientId){
-
-        if (!RedisReplyUtils.isOk(redisSupport.operate(new RedisCallBack() {
-            @Override
-            public Object operate(Jedis jedis) {
-                return jedis.hincrBy(CONN_REQ_CNT_SUCC_TREND+tenantAndBiz(clientId),clientId,1);
+    public void recordActiveClient(String clientId) {
+        try {
+            if (!RedisReplyUtils.isOk(redisSupport.operate(new RedisCallBack() {
+                @Override
+                public Object operate(Jedis jedis) {
+                    return jedis.hincrBy(ACTIVE_CNT_TREND + tenantAndBiz(clientId), clientId, 1);
+                }
+            }))) {
+                LogUtil.error(log, "Monitor recordActiveClient error,clientId:{}", clientId);
             }
-        }))){
-            LogUtil.error(log,"Monitor recordActiveClient error,clientId:{}",clientId);
+        } catch (Exception ex) {
+            LogUtil.error(log, "recordActiveClient error,ex:{}", ex);
         }
     }
 
-    private String tenantAndBiz(String clientId){
+    private String tenantAndBiz(String clientId) {
         ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
         return clientSession.getTenantCode() + "_" + clientSession.getBizCode();
     }
 
-    public void start(){
+    public void start() {
         this.redisSupport = RedisUtils.getInstance().createSupport(brokerConfig);
     }
 
-    public void shutdown(){
+    public void shutdown() {
         RedisUtils.getInstance().close();
     }
 }

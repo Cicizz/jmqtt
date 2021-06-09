@@ -7,8 +7,8 @@ import org.jmqtt.broker.common.helper.TenantContext;
 import org.jmqtt.broker.common.helper.MixAll;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.store.MessageStore;
-import org.jmqtt.broker.store.rdb.daoobject.RetainMessageTenant;
-import org.jmqtt.broker.store.rdb.daoobject.WillMessageTenant;
+import org.jmqtt.broker.store.rdb.daoobject.RetainMessageDO;
+import org.jmqtt.broker.store.rdb.daoobject.WillMessageDO;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,7 +29,7 @@ public class RDBMessageStore extends AbstractDBStore implements MessageStore {
 
     @Override
     public boolean storeWillMessage(String clientId, Message message) {
-        WillMessageTenant willMessageDO = new WillMessageTenant();
+        WillMessageDO willMessageDO = new WillMessageDO();
         willMessageDO.setClientId(clientId);
         willMessageDO.setContent(JSONObject.toJSONString(message));
         willMessageDO.setGmtCreate(message.getStoreTime());
@@ -48,7 +48,7 @@ public class RDBMessageStore extends AbstractDBStore implements MessageStore {
 
     @Override
     public Message getWillMessage(String clientId) {
-        WillMessageTenant willMessageDO = (WillMessageTenant) operate(sqlSession -> getMapper(sqlSession,willMessageMapperClass).getWillMessage(clientId));
+        WillMessageDO willMessageDO = (WillMessageDO) operate(sqlSession -> getMapper(sqlSession,willMessageMapperClass).getWillMessage(clientId));
         if (willMessageDO == null) {
             return null;
         }
@@ -57,7 +57,7 @@ public class RDBMessageStore extends AbstractDBStore implements MessageStore {
 
     @Override
     public boolean storeRetainMessage(String topic, Message message) {
-        RetainMessageTenant retainMessageDO = new RetainMessageTenant();
+        RetainMessageDO retainMessageDO = new RetainMessageDO();
         retainMessageDO.setTopic(topic);
         retainMessageDO.setContent(JSONObject.toJSONString(message));
         retainMessageDO.setBizCode(message.getBizCode());
@@ -79,12 +79,12 @@ public class RDBMessageStore extends AbstractDBStore implements MessageStore {
 
     @Override
     public Collection<Message> getAllRetainMsg() {
-        List<RetainMessageTenant> messageList = (List<RetainMessageTenant>) operate(sqlSession -> getMapper(sqlSession,retainMessageMapperClass).getAllRetainMessage());
+        List<RetainMessageDO> messageList = (List<RetainMessageDO>) operate(sqlSession -> getMapper(sqlSession,retainMessageMapperClass).getAllRetainMessage());
         if (MixAll.isEmpty(messageList)) {
             return null;
         }
         List<Message> mqttMessages = new ArrayList<>(messageList.size());
-        for (RetainMessageTenant retainMessageDO : messageList) {
+        for (RetainMessageDO retainMessageDO : messageList) {
             Message message = JSONObject.parseObject(retainMessageDO.getContent(),Message.class);
             mqttMessages.add(message);
         }

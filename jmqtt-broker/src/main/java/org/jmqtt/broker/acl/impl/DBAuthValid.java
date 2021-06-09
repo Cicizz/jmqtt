@@ -12,7 +12,7 @@ import org.jmqtt.broker.remoting.session.ClientSession;
 import org.jmqtt.broker.remoting.session.ConnectManager;
 import org.jmqtt.broker.store.rdb.AbstractDBStore;
 import org.jmqtt.broker.store.rdb.DBCallback;
-import org.jmqtt.broker.store.rdb.daoobject.DeviceTenant;
+import org.jmqtt.broker.store.rdb.daoobject.DeviceDO;
 import org.slf4j.Logger;
 
 /**
@@ -59,7 +59,7 @@ public class DBAuthValid extends AbstractDBStore implements AuthValid {
         }
         String tenantCode = arr[0];
         String deviceCode = arr[1];
-        DeviceTenant deviceDO = (DeviceTenant) operate(new DBCallback() {
+        DeviceDO deviceDO = (DeviceDO) operate(new DBCallback() {
             @Override
             public Object operate(SqlSession sqlSession) {
                 return getMapper(sqlSession,deviceMapperClass).getDevice(tenantCode,deviceCode);

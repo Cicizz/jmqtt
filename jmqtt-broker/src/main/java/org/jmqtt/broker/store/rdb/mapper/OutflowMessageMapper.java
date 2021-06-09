@@ -4,7 +4,7 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-import org.jmqtt.broker.store.rdb.daoobject.OutflowMessageTenant;
+import org.jmqtt.broker.store.rdb.daoobject.OutflowMessageDO;
 
 import java.util.List;
 
@@ -12,14 +12,14 @@ public interface OutflowMessageMapper {
 
     @Insert("INSERT INTO jmqtt_outflow_message(client_id,msg_id,content,gmt_create,biz_code,tenant_code) VALUES(#{clientId},#{msgId},#{content},#{gmtCreate},#{bizCode},#{tenantCode})"
             + "  on DUPLICATE key update content = #{content},gmt_create = #{gmtCreate}")
-    Long cacheOuflowMessage(OutflowMessageTenant outflowMessageDO);
+    Long cacheOuflowMessage(OutflowMessageDO outflowMessageDO);
 
     @Select("SELECT id,client_id,msg_id,content,gmt_create,biz_code,tenant_code FROM jmqtt_outflow_message WHERE client_id = #{clientId} and msg_id = #{msgId}")
-    OutflowMessageTenant getOutflowMessage(@Param("clientId") String clientId, @Param("msgId") int msgId);
+    OutflowMessageDO getOutflowMessage(@Param("clientId") String clientId, @Param("msgId") int msgId);
 
     @Delete("DELETE FROM jmqtt_outflow_message WHERE id = #{id}")
     Integer delOutflowMessage(Long id);
 
     @Select("SELECT id,client_id,msg_id,content,gmt_create,biz_code,tenant_code FROM jmqtt_outflow_message WHERE client_id = #{clientId} order by gmt_create asc")
-    List<OutflowMessageTenant> getAllOutflowMessage(String clientId);
+    List<OutflowMessageDO> getAllOutflowMessage(String clientId);
 }

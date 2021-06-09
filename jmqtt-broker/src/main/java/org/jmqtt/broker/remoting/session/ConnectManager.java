@@ -36,4 +36,8 @@ public class ConnectManager {
         }
         return null;
     }
+
+    public static final String getDeviceCoding(String clientId){
+        return clientId.split("@")[1];
+    }
 }

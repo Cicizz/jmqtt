@@ -8,7 +8,7 @@ import java.util.Date;
 
 @Data
 @ToString
-public class DeviceTenant extends TenantBase implements Serializable {
+public class DeviceDO extends TenantBase implements Serializable {
 
     private static final long serialVersionUID = 12213213131231231L;
 

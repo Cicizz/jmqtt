@@ -10,7 +10,7 @@ import org.jmqtt.broker.processor.dispatcher.EventConsumeHandler;
 import org.jmqtt.broker.processor.dispatcher.event.Event;
 import org.jmqtt.broker.store.rdb.AbstractDBStore;
 import org.jmqtt.broker.store.rdb.DBCallback;
-import org.jmqtt.broker.store.rdb.daoobject.EventTenant;
+import org.jmqtt.broker.store.rdb.daoobject.EventDO;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -47,7 +47,7 @@ public class RDBClusterEventHandler extends AbstractDBStore implements ClusterEv
 
     @Override
     public boolean sendEvent(Event event) {
-        EventTenant eventDO = new EventTenant();
+        EventDO eventDO = new EventDO();
         eventDO.setJmqttIp(MixAll.getLocalIp());
         eventDO.setContent(event.getBody());
         eventDO.setEventCode(event.getEventCode());
@@ -67,18 +67,18 @@ public class RDBClusterEventHandler extends AbstractDBStore implements ClusterEv
     public List<Event> pollEvent(int maxPollNum) {
         // offset: min -> max
         long currentOffset = offset.get();
-        List<EventTenant> eventDOList = (List<EventTenant>) operate(sqlSession -> getMapper(sqlSession,eventMapperClass).consumeEvent(currentOffset,maxPollNum));
+        List<EventDO> eventDOList = (List<EventDO>) operate(sqlSession -> getMapper(sqlSession,eventMapperClass).consumeEvent(currentOffset,maxPollNum));
         if (eventDOList == null || eventDOList.size() == 0) {
             return Collections.emptyList();
         }
         List<Event> events = new ArrayList<>();
-        for (EventTenant eventDO : eventDOList) {
+        for (EventDO eventDO : eventDOList) {
             Event event = new Event(eventDO.getEventCode(),eventDO.getContent(),eventDO.getGmtCreate(),currentIp);
             events.add(event);
         }
 
         // reset offset
-        EventTenant eventDO = eventDOList.get(eventDOList.size()-1);
+        EventDO eventDO = eventDOList.get(eventDOList.size()-1);
         if (!offset.compareAndSet(currentOffset,eventDO.getId())) {
             LogUtil.warn(log,"[RDBClusterEventHandler] pollEvent offset is wrong,expectOffset:{},currentOffset:{},maxOffset:{}",
                     offset.get(),currentOffset,eventDO.getId());

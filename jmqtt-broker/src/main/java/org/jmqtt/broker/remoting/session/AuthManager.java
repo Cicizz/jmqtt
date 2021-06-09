@@ -5,7 +5,7 @@ import org.jmqtt.broker.common.model.AuthorityEnum;
 import org.jmqtt.broker.common.model.Constants;
 import org.jmqtt.broker.store.rdb.AbstractDBStore;
 import org.jmqtt.broker.store.rdb.DBCallback;
-import org.jmqtt.broker.store.rdb.daoobject.ProductTopicTenant;
+import org.jmqtt.broker.store.rdb.daoobject.ProductTopicDO;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,10 +25,10 @@ public class AuthManager extends AbstractDBStore {
     public TopicPermission getTopicPerm(String tenantCode, String topic) {
         TopicPermission topicPermission = topicPermissionMap.get(tenantCode + Constants.SPLIT + topic);
         if (topicPermission == null) {
-            ProductTopicTenant productTopicDO = (ProductTopicTenant) operate(new DBCallback() {
+            ProductTopicDO productTopicDO = (ProductTopicDO) operate(new DBCallback() {
                 @Override
                 public Object operate(SqlSession sqlSession) {
-                    ProductTopicTenant query = new ProductTopicTenant();
+                    ProductTopicDO query = new ProductTopicDO();
                     query.setTopic(topic);
                     query.setTenantCode(tenantCode);
                     return getMapper(sqlSession, productTopicMapperClass).getProductTopicByTopic(query);

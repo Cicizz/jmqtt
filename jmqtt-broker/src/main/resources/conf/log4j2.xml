@@ -227,6 +227,13 @@
             <appender-ref ref="console"/>
         </logger>
 
+        <logger name="com.tj.mapper" level="${level}" additivity="false">
+            <AppenderRef ref="console"/>
+            <appender-ref ref="otherLog-appender"/>
+            <AppenderRef ref="error-appender" level="${level}"/>
+        </logger>
+
+
         <root>
             <level value="${level}"/>
             <appender-ref ref="error-appender"/>
