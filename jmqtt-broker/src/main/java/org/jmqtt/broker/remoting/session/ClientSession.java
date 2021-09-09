@@ -1,14 +1,19 @@
 package org.jmqtt.broker.remoting.session;
 
 import io.netty.channel.ChannelHandlerContext;
+import lombok.Data;
+import lombok.ToString;
+import org.jmqtt.broker.store.rdb.daoobject.TenantBase;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 本服务连接的设备会话信息
+ * client session data
  */
-public class ClientSession {
+@ToString
+@Data
+public class ClientSession extends TenantBase {
 
     /**
      * clientId uniqu in a cluseter
@@ -16,6 +21,8 @@ public class ClientSession {
     private           String                clientId;
     private           boolean               cleanStart;
     private transient ChannelHandlerContext ctx;
+    private int version;// mqtt version mqtt3.1.1:3   mqtt5:5
+
 
     private transient AtomicInteger messageIdCounter = new AtomicInteger(1);
 
@@ -29,30 +36,6 @@ public class ClientSession {
     public ClientSession(String clientId, boolean cleanStart, ChannelHandlerContext ctx) {
         this.clientId = clientId;
         this.cleanStart = cleanStart;
-        this.ctx = ctx;
-    }
-
-    public String getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
-
-    public boolean isCleanStart() {
-        return cleanStart;
-    }
-
-    public void setCleanStart(boolean cleanStart) {
-        this.cleanStart = cleanStart;
-    }
-
-    public ChannelHandlerContext getCtx() {
-        return ctx;
-    }
-
-    public void setCtx(ChannelHandlerContext ctx) {
         this.ctx = ctx;
     }
 

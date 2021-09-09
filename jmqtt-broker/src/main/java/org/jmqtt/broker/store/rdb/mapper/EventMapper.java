@@ -9,14 +9,14 @@ import java.util.List;
 
 public interface EventMapper {
 
-    @Insert("insert into jmqtt_event (content,gmt_create,jmqtt_ip,event_code) values "
-            + "(#{content},#{gmtCreate},#{jmqttIp},#{eventCode})")
+    @Insert("insert into jmqtt_event (content,gmt_create,jmqtt_ip,event_code,tenant_code,biz_code) values "
+            + "(#{content},#{gmtCreate},#{jmqttIp},#{eventCode},#{tenantCode},#{bizCode})")
     Long sendEvent(EventDO eventDO);
 
 
-    @Select("select id,content,gmt_create,jmqtt_ip,event_code from jmqtt_event "
+    @Select("select id,content,gmt_create,jmqtt_ip,event_code,tenant_code,biz_code from jmqtt_event "
             + "where id > #{offset} order by id asc limit #{maxNum}")
-    List<EventDO> consumeEvent(@Param("offset") long offset,@Param("maxNum") int maxNum);
+    List<EventDO> consumeEvent(@Param("offset") long offset, @Param("maxNum") int maxNum);
 
     @Select("SELECT max(id) FROM jmqtt_event")
     Long getMaxOffset();

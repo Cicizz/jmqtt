@@ -52,6 +52,8 @@ public class RDBClusterEventHandler extends AbstractDBStore implements ClusterEv
         eventDO.setContent(event.getBody());
         eventDO.setEventCode(event.getEventCode());
         eventDO.setGmtCreate(event.getSendTime());
+        eventDO.setBizCode(event.getBizCode());
+        eventDO.setTenantCode(event.getTenantCode());
         Long id = (Long) operate(sqlSession -> getMapper(sqlSession,eventMapperClass).sendEvent(eventDO));
         return id != null;
     }

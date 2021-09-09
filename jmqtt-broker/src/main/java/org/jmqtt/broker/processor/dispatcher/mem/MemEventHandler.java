@@ -1,5 +1,6 @@
 package org.jmqtt.broker.processor.dispatcher.mem;
 
+import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.log.JmqttLogger;
 import org.jmqtt.broker.common.log.LogUtil;

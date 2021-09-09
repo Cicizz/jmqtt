@@ -1,5 +1,9 @@
 package org.jmqtt.broker.common.model;
 
+import lombok.Data;
+import lombok.ToString;
+import org.jmqtt.broker.store.rdb.daoobject.TenantBase;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -8,7 +12,9 @@ import java.util.Objects;
  * inner message transfer from MqttMessage
  * jmqtt 内部消息处理
  */
-public class Message {
+@Data
+@ToString
+public class Message extends TenantBase {
 
     private int msgId;
 
@@ -21,6 +27,10 @@ public class Message {
     private byte[] payload;
 
     private long storeTime;
+
+    private Stage stage = Stage.NEW_ARRIVED;
+
+    private Subscription dispatcher;
 
     public Message(){}
 
@@ -46,53 +56,6 @@ public class Message {
         return headers.get(key);
     }
 
-    public int getMsgId() {
-        return msgId;
-    }
-
-    public void setMsgId(int msgId) {
-        this.msgId = msgId;
-    }
-
-    public Map<String, Object> getHeaders() {
-        return headers;
-    }
-
-    public void setHeaders(Map<String, Object> headers) {
-        this.headers = headers;
-    }
-
-    public Type getType() {
-        return type;
-    }
-
-    public void setType(Type type) {
-        this.type = type;
-    }
-
-    public byte[] getPayload() {
-        return payload;
-    }
-
-    public void setPayload(byte[] payload) {
-        this.payload = payload;
-    }
-
-    public String getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(String clientId) {
-        this.clientId = clientId;
-    }
-
-    public long getStoreTime() {
-        return storeTime;
-    }
-
-    public void setStoreTime(long storeTime) {
-        this.storeTime = storeTime;
-    }
 
     /**
      * mqtt message type
@@ -135,6 +98,35 @@ public class Message {
                 }
             }
             throw new IllegalArgumentException("unknown message type: " + type);
+        }
+    }
+
+
+    public enum Stage{
+        NEW_ARRIVED(1),
+        GROUP_DISPATHER(2);
+
+        private int value;
+
+        private Stage(int value) {
+            this.value = value;
+        }
+
+        public int value() {
+            return this.value;
+        }
+
+        public static Stage valueOf(int stage) {
+            Stage[] var1 = values();
+            int var2 = var1.length;
+
+            for(int var3 = 0; var3 < var2; ++var3) {
+                Stage t = var1[var3];
+                if (t.value == stage) {
+                    return t;
+                }
+            }
+            throw new IllegalArgumentException("unknown message Stage: " + stage);
         }
     }
 

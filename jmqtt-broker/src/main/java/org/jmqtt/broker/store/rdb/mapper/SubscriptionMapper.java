@@ -10,8 +10,8 @@ import java.util.List;
 
 public interface SubscriptionMapper {
 
-    @Insert("INSERT INTO jmqtt_subscription (client_id,topic,qos) "
-            + "VALUES (#{clientId},#{topic},#{qos})")
+    @Insert("INSERT INTO jmqtt_subscription (client_id,topic,qos,biz_code,tenant_code) "
+            + "VALUES (#{clientId},#{topic},#{qos},#{bizCode},#{tenantCode})")
     Long storeSubscription(SubscriptionDO subscriptionDO);
 
     @Delete("DELETE FROM jmqtt_subscription WHERE client_id = #{clientId}")
@@ -20,6 +20,6 @@ public interface SubscriptionMapper {
     @Delete("DELETE FROM jmqtt_subscription WHERE client_id = #{clientId} AND topic = #{topic}")
     Integer delSubscription(@Param("clientId") String clientId,@Param("topic") String topic);
 
-    @Select("SELECT client_id,topic,qos FROM jmqtt_subscription WHERE client_id = #{clientId}")
+    @Select("SELECT client_id,topic,qos,biz_code,tenant_code FROM jmqtt_subscription WHERE client_id = #{clientId}")
     List<SubscriptionDO> querySubscription(String clientId);
 }

@@ -1,15 +1,21 @@
 package org.jmqtt.broker.subscribe;
 
-import org.jmqtt.broker.common.log.JmqttLogger;
-import org.jmqtt.broker.common.log.LogUtil;
-import org.jmqtt.broker.common.model.Subscription;
-import org.slf4j.Logger;
-
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
+import org.jmqtt.broker.common.log.JmqttLogger;
+import org.jmqtt.broker.common.log.LogUtil;
+import org.jmqtt.broker.common.model.Subscription;
+import org.slf4j.Logger;
 
 
 public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
@@ -27,8 +33,21 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
     //TODO 共享订阅均衡策略（提取到配置文件）
     private String sharedSubscriptionStrategy = "random";
 
-
     public DefaultSubscriptionTreeMatcher() {
+
+    }
+
+    public static void main(String[] args) {
+
+        Pattern pattern = Pattern.compile("(\\$share/[a-zA-Z0-9]+/)(\\S+)");
+        Matcher m = pattern.matcher("$share/g1/test/1");
+        if (m.find()) {
+            System.out.println("args0 = " + m.group(0));
+            System.out.println("args1 = " + m.group(1));
+            System.out.println("args2 = " + m.group(2));
+        }
+        System.out.println(
+            "args = " + new DefaultSubscriptionTreeMatcher().isMatch("test/1", "$share/g1/test/#"));
     }
 
     @Override
@@ -51,7 +70,7 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
             }
             currentNode.addSubscriber(subscription);
         } catch (Exception ex) {
-            LogUtil.warn(log,"[Subscription] -> Subscribe failed,clientId={},topic={},qos={}",
+            LogUtil.warn(log, "[Subscription] -> Subscribe failed,clientId={},topic={},qos={}",
                 subscription.getClientId(), subscription.getTopic(), subscription.getQos());
             return true;
         }
@@ -88,37 +107,51 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
 
     @Override
     public Set<Subscription> match(String topic, String clientId) {
-        Set<Subscription> subscriptions = new HashSet<>();
-        recursionMatch(topic, root, false, subscriptions);
-        //过滤重复的共享订阅者
-        return filterSharedSub(subscriptions, clientId);
+        return getSubs(topic, clientId, false);
+
     }
 
-    private Set<Subscription> filterSharedSub(Set<Subscription> subscriptions, String clientId) {
+    @Override
+    public Set<Subscription> matchGroup(String topic, String clientId) {
+        return getSubs(topic, clientId, true);
+    }
+
+
+    private Set<Subscription> getSubs(String topic, String clientId,
+        boolean groupFlag) {
+
+        Set<Subscription> subscriptions = new HashSet<>();
+        recursionMatch(topic, root, false, subscriptions);
+
         Map<String, Set<Subscription>> groupSharedSubs = new HashMap<>();
-        Set<Subscription> filteredSubs = new HashSet<>();
+        Set<Subscription> normalSubs = new HashSet<>();
         for (Subscription sub : subscriptions) {
-            String topic = sub.getTopic();
+            String tmpTopic = sub.getTopic();
             //共享订阅者按topic字串分组
-            if (topic.startsWith(GROUP_STR)) {
+            if (tmpTopic.startsWith(GROUP_STR)) {
                 //TODO 待定，不同topic字串但匹配同一topic
-                Set<Subscription> subs = groupSharedSubs.get(topic);
+                Set<Subscription> subs = groupSharedSubs.get(tmpTopic);
                 if (Objects.isNull(subs)) {
                     subs = new HashSet<>();
-                    groupSharedSubs.put(topic, subs);
+                    groupSharedSubs.put(tmpTopic, subs);
                 }
                 subs.add(sub);
             } else {
-                filteredSubs.add(sub);
+                normalSubs.add(sub);
             }
+        }
+        //非共享
+        if (!groupFlag) {
+            return normalSubs;
         }
 
         //按策略从不同订阅组选取订阅者
+        Set<Subscription> groupSubs = new HashSet<>();
         Collection<Set<Subscription>> groups = groupSharedSubs.values();
         for (Set<Subscription> group : groups) {
-            filteredSubs.add(selectOneByStrategy(group, clientId));
+            groupSubs.add(selectOneByStrategy(group, clientId));
         }
-        return filteredSubs;
+        return groupSubs;
     }
 
     /**
@@ -138,10 +171,9 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
         if (pubTopic.equals(subTopic)) {
             return true;
         }
-        Pattern pattern = Pattern.compile("(" + GROUP + "/\\S/)(\\S+)");
-        Matcher m = pattern.matcher(subTopic);
-        if (m.find()) {
-            return innerIsMatch(pubTopic, m.group(2));
+        String sharedTopic = SubscriptionMatcher.groupTopic(subTopic);
+        if (StringUtils.isNotEmpty(sharedTopic)) {
+            return innerIsMatch(pubTopic, sharedTopic);
         }
 
         return innerIsMatch(pubTopic, subTopic);
@@ -207,6 +239,7 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
             }
         }
     }
+
 
     class Token {
 

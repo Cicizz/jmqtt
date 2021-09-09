@@ -3,6 +3,7 @@ package org.jmqtt.broker.store.rdb;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.ibatis.session.SqlSession;
 import org.jmqtt.broker.common.config.BrokerConfig;
+import org.jmqtt.broker.common.helper.TenantContext;
 import org.jmqtt.broker.common.helper.MixAll;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.store.MessageStore;
@@ -32,6 +33,8 @@ public class RDBMessageStore extends AbstractDBStore implements MessageStore {
         willMessageDO.setClientId(clientId);
         willMessageDO.setContent(JSONObject.toJSONString(message));
         willMessageDO.setGmtCreate(message.getStoreTime());
+        willMessageDO.setBizCode(TenantContext.getBizCode());
+        willMessageDO.setTenantCode(TenantContext.getTenantCode());
 
         Long id = (Long) operate(sqlSession -> getMapper(sqlSession,willMessageMapperClass).storeWillMessage(willMessageDO));
         return id != 0;
@@ -57,6 +60,8 @@ public class RDBMessageStore extends AbstractDBStore implements MessageStore {
         RetainMessageDO retainMessageDO = new RetainMessageDO();
         retainMessageDO.setTopic(topic);
         retainMessageDO.setContent(JSONObject.toJSONString(message));
+        retainMessageDO.setBizCode(message.getBizCode());
+        retainMessageDO.setTenantCode(message.getTenantCode());
         Long id = (Long) operate(new DBCallback() {
             @Override
             public Object operate(SqlSession sqlSession) {

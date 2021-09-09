@@ -18,25 +18,18 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <akka.version>2.6.13</akka.version>
         <scala.binary.version>2.13</scala.binary.version>
+
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.typesafe.akka</groupId>
-                <artifactId>akka-bom_${scala.binary.version}</artifactId>
-                <version>2.6.13</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
+
         <dependency>
-            <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-cluster-typed_${scala.binary.version}</artifactId>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.12</version>
         </dependency>
 
         <dependency>
@@ -67,6 +60,38 @@
             <artifactId>log4j-core</artifactId>
         </dependency>
 
+        <!-- akka -->
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-actor-typed_${scala.binary.version}</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-cluster-typed_${scala.binary.version}</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-remote_${scala.binary.version}</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-serialization-jackson_2.13</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>ch.qos.logback</groupId>-->
+<!--            <artifactId>logback-classic</artifactId>-->
+<!--            <version>1.2.3</version>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-actor-testkit-typed_2.13</artifactId>
+            <version>${akka.version}</version>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 

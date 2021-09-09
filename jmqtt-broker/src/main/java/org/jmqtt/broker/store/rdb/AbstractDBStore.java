@@ -18,6 +18,8 @@ public abstract class AbstractDBStore {
 
     protected static final Class<OfflineMessageMapper> offlineMessageMapperClass = OfflineMessageMapper.class;
     protected static final Class<WillMessageMapper>    willMessageMapperClass    = WillMessageMapper.class;
+    protected static final Class<DeviceMapper>         deviceMapperClass           = DeviceMapper.class;
+    protected static final Class<ProductTopicMapper>         productTopicMapperClass           = ProductTopicMapper.class;
 
     protected final static Logger log = JmqttLogger.storeLog;
 

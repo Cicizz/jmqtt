@@ -10,11 +10,14 @@ import org.jmqtt.broker.common.helper.RejectHandler;
 import org.jmqtt.broker.common.helper.ThreadFactoryImpl;
 import org.jmqtt.broker.common.log.JmqttLogger;
 import org.jmqtt.broker.common.log.LogUtil;
+import org.jmqtt.broker.monitor.MonitorHandler;
 import org.jmqtt.broker.processor.RequestProcessor;
 import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
 import org.jmqtt.broker.processor.dispatcher.DefaultDispatcherInnerMessage;
 import org.jmqtt.broker.processor.dispatcher.EventConsumeHandler;
 import org.jmqtt.broker.processor.dispatcher.InnerMessageDispatcher;
+import org.jmqtt.broker.processor.dispatcher.akka.AkkaActorListener;
+import org.jmqtt.broker.processor.dispatcher.akka.AkkaClusterEventHandler;
 import org.jmqtt.broker.processor.protocol.*;
 import org.jmqtt.broker.processor.recover.ReSendMessageService;
 import org.jmqtt.broker.remoting.netty.ChannelEventListener;
@@ -24,8 +27,9 @@ import org.jmqtt.broker.store.SessionStore;
 import org.jmqtt.broker.store.highperformance.InflowMessageHandler;
 import org.jmqtt.broker.store.highperformance.OutflowMessageHandler;
 import org.jmqtt.broker.store.highperformance.OutflowSecMessageHandler;
-import org.jmqtt.broker.subscribe.DefaultSubscriptionTreeMatcher;
+import org.jmqtt.broker.subscribe.AkkaController;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
+import org.jmqtt.broker.subscribe.SubscriptionSupportGroupTreeMatcher;
 import org.slf4j.Logger;
 
 import java.util.concurrent.ExecutorService;
@@ -57,19 +61,24 @@ public class BrokerController {
     private NettyRemotingServer remotingServer;
 
     private InnerMessageDispatcher innerMessageDispatcher;
-    private SubscriptionMatcher    subscriptionMatcher;
-    private AuthValid              authValid;
-    private ReSendMessageService   reSendMessageService;
-    private SessionStore           sessionStore;
-    private MessageStore           messageStore;
+    private SubscriptionMatcher subscriptionMatcher;
+    private AuthValid authValid;
+    private ReSendMessageService reSendMessageService;
+    private SessionStore sessionStore;
+    private MessageStore messageStore;
     private ClusterEventHandler clusterEventHandler;
     private EventConsumeHandler eventConsumeHandler;
     private String currentIp;
 
+    //akka
+    private AkkaController akkaController;
+
     // high performance message handle
-    private InflowMessageHandler     inflowMessageHandler;
-    private OutflowMessageHandler    outflowMessageHandler;
+    private InflowMessageHandler inflowMessageHandler;
+    private OutflowMessageHandler outflowMessageHandler;
     private OutflowSecMessageHandler outflowSecMessageHandler;
+
+    private MonitorHandler monitorHandler;
 
     public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig) {
         this.brokerConfig = brokerConfig;
@@ -80,6 +89,7 @@ public class BrokerController {
         this.subQueue = new LinkedBlockingQueue<>(100000);
         this.pingQueue = new LinkedBlockingQueue<>(10000);
         this.currentIp = MixAll.getLocalIp();
+        this.monitorHandler = new MonitorHandler(brokerConfig);
 
         {
             // 会话状态，消息存储加载，可自己实现相关的类
@@ -90,7 +100,14 @@ public class BrokerController {
             this.authValid = MixAll.pluginInit(brokerConfig.getAuthValidClass());
 
             // 集群事件转发加载
-            this.clusterEventHandler = MixAll.pluginInit(brokerConfig.getClusterEventHandlerClass());
+            this.clusterEventHandler = MixAll
+                .pluginInit(brokerConfig.getClusterEventHandlerClass());
+        }
+
+        if (clusterEventHandler instanceof AkkaClusterEventHandler) {
+            this.akkaController = new AkkaController((AkkaActorListener) clusterEventHandler);
+        } else {
+            this.akkaController = new AkkaController();
         }
 
         // high performance message handler
@@ -98,46 +115,47 @@ public class BrokerController {
         this.outflowMessageHandler = new OutflowMessageHandler();
         this.outflowSecMessageHandler = new OutflowSecMessageHandler();
 
-        this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
+        this.subscriptionMatcher = new SubscriptionSupportGroupTreeMatcher(akkaController);
         this.innerMessageDispatcher = new DefaultDispatcherInnerMessage(this);
         this.eventConsumeHandler = new EventConsumeHandler(this);
 
-        this.channelEventListener = new ClientLifeCycleHookService(messageStore, innerMessageDispatcher);
-        this.remotingServer = new NettyRemotingServer(brokerConfig, nettyConfig, channelEventListener);
+        this.channelEventListener = new ClientLifeCycleHookService(messageStore,
+            innerMessageDispatcher);
+        this.remotingServer = new NettyRemotingServer(brokerConfig, nettyConfig,
+            channelEventListener);
         this.reSendMessageService = new ReSendMessageService(this);
 
         int coreThreadNum = Runtime.getRuntime().availableProcessors();
         this.connectExecutor = new ThreadPoolExecutor(coreThreadNum * 2,
-                coreThreadNum * 2,
-                60000,
-                TimeUnit.MILLISECONDS,
-                connectQueue,
-                new ThreadFactoryImpl("ConnectThread"),
-                new RejectHandler("connect", 100000));
+            coreThreadNum * 2,
+            60000,
+            TimeUnit.MILLISECONDS,
+            connectQueue,
+            new ThreadFactoryImpl("ConnectThread"),
+            new RejectHandler("connect", 100000));
         this.pubExecutor = new ThreadPoolExecutor(coreThreadNum * 2,
-                coreThreadNum * 2,
-                60000,
-                TimeUnit.MILLISECONDS,
-                pubQueue,
-                new ThreadFactoryImpl("PubThread"),
-                new RejectHandler("pub", 100000));
+            coreThreadNum * 2,
+            60000,
+            TimeUnit.MILLISECONDS,
+            pubQueue,
+            new ThreadFactoryImpl("PubThread"),
+            new RejectHandler("pub", 100000));
         this.subExecutor = new ThreadPoolExecutor(coreThreadNum * 2,
-                coreThreadNum * 2,
-                60000,
-                TimeUnit.MILLISECONDS,
-                subQueue,
-                new ThreadFactoryImpl("SubThread"),
-                new RejectHandler("sub", 100000));
+            coreThreadNum * 2,
+            60000,
+            TimeUnit.MILLISECONDS,
+            subQueue,
+            new ThreadFactoryImpl("SubThread"),
+            new RejectHandler("sub", 100000));
         this.pingExecutor = new ThreadPoolExecutor(coreThreadNum,
-                coreThreadNum,
-                60000,
-                TimeUnit.MILLISECONDS,
-                pingQueue,
-                new ThreadFactoryImpl("PingThread"),
-                new RejectHandler("heartbeat", 100000));
+            coreThreadNum,
+            60000,
+            TimeUnit.MILLISECONDS,
+            pingQueue,
+            new ThreadFactoryImpl("PingThread"),
+            new RejectHandler("heartbeat", 100000));
 
     }
-
 
 
     public void start() {
@@ -145,13 +163,19 @@ public class BrokerController {
         MixAll.printProperties(log, brokerConfig);
         MixAll.printProperties(log, nettyConfig);
 
+        // start monitor
+        this.monitorHandler.start();
+
+        // akka 初始化
+        this.akkaController.start(brokerConfig,innerMessageDispatcher,eventConsumeHandler);
+
         // 1. start store
         this.sessionStore.start(brokerConfig);
         this.messageStore.start(brokerConfig);
 
         // 2. start cluster
-        this.eventConsumeHandler.start();
         this.clusterEventHandler.start(brokerConfig);
+        this.eventConsumeHandler.start();
 
         // 3. start message service
         if (this.innerMessageDispatcher != null) {
@@ -169,33 +193,45 @@ public class BrokerController {
             RequestProcessor publishProcessor = new PublishProcessor(this);
             RequestProcessor pubRelProcessor = new PubRelProcessor(this);
             RequestProcessor subscribeProcessor = new SubscribeProcessor(this);
-            RequestProcessor unSubscribeProcessor = new UnSubscribeProcessor(subscriptionMatcher, sessionStore);
+            RequestProcessor unSubscribeProcessor = new UnSubscribeProcessor(subscriptionMatcher,
+                sessionStore,monitorHandler);
             RequestProcessor pubRecProcessor = new PubRecProcessor(this);
             RequestProcessor pubAckProcessor = new PubAckProcessor(this);
             RequestProcessor pubCompProcessor = new PubCompProcessor(this);
 
-            this.remotingServer.registerProcessor(MqttMessageType.CONNECT, connectProcessor, connectExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.DISCONNECT, disconnectProcessor, connectExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.PINGREQ, pingProcessor, pingExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.PUBLISH, publishProcessor, pubExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.PUBACK, pubAckProcessor, pubExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.PUBREL, pubRelProcessor, pubExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.SUBSCRIBE, subscribeProcessor, subExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.UNSUBSCRIBE, unSubscribeProcessor, subExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.PUBREC, pubRecProcessor, subExecutor);
-            this.remotingServer.registerProcessor(MqttMessageType.PUBCOMP, pubCompProcessor, subExecutor);
+            this.remotingServer
+                .registerProcessor(MqttMessageType.CONNECT, connectProcessor, connectExecutor);
+            this.remotingServer.registerProcessor(MqttMessageType.DISCONNECT, disconnectProcessor,
+                connectExecutor);
+            this.remotingServer
+                .registerProcessor(MqttMessageType.PINGREQ, pingProcessor, pingExecutor);
+            this.remotingServer
+                .registerProcessor(MqttMessageType.PUBLISH, publishProcessor, pubExecutor);
+            this.remotingServer
+                .registerProcessor(MqttMessageType.PUBACK, pubAckProcessor, pubExecutor);
+            this.remotingServer
+                .registerProcessor(MqttMessageType.PUBREL, pubRelProcessor, pubExecutor);
+            this.remotingServer
+                .registerProcessor(MqttMessageType.SUBSCRIBE, subscribeProcessor, subExecutor);
+            this.remotingServer
+                .registerProcessor(MqttMessageType.UNSUBSCRIBE, unSubscribeProcessor, subExecutor);
+            this.remotingServer
+                .registerProcessor(MqttMessageType.PUBREC, pubRecProcessor, subExecutor);
+            this.remotingServer
+                .registerProcessor(MqttMessageType.PUBCOMP, pubCompProcessor, subExecutor);
         }
 
         // 5. start auth
         if (this.authValid != null) {
-            this.authValid.start();
+            this.authValid.start(brokerConfig);
         }
 
         // 6. start remoting
         if (this.remotingServer != null) {
             this.remotingServer.start();
         }
-        LogUtil.info(log,"JMqtt Server start success and version = {}", brokerConfig.getVersion());
+
+        LogUtil.info(log, "JMqtt Server start success and version = {}", brokerConfig.getVersion());
 
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             @Override
@@ -241,6 +277,9 @@ public class BrokerController {
         }
         if (this.authValid != null) {
             this.authValid.shutdown();
+        }
+        if (this.monitorHandler != null) {
+            this.monitorHandler.shutdown();
         }
 
     }
@@ -344,5 +383,17 @@ public class BrokerController {
 
     public OutflowSecMessageHandler getOutflowSecMessageHandler() {
         return outflowSecMessageHandler;
+    }
+
+    public AkkaController getAkkaController() {
+        return akkaController;
+    }
+
+    public MonitorHandler getMonitorHandler() {
+        return monitorHandler;
+    }
+
+    public void setAkkaController(AkkaController akkaController) {
+        this.akkaController = akkaController;
     }
 }
