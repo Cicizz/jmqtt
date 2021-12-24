@@ -2,9 +2,6 @@ package org.jmqtt.broker;
 
 import io.netty.handler.codec.mqtt.MqttMessageType;
 import org.jmqtt.broker.acl.AuthValid;
-import org.jmqtt.broker.processor.dispatcher.akka.AkkaActorListener;
-import org.jmqtt.broker.processor.dispatcher.akka.AkkaClusterEventHandler;
-import org.jmqtt.broker.subscribe.AkkaController;
 import org.jmqtt.broker.client.ClientLifeCycleHookService;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.config.NettyConfig;
@@ -13,12 +10,13 @@ import org.jmqtt.broker.common.helper.RejectHandler;
 import org.jmqtt.broker.common.helper.ThreadFactoryImpl;
 import org.jmqtt.broker.common.log.JmqttLogger;
 import org.jmqtt.broker.common.log.LogUtil;
-import org.jmqtt.broker.monitor.MonitorHandler;
 import org.jmqtt.broker.processor.RequestProcessor;
 import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
 import org.jmqtt.broker.processor.dispatcher.DefaultDispatcherInnerMessage;
 import org.jmqtt.broker.processor.dispatcher.EventConsumeHandler;
 import org.jmqtt.broker.processor.dispatcher.InnerMessageDispatcher;
+import org.jmqtt.broker.processor.dispatcher.akka.AkkaActorListener;
+import org.jmqtt.broker.processor.dispatcher.akka.AkkaClusterEventHandler;
 import org.jmqtt.broker.processor.protocol.*;
 import org.jmqtt.broker.processor.recover.ReSendMessageService;
 import org.jmqtt.broker.remoting.netty.ChannelEventListener;
@@ -28,6 +26,7 @@ import org.jmqtt.broker.store.SessionStore;
 import org.jmqtt.broker.store.highperformance.InflowMessageHandler;
 import org.jmqtt.broker.store.highperformance.OutflowMessageHandler;
 import org.jmqtt.broker.store.highperformance.OutflowSecMessageHandler;
+import org.jmqtt.broker.subscribe.AkkaController;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.jmqtt.broker.subscribe.SubscriptionSupportGroupTreeMatcher;
 import org.slf4j.Logger;
@@ -78,7 +77,6 @@ public class BrokerController {
     private OutflowMessageHandler outflowMessageHandler;
     private OutflowSecMessageHandler outflowSecMessageHandler;
 
-    private MonitorHandler monitorHandler;
 
     public BrokerController(BrokerConfig brokerConfig, NettyConfig nettyConfig) {
         this.brokerConfig = brokerConfig;
@@ -89,7 +87,6 @@ public class BrokerController {
         this.subQueue = new LinkedBlockingQueue<>(100000);
         this.pingQueue = new LinkedBlockingQueue<>(10000);
         this.currentIp = MixAll.getLocalIp();
-        this.monitorHandler = new MonitorHandler(brokerConfig);
 
         {
             // 会话状态，消息存储加载，可自己实现相关的类
@@ -163,8 +160,6 @@ public class BrokerController {
         MixAll.printProperties(log, brokerConfig);
         MixAll.printProperties(log, nettyConfig);
 
-        // start monitor
-        this.monitorHandler.start();
 
         // akka 初始化
         this.akkaController.start(brokerConfig,innerMessageDispatcher,eventConsumeHandler);
@@ -194,7 +189,7 @@ public class BrokerController {
             RequestProcessor pubRelProcessor = new PubRelProcessor(this);
             RequestProcessor subscribeProcessor = new SubscribeProcessor(this);
             RequestProcessor unSubscribeProcessor = new UnSubscribeProcessor(subscriptionMatcher,
-                sessionStore,monitorHandler);
+                sessionStore);
             RequestProcessor pubRecProcessor = new PubRecProcessor(this);
             RequestProcessor pubAckProcessor = new PubAckProcessor(this);
             RequestProcessor pubCompProcessor = new PubCompProcessor(this);
@@ -278,9 +273,7 @@ public class BrokerController {
         if (this.authValid != null) {
             this.authValid.shutdown();
         }
-        if (this.monitorHandler != null) {
-            this.monitorHandler.shutdown();
-        }
+
 
     }
 
@@ -389,9 +382,6 @@ public class BrokerController {
         return akkaController;
     }
 
-    public MonitorHandler getMonitorHandler() {
-        return monitorHandler;
-    }
 
     public void setAkkaController(AkkaController akkaController) {
         this.akkaController = akkaController;
