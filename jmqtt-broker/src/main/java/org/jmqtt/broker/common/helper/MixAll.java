@@ -21,7 +21,7 @@ import java.util.zip.InflaterInputStream;
 
 public class MixAll {
 
-    public static String MQTT_VERSION_SUPPORT = "mqtt,mqtt3.1,mqttv3.1.1";
+    public static String MQTT_VERSION_SUPPORT = "mqtt,mqtt3.1,mqttv3.1.1,mqttv5.0";
 
     public static boolean createIfNotExistsDir(File file) {
         return file != null && (file.exists() ? file.isDirectory() : file.mkdirs());

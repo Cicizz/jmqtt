@@ -1,12 +1,15 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+
 -- ----------------------------
 -- Table structure for jmqtt_event
 -- ----------------------------
 DROP TABLE IF EXISTS `jmqtt_event`;
 CREATE TABLE `jmqtt_event` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键：也是集群节点批量拉消息的offset',
+`tenant_code` varchar(32) NOT NULL COMMENT '所属租户code',
+`biz_code` varchar(32) NOT NULL COMMENT '所属业务code',
 `content` text NOT NULL COMMENT '消息体',
 `gmt_create` bigint(20) NOT NULL COMMENT '创建时间',
 `jmqtt_ip` varchar(24) NOT NULL COMMENT 'jmqtt服务器ip，发送该消息到集群中的broker ip',
@@ -20,6 +23,8 @@ PRIMARY KEY (`id`)
 DROP TABLE IF EXISTS `jmqtt_inflow_message`;
 CREATE TABLE `jmqtt_inflow_message` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键id',
+`tenant_code` varchar(32) NOT NULL COMMENT '所属租户code',
+`biz_code` varchar(32) NOT NULL COMMENT '所属业务code',
 `client_id` varchar(64) NOT NULL COMMENT '设备id',
 `msg_id` int(11) NOT NULL COMMENT '消息id',
 `content` text NOT NULL COMMENT '消息体内容',
@@ -35,6 +40,8 @@ KEY `idx_client_id` (`client_id`)
 DROP TABLE IF EXISTS `jmqtt_offline_message`;
 CREATE TABLE `jmqtt_offline_message` (
   `id` bigint(20) AUTO_INCREMENT NOT NULL,
+`tenant_code` varchar(32) NOT NULL COMMENT '所属租户code',
+`biz_code` varchar(32) NOT NULL COMMENT '所属业务code',
 `client_id` varchar(64) NOT NULL COMMENT '客户端id',
 `content` text NOT NULL COMMENT '消息体',
 `gmt_create` bigint(20) NOT NULL COMMENT '创建时间',
@@ -49,6 +56,8 @@ KEY `idx_gmt_create` (`gmt_create`)
 DROP TABLE IF EXISTS `jmqtt_outflow_message`;
 CREATE TABLE `jmqtt_outflow_message` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+`tenant_code` varchar(32) NOT NULL COMMENT '所属租户code',
+`biz_code` varchar(32) NOT NULL COMMENT '所属业务code',
 `client_id` varchar(64) NOT NULL COMMENT '目标客户端id',
 `msg_id` int(11) NOT NULL COMMENT '消息id',
 `content` text NOT NULL COMMENT '消息内容',
@@ -64,6 +73,8 @@ KEY `idx_client_id` (`client_id`)
 DROP TABLE IF EXISTS `jmqtt_outflow_sec_message`;
 CREATE TABLE `jmqtt_outflow_sec_message` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+`tenant_code` varchar(32) NOT NULL COMMENT '所属租户code',
+`biz_code` varchar(32) NOT NULL COMMENT '所属业务code',
 `client_id` varchar(64) NOT NULL COMMENT '目标客户端id',
 `msg_id` int(11) NOT NULL COMMENT '消息id',
 `gmt_create` bigint(20) NOT NULL COMMENT '消息缓存时间',
@@ -78,6 +89,8 @@ KEY `idx_client_id` (`client_id`)
 DROP TABLE IF EXISTS `jmqtt_retain_message`;
 CREATE TABLE `jmqtt_retain_message` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+`tenant_code` varchar(32) NOT NULL COMMENT '所属租户code',
+`biz_code` varchar(32) NOT NULL COMMENT '所属业务code',
 `topic` varchar(128) NOT NULL COMMENT '所属topic',
 `content` text NOT NULL COMMENT '消息体',
 PRIMARY KEY (`id`),
@@ -90,6 +103,8 @@ UNIQUE KEY `uqe_topic` (`topic`)
 DROP TABLE IF EXISTS `jmqtt_session`;
 CREATE TABLE `jmqtt_session` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+`tenant_code` varchar(32) NOT NULL COMMENT '所属租户code',
+`biz_code` varchar(32) NOT NULL COMMENT '所属业务code',
 `client_id` varchar(64) NOT NULL COMMENT '客户端id',
 `state` varchar(12) NOT NULL COMMENT '状态：ONLINE,OFFLINE两种',
 `offline_time` bigint(20) DEFAULT NULL COMMENT 'OFFLINE状态时对应的离线时间戳（只有cleanStart为0时候离线才有该数据）',
@@ -103,6 +118,8 @@ UNIQUE KEY `uqe_client_id` (`client_id`)
 DROP TABLE IF EXISTS `jmqtt_subscription`;
 CREATE TABLE `jmqtt_subscription` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+`tenant_code` varchar(32) NOT NULL COMMENT '所属租户code',
+`biz_code` varchar(32) NOT NULL COMMENT '所属业务code',
 `client_id` varchar(64) NOT NULL COMMENT '客户端id',
 `topic` varchar(128) NOT NULL COMMENT '订阅的topic',
 `qos` tinyint(4) NOT NULL COMMENT '对应的qos',
@@ -117,6 +134,8 @@ KEY `idx_topic` (`topic`)
 DROP TABLE IF EXISTS `jmqtt_will_message`;
 CREATE TABLE `jmqtt_will_message` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
+`tenant_code` varchar(32) NOT NULL COMMENT '所属租户code',
+`biz_code` varchar(32) NOT NULL COMMENT '所属业务code',
 `client_id` varchar(64) NOT NULL COMMENT '客户端id',
 `content` text NOT NULL COMMENT '消息体',
 `gmt_create` bigint(20) NOT NULL COMMENT '创建时间',

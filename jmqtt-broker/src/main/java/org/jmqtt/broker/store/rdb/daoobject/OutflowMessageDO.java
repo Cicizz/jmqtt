@@ -2,7 +2,7 @@ package org.jmqtt.broker.store.rdb.daoobject;
 
 import java.io.Serializable;
 
-public class OutflowMessageDO implements Serializable {
+public class OutflowMessageDO extends TenantBase implements Serializable {
 
     private static final long serialVersionUID = 1213131231231L;
 

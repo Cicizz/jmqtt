@@ -14,6 +14,7 @@ import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.MessageHeader;
 import org.jmqtt.broker.common.model.Subscription;
 import org.jmqtt.broker.common.model.Topic;
+import org.jmqtt.broker.monitor.MonitorHandler;
 import org.jmqtt.broker.processor.RequestProcessor;
 import org.jmqtt.broker.remoting.session.ClientSession;
 import org.jmqtt.broker.remoting.session.ConnectManager;
@@ -40,18 +41,21 @@ public class SubscribeProcessor implements RequestProcessor {
     private AuthValid           authValid;
     private MessageStore        messageStore;
     private SessionStore        sessionStore;
+    private MonitorHandler monitorHandler;
 
     public SubscribeProcessor(BrokerController controller){
         this.subscriptionMatcher = controller.getSubscriptionMatcher();
         this.authValid = controller.getAuthValid();
         this.sessionStore = controller.getSessionStore();
         this.messageStore = controller.getMessageStore();
+        this.monitorHandler = controller.getMonitorHandler();
     }
 
     @Override
     public void processRequest(ChannelHandlerContext ctx, MqttMessage mqttMessage) {
         MqttSubscribeMessage subscribeMessage = (MqttSubscribeMessage) mqttMessage;
         String clientId = NettyUtil.getClientId(ctx.channel());
+        monitorHandler.recordActiveClient(clientId);
         int messageId = subscribeMessage.variableHeader().messageId();
         ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
         List<Topic> validTopicList =validTopics(clientSession,subscribeMessage.payload().topicSubscriptions());
@@ -80,6 +84,8 @@ public class SubscribeProcessor implements RequestProcessor {
         List<Message> needDispatcher = new ArrayList<>();
         for(Topic topic : validTopicList){
             Subscription subscription = new Subscription(clientSession.getClientId(),topic.getTopicName(),topic.getQos());
+            subscription.setBizCode(clientSession.getBizCode());
+            subscription.setTenantCode(clientSession.getTenantCode());
             boolean subRs = this.subscriptionMatcher.subscribe(subscription);
             if(subRs){
                 if(retainMessages == null){
@@ -130,6 +136,8 @@ public class SubscribeProcessor implements RequestProcessor {
                 sessionStore.cacheInflowMsg(clientSession.getClientId(),message);
             }
             message.setMsgId(clientSession.generateMessageId());
+            message.setBizCode(clientSession.getBizCode());
+            message.setTenantCode(clientSession.getTenantCode());
             MqttPublishMessage publishMessage = MessageUtil.getPubMessage(message,false);
             clientSession.getCtx().writeAndFlush(publishMessage);
         }

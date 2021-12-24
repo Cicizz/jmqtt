@@ -10,16 +10,16 @@ import java.util.List;
 
 public interface OutflowMessageMapper {
 
-    @Insert("INSERT INTO jmqtt_outflow_message(client_id,msg_id,content,gmt_create) VALUES(#{clientId},#{msgId},#{content},#{gmtCreate})"
+    @Insert("INSERT INTO jmqtt_outflow_message(client_id,msg_id,content,gmt_create,biz_code,tenant_code) VALUES(#{clientId},#{msgId},#{content},#{gmtCreate},#{bizCode},#{tenantCode})"
             + "  on DUPLICATE key update content = #{content},gmt_create = #{gmtCreate}")
     Long cacheOuflowMessage(OutflowMessageDO outflowMessageDO);
 
-    @Select("SELECT id,client_id,msg_id,content,gmt_create FROM jmqtt_outflow_message WHERE client_id = #{clientId} and msg_id = #{msgId}")
-    OutflowMessageDO getOutflowMessage(@Param("clientId") String clientId,@Param("msgId") int msgId);
+    @Select("SELECT id,client_id,msg_id,content,gmt_create,biz_code,tenant_code FROM jmqtt_outflow_message WHERE client_id = #{clientId} and msg_id = #{msgId}")
+    OutflowMessageDO getOutflowMessage(@Param("clientId") String clientId, @Param("msgId") int msgId);
 
     @Delete("DELETE FROM jmqtt_outflow_message WHERE id = #{id}")
     Integer delOutflowMessage(Long id);
 
-    @Select("SELECT id,client_id,msg_id,content,gmt_create FROM jmqtt_outflow_message WHERE client_id = #{clientId} order by gmt_create asc")
+    @Select("SELECT id,client_id,msg_id,content,gmt_create,biz_code,tenant_code FROM jmqtt_outflow_message WHERE client_id = #{clientId} order by gmt_create asc")
     List<OutflowMessageDO> getAllOutflowMessage(String clientId);
 }

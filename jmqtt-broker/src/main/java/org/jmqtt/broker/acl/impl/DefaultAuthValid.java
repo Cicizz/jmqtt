@@ -1,12 +1,12 @@
 package org.jmqtt.broker.acl.impl;
 
 import org.jmqtt.broker.acl.AuthValid;
-
+import org.jmqtt.broker.common.config.BrokerConfig;
 
 public class DefaultAuthValid implements AuthValid {
 
     @Override
-    public void start() {
+    public void start(BrokerConfig brokerConfig) {
     }
 
     @Override

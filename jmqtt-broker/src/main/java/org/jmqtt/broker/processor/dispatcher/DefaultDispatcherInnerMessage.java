@@ -1,16 +1,6 @@
 package org.jmqtt.broker.processor.dispatcher;
 
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.helper.RejectHandler;
 import org.jmqtt.broker.common.helper.ThreadFactoryImpl;
@@ -27,6 +17,9 @@ import org.jmqtt.broker.remoting.util.MessageUtil;
 import org.jmqtt.broker.store.SessionStore;
 import org.jmqtt.broker.subscribe.SubscriptionMatcher;
 import org.slf4j.Logger;
+
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * 默认的消息分发实现类
@@ -93,6 +86,9 @@ public class DefaultDispatcherInnerMessage extends HighPerformanceMessageHandler
 
     @Override
     public boolean appendMessage(Message message) {
+        ClientSession clientSession = ConnectManager.getInstance().getClient(message.getClientId());
+        message.setTenantCode(clientSession.getTenantCode());
+        message.setBizCode(clientSession.getBizCode());
         boolean isNotFull = messageQueue.offer(message);
         if (!isNotFull) {
             LogUtil.warn(log, "[PubMessage] -> the buffer queue is full");

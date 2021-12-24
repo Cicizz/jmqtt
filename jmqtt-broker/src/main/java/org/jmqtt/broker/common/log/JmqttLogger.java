@@ -11,6 +11,8 @@ public interface JmqttLogger {
 
     Logger messageTraceLog = LoggerFactory.getLogger("messageTraceLog");
 
+    Logger authorityLog = LoggerFactory.getLogger("authorityLog");
+
     Logger eventLog = LoggerFactory.getLogger("eventLog");
 
     Logger remotingLog = LoggerFactory.getLogger("remotingLog");
@@ -18,5 +20,7 @@ public interface JmqttLogger {
     Logger storeLog = LoggerFactory.getLogger("storeLog");
 
     Logger otherLog = LoggerFactory.getLogger("otherLog");
+
+    Logger monitorLog = LoggerFactory.getLogger("monitorLog");
 
 }

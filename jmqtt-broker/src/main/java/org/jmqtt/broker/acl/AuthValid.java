@@ -1,11 +1,13 @@
 package org.jmqtt.broker.acl;
 
+import org.jmqtt.broker.common.config.BrokerConfig;
+
 /**
  * Connect permission manager
  */
 public interface AuthValid {
 
-    void start();
+    void start(BrokerConfig brokerConfig);
 
     void shutdown();
 
