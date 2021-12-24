@@ -9,7 +9,7 @@
 * 支持友好的二次开发，插件化开发：集群/存储/设备连接，发布订阅认证
 * 支持tcp, websocket,ssl,wss
 * 支持基于redis的集群，性能更高
-* 支持基于内存的启动，适合嵌入式启动
+* 支持基于内存的启动，不支持数据持久化和集群，适合嵌入式启动
 * 支持Spring boot jmqtt starter,可快速结合spring boot启动
 * 支持完整的测试用例
 
@@ -37,4 +37,7 @@ wss端口：8884
 欢迎小伙伴们给个star并使用。
 
 ![jmqtt技术交流群](jmqtt_qq.png)
+## 微信公众号
+关注我，一起学习成长
 
+![vx_mangdagou](vx_mangdagou.jpg)

@@ -35,7 +35,7 @@ public class BrokerConfig {
     private int     maxIdle       = 50;
 
     /* db相关配置 */
-    private String driver   = "com.mysql.cj.jdbc.Driver";
+    private String driver   = "com.mysql.jdbc.Driver";
     private String url
                             = "jdbc:mysql://localhost:3306/jmqtt?characterEncoding=utf8&autoReconnect=true&failOverReadOnly=false"
             + "&maxReconnects=10&useSSL=false";
