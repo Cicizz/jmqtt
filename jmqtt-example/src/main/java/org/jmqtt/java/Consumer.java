@@ -5,8 +5,8 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 public class Consumer {
     private static final String broker = "tcp://127.0.0.1:1883";
-    private static final String topic = "zztopic01";
-    private static final String clientId = "1@zztest02";
+    private static final String topic = "MQTT/TOPIC";
+    private static final String clientId = "MQTT_SUB_CLIENT";
 
     public static void main(String[] args) throws MqttException {
         MqttClient subClient = getMqttClient();
@@ -28,7 +28,7 @@ public class Consumer {
             }
 
         });
-        subClient.subscribe(topic,2);
+        subClient.subscribe(topic);
     }
 
 
@@ -37,8 +37,6 @@ public class Consumer {
             MqttClient pubClient = new MqttClient(broker, clientId, new MemoryPersistence());
             MqttConnectOptions connectOptions = new MqttConnectOptions();
             connectOptions.setCleanSession(false);
-            connectOptions.setUserName("1@zztest02");
-            connectOptions.setPassword("zztest02".toCharArray());
             System.out.println("Connecting to broker: " + broker);
             pubClient.connect(connectOptions);
             return pubClient;

@@ -2,17 +2,11 @@
 package org.jmqtt.broker.store.rdb;
 
 import com.alibaba.fastjson.JSONObject;
-import io.netty.channel.Channel;
-import org.apache.ibatis.session.SqlSession;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.helper.MixAll;
-import org.jmqtt.broker.common.helper.TenantContext;
 import org.jmqtt.broker.common.log.LogUtil;
 import org.jmqtt.broker.common.model.Message;
 import org.jmqtt.broker.common.model.Subscription;
-import org.jmqtt.broker.remoting.session.ClientSession;
-import org.jmqtt.broker.remoting.session.ConnectManager;
-import org.jmqtt.broker.remoting.util.RemotingHelper;
 import org.jmqtt.broker.store.SessionState;
 import org.jmqtt.broker.store.SessionStore;
 import org.jmqtt.broker.store.rdb.daoobject.*;
@@ -44,50 +38,10 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
     public boolean storeSession(String clientId, SessionState sessionState) {
         SessionDO sessionDO = new SessionDO();
         sessionDO.setClientId(clientId);
-        ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
-        String tenantCode = null;
-        String bizCode = null;
-        Channel channel = null;
-        if (clientSession != null) {
-            tenantCode = clientSession.getTenantCode();
-            bizCode = clientSession.getBizCode();
-            channel = clientSession.getCtx().channel();
-        } else {
-            tenantCode = TenantContext.getTenantCode();
-            bizCode = TenantContext.getBizCode();
-            channel = TenantContext.getAuthInfo().getChannel();
-        }
-
         sessionDO.setState(sessionState.getState().getCode());
         sessionDO.setOfflineTime(sessionState.getOfflineTime());
-        sessionDO.setBizCode(bizCode);
-        sessionDO.setTenantCode(tenantCode);
-        SqlSession sqlSession = getSqlSessionWithTrans();
-        try {
-            getMapper(sqlSession, sessionMapperClass).storeSession(sessionDO);
-            if (sessionState.getState() != SessionState.StateEnum.NULL) {
-                DeviceDO deviceDO = new DeviceDO();
-                deviceDO.setDeviceCoding(ConnectManager.getDeviceCoding(clientId));
-                deviceDO.setTenantCode(tenantCode);
-                deviceDO.setLatestOnlineTime(new Date());
-                deviceDO.setLatestNetworkAddress(RemotingHelper.getRemoteAddr(channel));
-                // 上线
-                if (sessionState.online()) {
-                    deviceDO.setIsOnline(0);
-                } else { // 下线
-                    deviceDO.setIsOnline(1);
-                }
-                getMapper(sqlSession, deviceMapperClass).updateDevice(deviceDO);
-            }
-            sqlSession.commit();
-        } catch (Exception ex) {
-            LogUtil.error(log, "Store session failed ", ex);
-            sqlSession.rollback();
-            return false;
-        } finally {
-            sqlSession.close();
-        }
-        return true;
+        Long id = (Long) operate(sqlSession -> getMapper(sqlSession, sessionMapperClass).storeSession(sessionDO));
+        return id != null;
     }
 
     @Override
@@ -96,8 +50,6 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
         subscriptionDO.setClientId(clientId);
         subscriptionDO.setTopic(subscription.getTopic());
         subscriptionDO.setQos(subscription.getQos());
-        subscriptionDO.setBizCode(subscription.getBizCode());
-        subscriptionDO.setTenantCode(subscription.getTenantCode());
         Long id = (Long) operate(sqlSession -> getMapper(sqlSession, subscriptionMapperClass).storeSubscription(subscriptionDO));
 
         return id != null;
@@ -140,8 +92,6 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
         inflowMessageDO.setMsgId(message.getMsgId());
         inflowMessageDO.setContent(JSONObject.toJSONString(message));
         inflowMessageDO.setGmtCreate(message.getStoreTime());
-        inflowMessageDO.setBizCode(message.getBizCode());
-        inflowMessageDO.setTenantCode(message.getTenantCode());
         Long id = (Long) operate(sqlSession -> getMapper(sqlSession, inflowMessageMapperClass).cacheInflowMessage(inflowMessageDO));
         return id != null;
     }
@@ -183,8 +133,6 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
         outflowMessageDO.setMsgId(message.getMsgId());
         outflowMessageDO.setContent(JSONObject.toJSONString(message));
         outflowMessageDO.setGmtCreate(message.getStoreTime());
-        outflowMessageDO.setBizCode(message.getBizCode());
-        outflowMessageDO.setTenantCode(message.getTenantCode());
         Long id = (Long) operate(sqlSession -> getMapper(sqlSession, outflowMessageMapperClass).cacheOuflowMessage(outflowMessageDO));
         return id != null;
     }
@@ -225,9 +173,6 @@ public class RDBSessionStore extends AbstractDBStore implements SessionStore {
         outflowSecMessageDO.setClientId(clientId);
         outflowSecMessageDO.setMsgId(msgId);
         outflowSecMessageDO.setGmtCreate(System.currentTimeMillis());
-        ClientSession clientSession = ConnectManager.getInstance().getClient(clientId);
-        outflowSecMessageDO.setBizCode(clientSession.getBizCode());
-        outflowSecMessageDO.setTenantCode(clientSession.getTenantCode());
         Long id = (Long) operate(sqlSession -> getMapper(sqlSession, outflowSecMessageMapperClass).cacheOuflowMessage(outflowSecMessageDO));
         return id != null;
     }

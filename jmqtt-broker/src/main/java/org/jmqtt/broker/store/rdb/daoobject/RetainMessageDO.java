@@ -2,7 +2,7 @@ package org.jmqtt.broker.store.rdb.daoobject;
 
 import java.io.Serializable;
 
-public class RetainMessageDO extends TenantBase implements Serializable {
+public class RetainMessageDO implements Serializable {
 
     private static final long serialVersionUID = 12213131231231L;
 

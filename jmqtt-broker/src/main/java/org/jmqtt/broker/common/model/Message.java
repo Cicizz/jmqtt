@@ -1,20 +1,15 @@
 package org.jmqtt.broker.common.model;
 
-import lombok.Data;
-import lombok.ToString;
-import org.jmqtt.broker.store.rdb.daoobject.TenantBase;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * inner message transfer from MqttMessage
  * jmqtt 内部消息处理
  */
-@Data
-@ToString
-public class Message extends TenantBase {
+public class Message {
 
     private int msgId;
 
@@ -56,6 +51,69 @@ public class Message extends TenantBase {
         return headers.get(key);
     }
 
+    public int getMsgId() {
+        return msgId;
+    }
+
+    public void setMsgId(int msgId) {
+        this.msgId = msgId;
+    }
+
+    public Map<String, Object> getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(Map<String, Object> headers) {
+        this.headers = headers;
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    public byte[] getPayload() {
+        return payload;
+    }
+
+    public void setPayload(byte[] payload) {
+        this.payload = payload;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+
+    public long getStoreTime() {
+        return storeTime;
+    }
+
+    public void setStoreTime(long storeTime) {
+        this.storeTime = storeTime;
+    }
+
+    public Stage getStage() {
+        return stage;
+    }
+
+    public void setStage(Stage stage) {
+        this.stage = stage;
+    }
+
+    public Subscription getDispatcher() {
+        return dispatcher;
+    }
+
+    public void setDispatcher(Subscription dispatcher) {
+        this.dispatcher = dispatcher;
+    }
 
     /**
      * mqtt message type

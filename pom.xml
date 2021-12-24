@@ -51,22 +51,14 @@
         <jedis.version>2.9.0</jedis.version>
         <hazelcast.version>4.0.3</hazelcast.version>
         <HServer.version>2.9.46</HServer.version>
-        <mybatis.version>3.5.6</mybatis.version>
+        <mybatis.version>3.4.6</mybatis.version>
         <druid.version>1.2.4</druid.version>
-        <jdbc.version>8.0.27</jdbc.version>
-        <log4j2.version>2.17.0</log4j2.version>
-
+        <jdbc.version>8.0.16</jdbc.version>
+        <log4j2.version>2.13.3</log4j2.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-
-            <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>1.18.12</version>
-                <scope>provided</scope>
-            </dependency>
             <dependency>
                 <groupId>org.jmqtt</groupId>
                 <artifactId>jmqtt-common</artifactId>
@@ -203,27 +195,4 @@
             </repositories>
         </profile>
     </profiles>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <fork>true</fork>
-                    <!-- 如果没有该配置，devtools不会生效 -->
-                    <!-- 指定该Main Class为全局的唯一入口 -->
-                    <mainClass>org.jmqtt.broker.BrokerStartup</mainClass>
-                    <layout>ZIP</layout>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal><!--可以把依赖的包都打包到生成的Jar包中-->
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

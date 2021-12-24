@@ -9,11 +9,11 @@ import java.util.List;
 
 public interface RetainMessageMapper {
 
-    @Insert("INSERT INTO jmqtt_retain_message(topic,content,biz_code,tenant_code) VALUES(#{topic},#{content},#{bizCode},#{tenantCode})"
+    @Insert("INSERT INTO jmqtt_retain_message(topic,content) VALUES(#{topic},#{content})"
             + " on DUPLICATE key update content = #{content}")
     Long storeRetainMessage(RetainMessageDO retainMessageDO);
 
-    @Select("SELECT id,topic,content,biz_code,tenant_code FROM jmqtt_retain_message")
+    @Select("SELECT id,topic,content FROM jmqtt_retain_message")
     List<RetainMessageDO> getAllRetainMessage();
 
     @Delete("DELETE FROM jmqtt_retain_message WHERE topic = #{topic}")

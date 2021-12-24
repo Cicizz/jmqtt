@@ -1,6 +1,7 @@
 package org.jmqtt.broker.processor.dispatcher.rdb;
 
 import org.apache.ibatis.session.SqlSession;
+import org.jmqtt.broker.BrokerController;
 import org.jmqtt.broker.common.config.BrokerConfig;
 import org.jmqtt.broker.common.helper.MixAll;
 import org.jmqtt.broker.common.log.JmqttLogger;
@@ -52,8 +53,6 @@ public class RDBClusterEventHandler extends AbstractDBStore implements ClusterEv
         eventDO.setContent(event.getBody());
         eventDO.setEventCode(event.getEventCode());
         eventDO.setGmtCreate(event.getSendTime());
-        eventDO.setBizCode(event.getBizCode());
-        eventDO.setTenantCode(event.getTenantCode());
         Long id = (Long) operate(sqlSession -> getMapper(sqlSession,eventMapperClass).sendEvent(eventDO));
         return id != null;
     }

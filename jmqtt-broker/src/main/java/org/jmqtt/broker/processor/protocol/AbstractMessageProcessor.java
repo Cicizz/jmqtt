@@ -8,8 +8,6 @@ import org.jmqtt.broker.processor.HighPerformanceMessageHandler;
 import org.jmqtt.broker.processor.dispatcher.ClusterEventHandler;
 import org.jmqtt.broker.processor.dispatcher.event.Event;
 import org.jmqtt.broker.processor.dispatcher.event.EventCode;
-import org.jmqtt.broker.remoting.session.ClientSession;
-import org.jmqtt.broker.remoting.session.ConnectManager;
 import org.jmqtt.broker.store.MessageStore;
 import org.jmqtt.broker.subscribe.GroupSubscriptionAndMessageListener;
 
@@ -56,9 +54,6 @@ public abstract class AbstractMessageProcessor extends HighPerformanceMessageHan
      */
     private void sendMessage2Cluster(Message message) {
         Event event = new Event(EventCode.DISPATCHER_CLIENT_MESSAGE.getCode(), JSONObject.toJSONString(message),System.currentTimeMillis(),currentIp);
-        ClientSession clientSession = ConnectManager.getInstance().getClient(message.getClientId());
-        event.setTenantCode(clientSession.getTenantCode());
-        event.setBizCode(clientSession.getBizCode());
         this.clusterEventHandler.sendEvent(event);
         this.groupSubscriptionAndMessageListener.receiveNewMessage(message);
     }

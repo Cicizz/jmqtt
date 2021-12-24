@@ -28,10 +28,6 @@ public class SessionState {
         return offlineTime;
     }
 
-    public boolean online(){
-        return state == StateEnum.ONLINE;
-    }
-
     public enum StateEnum {
         /**
          * 从未连接过（之前 cleanStart为1 的也为为NULL）
