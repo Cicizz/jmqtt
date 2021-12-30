@@ -1,127 +1,79 @@
-SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
+DROP INDEX `uqe_client_id` ON `jmqtt_session`;
+DROP INDEX `idx_client_id` ON `jmqtt_subscription`;
+DROP INDEX `idx_topic` ON `jmqtt_subscription`;
+DROP INDEX `idx_client_id` ON `jmqtt_message`;
+DROP INDEX `idx_msg_id` ON `jmqtt_message`;
+DROP INDEX `idx_client_id` ON `jmqtt_client_inbox`;
+DROP INDEX `uqe_topic` ON `jmqtt_retain_message`;
 
--- ----------------------------
--- Table structure for jmqtt_event
--- ----------------------------
-DROP TABLE IF EXISTS `jmqtt_event`;
-CREATE TABLE `jmqtt_event` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键：也是集群节点批量拉消息的offset',
-`content` text NOT NULL COMMENT '消息体',
-`gmt_create` bigint(20) NOT NULL COMMENT '创建时间',
-`jmqtt_ip` varchar(24) NOT NULL COMMENT 'jmqtt服务器ip，发送该消息到集群中的broker ip',
-`event_code` int(4) NOT NULL COMMENT '事件码',
-PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='jmqtt 集群事件转发表：由发送端将消息发送到该表中，其他节点批量拉取该表中的事件进行处理';
+DROP TABLE `jmqtt_session`;
+DROP TABLE `jmqtt_subscription`;
+DROP TABLE `jmqtt_message`;
+DROP TABLE `jmqtt_client_inbox`;
+DROP TABLE `jmqtt_retain_message`;
+DROP TABLE `jmqtt_cluster_event`;
 
--- ----------------------------
--- Table structure for jmqtt_inflow_message
--- ----------------------------
-DROP TABLE IF EXISTS `jmqtt_inflow_message`;
-CREATE TABLE `jmqtt_inflow_message` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键id',
-`client_id` varchar(64) NOT NULL COMMENT '设备id',
-`msg_id` int(11) NOT NULL COMMENT '消息id',
-`content` text NOT NULL COMMENT '消息体内容',
-`gmt_create` bigint(20) NOT NULL COMMENT '消息保存时间（对应消息接收时间）',
-PRIMARY KEY (`id`),
-UNIQUE KEY `uqe_client_id_msg_id` (`client_id`,`msg_id`) USING BTREE,
-KEY `idx_client_id` (`client_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='入栈消息表';
-
--- ----------------------------
--- Table structure for jmqtt_offline_message
--- ----------------------------
-DROP TABLE IF EXISTS `jmqtt_offline_message`;
-CREATE TABLE `jmqtt_offline_message` (
-  `id` bigint(20) AUTO_INCREMENT NOT NULL,
-`client_id` varchar(64) NOT NULL COMMENT '客户端id',
-`content` text NOT NULL COMMENT '消息体',
-`gmt_create` bigint(20) NOT NULL COMMENT '创建时间',
-PRIMARY KEY (`id`),
-KEY `idx_client_id` (`client_id`),
-KEY `idx_gmt_create` (`gmt_create`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='离线消息表';
-
--- ----------------------------
--- Table structure for jmqtt_outflow_message
--- ----------------------------
-DROP TABLE IF EXISTS `jmqtt_outflow_message`;
-CREATE TABLE `jmqtt_outflow_message` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
-`client_id` varchar(64) NOT NULL COMMENT '目标客户端id',
-`msg_id` int(11) NOT NULL COMMENT '消息id',
-`content` text NOT NULL COMMENT '消息内容',
-`gmt_create` bigint(20) NOT NULL COMMENT '消息缓存时间',
-PRIMARY KEY (`id`),
-UNIQUE KEY `uqe_client_id_msg_id` (`msg_id`,`client_id`) USING BTREE,
-KEY `idx_client_id` (`client_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='出栈消息表';
-
--- ----------------------------
--- Table structure for jmqtt_outflow_sec_message
--- ----------------------------
-DROP TABLE IF EXISTS `jmqtt_outflow_sec_message`;
-CREATE TABLE `jmqtt_outflow_sec_message` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
-`client_id` varchar(64) NOT NULL COMMENT '目标客户端id',
-`msg_id` int(11) NOT NULL COMMENT '消息id',
-`gmt_create` bigint(20) NOT NULL COMMENT '消息缓存时间',
-PRIMARY KEY (`id`),
-UNIQUE KEY `uqe_client_id_msg_id` (`msg_id`,`client_id`) USING BTREE,
-KEY `idx_client_id` (`client_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='发送qos2消息后的第二阶段的消息缓存表：接收pubRec后保留clientId，msgId等报文。设备重连时候进行重发';
-
--- ----------------------------
--- Table structure for jmqtt_retain_message
--- ----------------------------
-DROP TABLE IF EXISTS `jmqtt_retain_message`;
-CREATE TABLE `jmqtt_retain_message` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
-`topic` varchar(128) NOT NULL COMMENT '所属topic',
-`content` text NOT NULL COMMENT '消息体',
-PRIMARY KEY (`id`),
-UNIQUE KEY `uqe_topic` (`topic`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='保留消息表';
-
--- ----------------------------
--- Table structure for jmqtt_session
--- ----------------------------
-DROP TABLE IF EXISTS `jmqtt_session`;
 CREATE TABLE `jmqtt_session` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+`id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
 `client_id` varchar(64) NOT NULL COMMENT '客户端id',
-`state` varchar(12) NOT NULL COMMENT '状态：ONLINE,OFFLINE两种',
-`offline_time` bigint(20) DEFAULT NULL COMMENT 'OFFLINE状态时对应的离线时间戳（只有cleanStart为0时候离线才有该数据）',
-PRIMARY KEY (`id`),
-UNIQUE KEY `uqe_client_id` (`client_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端会话状态';
-
--- ----------------------------
--- Table structure for jmqtt_subscription
--- ----------------------------
-DROP TABLE IF EXISTS `jmqtt_subscription`;
+`online` varchar(12) NOT NULL COMMENT '状态：ONLINE,OFFLINE两种',
+`transport_protocol` varchar(20) NOT NULL COMMENT '传输协议：MQTT,TCP,COAP等',
+`clientIp` varchar(32) NOT NULL COMMENT '客户端ip',
+`serverIp` varchar(32) NOT NULL COMMENT '连接的服务端ip',
+`last_offline_time` timestamp NULL COMMENT '上一次离线时间',
+`online_time` timestamp NOT NULL COMMENT '最近连接在线时间',
+`properties` text NULL COMMENT '扩展信息',
+PRIMARY KEY (`id`) ,
+UNIQUE INDEX `uqe_client_id` (`client_id` ASC)
+)
+COMMENT = '客户端会话状态';
 CREATE TABLE `jmqtt_subscription` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+`id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
 `client_id` varchar(64) NOT NULL COMMENT '客户端id',
-`topic` varchar(128) NOT NULL COMMENT '订阅的topic',
-`qos` tinyint(4) NOT NULL COMMENT '对应的qos',
-PRIMARY KEY (`id`),
-KEY `idx_client_id` (`client_id`),
-KEY `idx_topic` (`topic`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='客户端订阅关系';
-
--- ----------------------------
--- Table structure for jmqtt_will_message
--- ----------------------------
-DROP TABLE IF EXISTS `jmqtt_will_message`;
-CREATE TABLE `jmqtt_will_message` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+`topic` varchar(255) NOT NULL COMMENT '订阅的topic',
+`properties` text NULL COMMENT '订阅的额外属性',
+PRIMARY KEY (`id`) ,
+INDEX `idx_client_id` (`client_id` ASC),
+INDEX `idx_topic` (`topic` ASC)
+)
+COMMENT = '客户端订阅关系';
+CREATE TABLE `jmqtt_message` (
+`id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键id',
+`source` varchar(32) NOT NULL COMMENT '消息来源：DEVICE/PLATFORM',
+`content` mediumblob NOT NULL COMMENT '消息体内容：字节',
+`topic` varchar(64) NULL COMMENT '发送的目标topic',
+`from_client_id` varchar(64) NULL COMMENT '消息来源若是设备，从属设备id',
+`stored_time` timestamp NOT NULL COMMENT '消息落库时间',
+`properties` text NULL COMMENT '消息额外属性',
+PRIMARY KEY (`id`) ,
+INDEX `idx_client_id` (`source` ASC),
+INDEX `idx_msg_id` (`stored_time` ASC)
+)
+COMMENT = '消息表';
+CREATE TABLE `jmqtt_client_inbox` (
+`id` bigint(20) NOT NULL COMMENT '主键id',
 `client_id` varchar(64) NOT NULL COMMENT '客户端id',
-`content` text NOT NULL COMMENT '消息体',
-`gmt_create` bigint(20) NOT NULL COMMENT '创建时间',
-PRIMARY KEY (`id`),
-UNIQUE KEY `uqe_client_id` (`client_id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='遗嘱消息表';
-
-SET FOREIGN_KEY_CHECKS = 1;
+`message_id` bigint(20) NOT NULL COMMENT '消息id',
+`ack` tinyint(2) NOT NULL COMMENT '客户端是否收到消息：0未收到，1到达',
+`stored_time` timestamp NOT NULL COMMENT '收件箱时间',
+PRIMARY KEY (`id`) ,
+INDEX `idx_client_id` (`client_id` ASC)
+)
+COMMENT = '设备消息收件箱表';
+CREATE TABLE `jmqtt_retain_message` (
+`id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+`topic` varchar(255) NOT NULL COMMENT '所属topic',
+`message_id` bigint(20) NOT NULL COMMENT '关联的消息id',
+PRIMARY KEY (`id`) ,
+UNIQUE INDEX `uqe_topic` (`topic` ASC)
+)
+COMMENT = 'mqtt协议的retain 消息表';
+CREATE TABLE `jmqtt_cluster_event` (
+`id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键：也是集群节点批量拉消息的offset',
+`content` longtext NOT NULL COMMENT '消息体',
+`gmt_create` datetime(6) NOT NULL COMMENT '创建时间',
+`node_ip` varchar(24) NOT NULL COMMENT 'jmqtt集群节点ip',
+`event_code` varchar(24) NOT NULL COMMENT '事件码：参考代码',
+PRIMARY KEY (`id`)
+)
+COMMENT = 'jmqtt集群事件转发表：由发送端将消息发送到该表中，其他节点批量拉取该表中的事件进行处理，若有mq,redis等，可以替换该逻辑';

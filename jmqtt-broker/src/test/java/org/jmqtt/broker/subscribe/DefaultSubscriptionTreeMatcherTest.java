@@ -1,6 +1,8 @@
 package org.jmqtt.broker.subscribe;
 
-import org.jmqtt.broker.common.model.Subscription;
+import org.jmqtt.mqtt.model.Subscription;
+import org.jmqtt.mqtt.subscription.DefaultSubscriptionTreeMatcher;
+import org.jmqtt.mqtt.subscription.SubscriptionMatcher;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

@@ -7,9 +7,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
-import org.jmqtt.broker.common.config.BrokerConfig;
-import org.jmqtt.broker.common.config.NettyConfig;
-import org.jmqtt.broker.common.helper.MixAll;
+import org.jmqtt.support.config.BrokerConfig;
+import org.jmqtt.support.config.NettyConfig;
+import org.jmqtt.support.helper.MixAll;
 
 import java.io.*;
 import java.util.Map;
@@ -17,8 +17,7 @@ import java.util.Objects;
 import java.util.Properties;
 
 /**
- * jmqtt 启动类,代码风格参考RocketMQ
- * 代码阅读沟通，二次开发文档：请加 qq群：578185385 或 参考官网 http://www.mangdagou.com/
+ * 技术问题，二次开发问题：请加 qq群：578185385
  */
 public class BrokerStartup {
 

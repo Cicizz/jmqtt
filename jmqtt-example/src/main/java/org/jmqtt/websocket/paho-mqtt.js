@@ -1402,7 +1402,7 @@ Paho.MQTT = (function (global) {
 
 	/**
 	 * Client has disconnected either at its own request or because the server
-	 * or network disconnected it. Remove all non-durable state.
+	 * or transfer disconnected it. Remove all non-durable state.
 	 * @param {errorCode} [number] the error number.
 	 * @param {errorText} [string] the error text.
 	 * @ignore
@@ -1543,7 +1543,7 @@ Paho.MQTT = (function (global) {
 	 * @property {function} onConnectionLost - called when a connection has been lost.
 	 *                            after a connect() method has succeeded.
 	 *                            Establish the call back used when a connection has been lost. The connection may be
-	 *                            lost because the client initiates a disconnect or because the server or network
+	 *                            lost because the client initiates a disconnect or because the server or transfer
 	 *                            cause the client to be disconnected. The disconnect call back may be called without
 	 *                            the connectionComplete call back being invoked if, for example the client fails to
 	 *                            connect.
