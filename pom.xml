@@ -17,8 +17,12 @@
         <module>jmqtt-broker</module>
         <module>jmqtt-example</module>
         <module>jmqtt-admin</module>
-        <module>jmqtt-springboot-starter</module>
         <module>jmqtt-acceptance</module>
+        <module>jmqtt-mqtt</module>
+        <module>jmqtt-tcp</module>
+        <module>jmqtt-support</module>
+        <module>jmqtt-bus</module>
+        <module>jmqtt-doc</module>
     </modules>
 
     <name>jmqtt</name>
@@ -55,20 +59,46 @@
         <druid.version>1.2.4</druid.version>
         <jdbc.version>8.0.17</jdbc.version>
         <log4j2.version>2.17.0</log4j2.version>
+        <guava.version>31.0.1-jre</guava.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+
             <dependency>
-                <groupId>org.jmqtt</groupId>
-                <artifactId>jmqtt-common</artifactId>
-                <version>${project.version}</version>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.jmqtt</groupId>
                 <artifactId>jmqtt-broker</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.jmqtt</groupId>
+                <artifactId>jmqtt-bus</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jmqtt</groupId>
+                <artifactId>jmqtt-mqtt</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jmqtt</groupId>
+                <artifactId>jmqtt-support</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jmqtt</groupId>
+                <artifactId>jmqtt-tcp</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.jmqtt</groupId>
                 <artifactId>jmqtt-admin</artifactId>
