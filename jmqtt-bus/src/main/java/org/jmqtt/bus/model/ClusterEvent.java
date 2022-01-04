@@ -1,6 +1,7 @@
 package org.jmqtt.bus.model;
 
 import org.jmqtt.bus.enums.ClusterEventCodeEnum;
+import org.jmqtt.bus.subscription.model.Subscription;
 
 import java.util.Date;
 
@@ -15,6 +16,11 @@ public class ClusterEvent {
     private String nodeIp;
 
     private ClusterEventCodeEnum clusterEventCode;
+
+    /**
+     * 待分发消息时的订阅关系
+     */
+    private Subscription subscription;
 
     public Long getId() {
         return id;
@@ -54,5 +60,24 @@ public class ClusterEvent {
 
     public void setClusterEventCode(ClusterEventCodeEnum clusterEventCode) {
         this.clusterEventCode = clusterEventCode;
+    }
+
+    public Subscription getSubscription() {
+        return subscription;
+    }
+
+    public void setSubscription(Subscription subscription) {
+        this.subscription = subscription;
+    }
+
+    public ClusterEvent clone() {
+        ClusterEvent event = new ClusterEvent();
+        event.setClusterEventCode(this.getClusterEventCode());
+        event.setContent(this.getContent());
+        event.setGmtCreate(this.getGmtCreate());
+        event.setNodeIp(this.getNodeIp());
+        event.setId(this.getId());
+        event.setSubscription(this.getSubscription());
+        return event;
     }
 }

@@ -1,5 +1,6 @@
 package org.jmqtt.mqtt;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,6 +17,10 @@ public class ConnectManager {
 
     public static  ConnectManager getInstance(){
         return INSTANCE;
+    }
+
+    public Collection<MQTTConnection> getAllConnections(){
+        return this.clientCache.values();
     }
 
     public MQTTConnection getClient(String clientId){
@@ -37,7 +42,4 @@ public class ConnectManager {
         return null;
     }
 
-    public static final String getDeviceCoding(String clientId){
-        return clientId.split("@")[1];
-    }
 }

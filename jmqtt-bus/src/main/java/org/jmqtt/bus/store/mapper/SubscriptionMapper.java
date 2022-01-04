@@ -1,17 +1,15 @@
 package org.jmqtt.bus.store.mapper;
 
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 import org.jmqtt.bus.store.daoobject.SubscriptionDO;
 
 import java.util.List;
 
 public interface SubscriptionMapper {
 
-    @Insert("INSERT INTO jmqtt_subscription (client_id,topic,properties) "
-            + "VALUES (#{clientId},#{topic},#{properties})")
+    @Insert("INSERT INTO jmqtt_subscription (client_id,topic,properties,subscribe_time) "
+            + "VALUES (#{clientId},#{topic},#{properties},#{subscribeTime}) on duplicate key update properties = #{properties},subscribe_time=#{subscribeTime}")
+    @Options(useGeneratedKeys=true,keyProperty="id")
     Long storeSubscription(SubscriptionDO subscriptionDO);
 
     @Delete("DELETE FROM jmqtt_subscription WHERE client_id = #{clientId}")
@@ -20,6 +18,6 @@ public interface SubscriptionMapper {
     @Delete("DELETE FROM jmqtt_subscription WHERE client_id = #{clientId} AND topic = #{topic}")
     Integer delSubscription(@Param("clientId") String clientId, @Param("topic") String topic);
 
-    @Select("SELECT client_id,topic,properties FROM jmqtt_subscription WHERE client_id = #{clientId}")
-    List<SubscriptionDO> querySubscription(String clientId);
+    @Select("SELECT id,client_id,topic,properties,subscribe_time FROM jmqtt_subscription WHERE client_id = #{clientId}")
+    List<SubscriptionDO> getAllSubscription(String clientId);
 }

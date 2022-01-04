@@ -36,21 +36,16 @@ public class DeviceSessionManagerImpl implements DeviceSessionManager {
         SessionDO sessionDO = convert(deviceSession);
         DBUtils.operate(new DBCallback() {
             @Override
-            public Object operate(SqlSession sqlSession) {
+            public Long operate(SqlSession sqlSession) {
                 return DBUtils.getMapper(sqlSession, DBUtils.sessionMapperClass).storeSession(sessionDO);
             }
         });
     }
 
     @Override
-    public void updateSession(DeviceSession deviceSession) {
-
-    }
-
-    @Override
     public void offline(String clientId) {
         SessionDO sessionDO = new SessionDO();
-        sessionDO.setClientIp(clientId);
+        sessionDO.setClientId(clientId);
         sessionDO.setOnline(DeviceOnlineStateEnum.OFFLINE.getCode());
         sessionDO.setLastOfflineTime(new Date());
         DBUtils.operate(new DBCallback() {

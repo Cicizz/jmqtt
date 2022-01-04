@@ -1,12 +1,11 @@
 
 package org.jmqtt.mqtt.netty;
 
+import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.mqtt.MqttMessage;
-import io.netty.util.ReferenceCountUtil;
 import org.jmqtt.mqtt.MQTTConnection;
 import org.jmqtt.mqtt.MQTTConnectionFactory;
 import org.jmqtt.support.log.JmqttLogger;
@@ -15,7 +14,7 @@ import org.slf4j.Logger;
 
 import static io.netty.channel.ChannelFutureListener.CLOSE_ON_FAILURE;
 
-public class NettyMqttHandler extends ChannelInboundHandlerAdapter {
+public class NettyMqttHandler extends ChannelDuplexHandler {
 
     private static final Logger  log = JmqttLogger.remotingLog;
 
@@ -39,8 +38,6 @@ public class NettyMqttHandler extends ChannelInboundHandlerAdapter {
                     LogUtil.info(log,"Closed client channel due to exception in processing");
                 }
             });
-        } finally {
-            ReferenceCountUtil.release(msg);
         }
     }
 

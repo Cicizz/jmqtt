@@ -15,17 +15,11 @@
     <name>jmqtt-mqtt</name>
 
 
-
     <dependencies>
 
         <dependency>
             <groupId>org.jmqtt</groupId>
             <artifactId>jmqtt-bus</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jmqtt</groupId>
-            <artifactId>jmqtt-support</artifactId>
         </dependency>
 
         <dependency>

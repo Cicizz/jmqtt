@@ -1,6 +1,7 @@
 package org.jmqtt.bus.store.daoobject;
 
 import java.io.Serializable;
+import java.util.Date;
 
 public class SubscriptionDO implements Serializable {
 
@@ -11,6 +12,8 @@ public class SubscriptionDO implements Serializable {
     private String clientId;
 
     private String topic;
+
+    private Date subscribeTime;
 
     private String properties;
 
@@ -36,6 +39,14 @@ public class SubscriptionDO implements Serializable {
 
     public void setTopic(String topic) {
         this.topic = topic;
+    }
+
+    public Date getSubscribeTime() {
+        return subscribeTime;
+    }
+
+    public void setSubscribeTime(Date subscribeTime) {
+        this.subscribeTime = subscribeTime;
     }
 
     public String getProperties() {

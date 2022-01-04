@@ -1,21 +1,29 @@
-package org.jmqtt.mqtt.model;
+package org.jmqtt.bus.subscription.model;
 
+import java.util.Map;
 import java.util.Objects;
-import java.util.StringJoiner;
 
 /**
  * 订阅关系
  */
 public class Subscription {
-    private String clientId;
-    private int qos;
-    private String topic;
+    private String             clientId;
+    private String             topic;
+    private Map<String,Object> properties;
 
-    public Subscription(String clientId,String topic,int qos){
+    public Subscription(String clientId,String topic,Map<String,Object> properties){
         this.clientId = clientId;
         this.topic = topic;
-        this.qos = qos;
+        this.properties = properties;
     }
+
+    public <T> T getProperty(String key){
+        if (properties == null) {
+            return null;
+        }
+        return (T) properties.get(key);
+    }
+
 
     public String getClientId() {
         return clientId;
@@ -25,20 +33,20 @@ public class Subscription {
         this.clientId = clientId;
     }
 
-    public int getQos() {
-        return qos;
-    }
-
-    public void setQos(int qos) {
-        this.qos = qos;
-    }
-
     public String getTopic() {
         return topic;
     }
 
     public void setTopic(String topic) {
         this.topic = topic;
+    }
+
+    public Map<String, Object> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Map<String, Object> properties) {
+        this.properties = properties;
     }
 
     @Override
@@ -57,10 +65,10 @@ public class Subscription {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", Subscription.class.getSimpleName() + "[", "]")
-            .add("clientId='" + clientId + "'")
-            .add("qos=" + qos)
-            .add("topic='" + topic + "'")
-            .toString();
+        return "Subscription{" +
+                "clientId='" + clientId + '\'' +
+                ", topic='" + topic + '\'' +
+                ", properties=" + properties +
+                '}';
     }
 }

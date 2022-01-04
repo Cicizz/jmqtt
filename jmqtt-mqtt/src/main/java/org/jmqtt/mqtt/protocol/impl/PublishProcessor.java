@@ -23,10 +23,9 @@ public class PublishProcessor implements RequestProcessor {
         try {
             MqttPublishMessage publishMessage = (MqttPublishMessage) mqttMessage;
             MQTTConnection mqttConnection = MqttNettyUtils.mqttConnection(ctx.channel());
-
             mqttConnection.processPublishMessage(publishMessage);
         } catch (Throwable tr) {
-            LogUtil.warn(log, "[PubMessage] -> Solve mqtt pub message exception:{}", tr.getMessage());
+            LogUtil.warn(log, "[PubMessage] -> Solve mqtt pub message exception:{}", tr);
         } finally {
             ReferenceCountUtil.release(mqttMessage.payload());
         }

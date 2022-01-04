@@ -1,11 +1,11 @@
 package org.jmqtt.mqtt.model;
 
-public class Topic {
+public class MqttTopic {
 
     private String topicName;
-    private int qos;
+    private int    qos;
 
-    public Topic(String topicName, int qos) {
+    public MqttTopic(String topicName, int qos) {
         this.topicName = topicName;
         this.qos = qos;
     }

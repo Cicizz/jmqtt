@@ -10,7 +10,7 @@ import io.netty.handler.codec.mqtt.MqttMessage;
 import org.jmqtt.mqtt.MQTTConnection;
 import org.jmqtt.mqtt.netty.MqttNettyUtils;
 import org.jmqtt.mqtt.protocol.RequestProcessor;
-import org.jmqtt.mqtt.utils.MessageUtil;
+import org.jmqtt.mqtt.utils.MqttMessageUtil;
 import org.jmqtt.support.log.JmqttLogger;
 import org.jmqtt.support.log.LogUtil;
 import org.jmqtt.support.remoting.RemotingHelper;
@@ -31,6 +31,7 @@ public class ConnectProcessor implements RequestProcessor {
         String clientId = connectMessage.payload().clientIdentifier();
         String userName = connectMessage.payload().userName();
         byte[] password = connectMessage.payload().passwordInBytes();
+        boolean cleanSession = connectMessage.variableHeader().isCleanSession();
         MQTTConnection mqttConnection = MqttNettyUtils.mqttConnection(ctx.channel());
         boolean sessionPresent = false;
         try {
@@ -61,13 +62,20 @@ public class ConnectProcessor implements RequestProcessor {
                 ctx.close();
                 LogUtil.warn(log,"[CONNECT] -> {} connect failure,returnCode={}", clientId, returnCode);
             }
-            MqttConnAckMessage ackMessage = MessageUtil.getConnectAckMessage(returnCode, sessionPresent);
+            MqttConnAckMessage ackMessage = MqttMessageUtil.getConnectAckMessage(returnCode, sessionPresent);
+
+            final boolean hasOldSession = sessionPresent;
             ctx.writeAndFlush(ackMessage).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     LogUtil.info(log,"[CONNECT] -> {} connect to this mqtt server", clientId);
                     if (future.isSuccess()) {
-                        mqttConnection.reSendMessage2Client();
+                        // store session
+                        mqttConnection.storeSession();
+                        // send unAckMessages
+                        if (!cleanSession && hasOldSession) {
+                            mqttConnection.reSendMessage2Client();
+                        }
                     } else {
                         LogUtil.error(log,"[CONNECT] -> send connect ack error.");
                         mqttConnection.abortConnection(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
@@ -78,7 +86,7 @@ public class ConnectProcessor implements RequestProcessor {
         } catch (Exception ex) {
             LogUtil.warn(log,"[CONNECT] -> Service Unavailable: cause={}", ex);
             returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE;
-            MqttConnAckMessage ackMessage = MessageUtil.getConnectAckMessage(returnCode, sessionPresent);
+            MqttConnAckMessage ackMessage = MqttMessageUtil.getConnectAckMessage(returnCode, sessionPresent);
             ctx.writeAndFlush(ackMessage);
             ctx.close();
         }

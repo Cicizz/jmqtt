@@ -11,7 +11,6 @@ public interface DeviceSessionManager {
 
     void storeSession(DeviceSession deviceSession);
 
-    void updateSession(DeviceSession deviceSession);
 
     void offline(String clientId);
 }

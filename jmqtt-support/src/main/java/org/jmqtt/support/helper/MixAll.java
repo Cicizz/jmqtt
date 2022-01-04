@@ -1,5 +1,6 @@
 package org.jmqtt.support.helper;
 
+import com.alibaba.fastjson.JSONObject;
 import org.jmqtt.support.log.LogUtil;
 import org.slf4j.Logger;
 
@@ -13,6 +14,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Properties;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
@@ -44,6 +46,19 @@ public class MixAll {
         return null;
     }
 
+    public static Map<String,Object> propToMap(String propStr) {
+        if (propStr == null) {
+            return null;
+        }
+        return JSONObject.parseObject(propStr,Map.class);
+    }
+
+    public static String propToStr(Map<String,Object> properties) {
+        if (properties == null) {
+            return null;
+        }
+        return JSONObject.toJSONString(properties);
+    }
 
     public static boolean isEmpty(Collection collection) {
         if (collection == null || collection.size() == 0) {

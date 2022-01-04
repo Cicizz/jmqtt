@@ -4,15 +4,15 @@ package org.jmqtt.mqtt.session;
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import org.jmqtt.bus.model.DeviceMessage;
+import org.jmqtt.bus.model.DeviceSubscription;
 import org.jmqtt.mqtt.MQTTConnection;
-import org.jmqtt.mqtt.model.Subscription;
-import org.jmqtt.mqtt.utils.MessageUtil;
+import org.jmqtt.mqtt.utils.MqttMessageUtil;
 import org.jmqtt.mqtt.utils.MqttMsgHeader;
 import org.jmqtt.support.log.JmqttLogger;
 import org.jmqtt.support.log.LogUtil;
 import org.slf4j.Logger;
 
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,18 +29,27 @@ public class MqttSession {
     /**
      * clientId uniqu in a cluseter
      */
-    private           String                           clientId;
-    private           boolean                          cleanSession;
-    private transient AtomicInteger                    lastPacketId = new AtomicInteger(1);
-    private           int                              mqttVersion;
-    private           DeviceMessage                    will;
-    private           Set<Subscription>                subscriptions    = new HashSet<>();
-    private final     Map<Integer, DeviceMessage> qos2Receiving    = new ConcurrentHashMap<>();
-    private MQTTConnection mqttConnection;
-    private final Map<Integer,DeviceMessage> outboundFlowMessages = new ConcurrentHashMap<>();
-    private final Set<Integer> qos2OutboundFlowPacketIds = new CopyOnWriteArraySet<>();
-    private String clientIp;
-    private String serverIp;
+    private           String                      clientId;
+    private           boolean                     cleanSession;
+    private transient AtomicInteger               lastPacketId              = new AtomicInteger(1);
+    private           int                         mqttVersion;
+    private           DeviceMessage               will;
+    private final     Map<Integer, DeviceMessage> qos2Receiving             = new ConcurrentHashMap<>();
+    private MQTTConnection                        mqttConnection;
+    private final Map<Integer,DeviceMessage>      outboundFlowMessages      = new ConcurrentHashMap<>();
+    private final Set<Integer>                    qos2OutboundFlowPacketIds = new CopyOnWriteArraySet<>();
+    private String                                clientIp;
+    private String                                serverIp;
+    private Map<String, DeviceSubscription>   subscriptions             = new HashMap<>();
+
+
+    public void addSubscription(DeviceSubscription deviceSubscription) {
+        this.subscriptions.put(deviceSubscription.getTopic(),deviceSubscription);
+    }
+
+    public void removeSubscription(String topic) {
+        this.subscriptions.remove(topic);
+    }
 
     public void receivePubRec(int packetId){
         this.qos2OutboundFlowPacketIds.add(packetId);
@@ -78,7 +87,7 @@ public class MqttSession {
     }
 
     private void sendQos0Message(DeviceMessage deviceMessage) {
-        MqttPublishMessage mqttPublishMessage = MessageUtil.getPubMessage(deviceMessage,0);
+        MqttPublishMessage mqttPublishMessage = MqttMessageUtil.getPubMessage(deviceMessage,0);
         mqttConnection.publishMessage(mqttPublishMessage);
     }
 
@@ -87,7 +96,7 @@ public class MqttSession {
         // cache
         outboundFlowMessages.put(packetId,deviceMessage);
 
-        MqttPublishMessage mqttPublishMessage = MessageUtil.getPubMessage(deviceMessage,packetId);
+        MqttPublishMessage mqttPublishMessage = MqttMessageUtil.getPubMessage(deviceMessage,packetId);
         mqttConnection.publishMessage(mqttPublishMessage);
     }
 
@@ -102,14 +111,6 @@ public class MqttSession {
 
     public void clearWill(){
         this.will = null;
-    }
-
-    public void subscribe(Subscription subscription){
-        this.subscriptions.add(subscription);
-    }
-
-    public void unSubscribe(Subscription subscription) {
-        this.subscriptions.remove(subscription);
     }
 
     public boolean hasWill(){
@@ -153,13 +154,6 @@ public class MqttSession {
         this.will = will;
     }
 
-    public Set<Subscription> getSubscriptions() {
-        return subscriptions;
-    }
-
-    public void setSubscriptions(Set<Subscription> subscriptions) {
-        this.subscriptions = subscriptions;
-    }
 
     public MQTTConnection getMqttConnection() {
         return mqttConnection;
@@ -183,5 +177,13 @@ public class MqttSession {
 
     public void setServerIp(String serverIp) {
         this.serverIp = serverIp;
+    }
+
+    public Map<String, DeviceSubscription> getSubscriptions() {
+        return subscriptions;
+    }
+
+    public void setSubscriptions(Map<String, DeviceSubscription> subscriptions) {
+        this.subscriptions = subscriptions;
     }
 }

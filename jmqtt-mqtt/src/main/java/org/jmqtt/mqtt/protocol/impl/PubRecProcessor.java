@@ -8,6 +8,7 @@ import org.jmqtt.mqtt.protocol.RequestProcessor;
 
 /**
  * 出栈消息接收到qos2第一阶段的的pubRec报文: 丢弃消息，存储报文标志符
+ * 发送pubRel报文
  */
 public class PubRecProcessor implements RequestProcessor {
 

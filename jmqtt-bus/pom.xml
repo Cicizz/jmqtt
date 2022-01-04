@@ -14,9 +14,10 @@
     <name>jmqtt-bus</name>
 
     <dependencies>
+
         <dependency>
-            <groupId>org.jmqtt</groupId>
-            <artifactId>jmqtt-support</artifactId>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
         </dependency>
 
         <dependency>
@@ -40,6 +41,11 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jmqtt</groupId>
+            <artifactId>jmqtt-support</artifactId>
         </dependency>
     </dependencies>
 </project>

@@ -98,7 +98,7 @@ public class DBUtils {
     public void shutdown(){}
 
 
-    public static final Object operate(DBCallback dbCallback) {
+    public static final <T> T operate(DBCallback dbCallback) {
         try (SqlSession sqlSession = DBUtils.getInstance().sqlSessionFactory.openSession(true)){
             return dbCallback.operate(sqlSession);
         }

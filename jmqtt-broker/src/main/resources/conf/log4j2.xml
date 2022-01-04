@@ -66,6 +66,22 @@
             </DefaultRolloverStrategy>
         </RollingFile>
 
+        <!-- busLog -->
+        <RollingFile name="busLog-appender" fileName="${user.dir}/jmqttlogs/busLog.log"
+                     filePattern="${user.dir}/jmqttlogs/mqttLog.log.%d{yyyy-MM-dd}"
+                     append="true">
+            <PatternLayout
+                    pattern="${pattern}"
+                    charset="UTF-8"/>
+            <TimeBasedTriggeringPolicy/>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${user.dir}" maxDepth="1">
+                    <IfFileName glob="*/busLog.log.*"/>
+                    <IfLastModified age="10d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
         <!-- clientTraceLog -->
         <RollingFile name="clientTraceLog-appender" fileName="${user.dir}/jmqttlogs/clientTraceLog.log"
                      filePattern="${user.dir}/jmqttlogs/clientTraceLog.log.%d{yyyy-MM-dd}"
@@ -171,6 +187,11 @@
         </logger>
         <logger name="mqttLog" level="${level}" additivity="false">
             <appender-ref ref="mqttLog-appender"/>
+            <appender-ref ref="error-appender"/>
+            <appender-ref ref="console"/>
+        </logger>
+        <logger name="busLog" level="${level}" additivity="false">
+            <appender-ref ref="busLog-appender"/>
             <appender-ref ref="error-appender"/>
             <appender-ref ref="console"/>
         </logger>

@@ -1,10 +1,9 @@
 package org.jmqtt.bus;
 
-import org.jmqtt.bus.impl.ClusterEventManagerImpl;
-import org.jmqtt.bus.impl.DeviceMessageManagerImpl;
-import org.jmqtt.bus.impl.DeviceSessionManagerImpl;
-import org.jmqtt.bus.impl.DeviceSubscriptionManagerImpl;
+import org.jmqtt.bus.impl.*;
 import org.jmqtt.bus.store.DBUtils;
+import org.jmqtt.bus.subscription.DefaultSubscriptionTreeMatcher;
+import org.jmqtt.bus.subscription.SubscriptionMatcher;
 import org.jmqtt.support.config.BrokerConfig;
 
 public class BusController {
@@ -14,22 +13,27 @@ public class BusController {
     private DeviceSessionManager deviceSessionManager;
     private DeviceMessageManager deviceMessageManager;
     private DeviceSubscriptionManager deviceSubscriptionManager;
+    private SubscriptionMatcher subscriptionMatcher;
     private ClusterEventManager clusterEventManager;
 
     public BusController(BrokerConfig brokerConfig){
         this.brokerConfig = brokerConfig;
+        this.authenticator = new DefaultAuthenticator();
         this.deviceMessageManager = new DeviceMessageManagerImpl();
         this.deviceSessionManager = new DeviceSessionManagerImpl();
-        this.deviceSubscriptionManager = new DeviceSubscriptionManagerImpl();
-        this.clusterEventManager = new ClusterEventManagerImpl();
+        this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
+        this.deviceSubscriptionManager = new DeviceSubscriptionManagerImpl(subscriptionMatcher);
+        this.clusterEventManager = new ClusterEventManagerImpl(subscriptionMatcher);
     }
 
 
     public void start(){
         DBUtils.getInstance().start(brokerConfig);
+        this.clusterEventManager.start();
     }
 
     public void shutdown(){
+        this.clusterEventManager.shutdown();
         DBUtils.getInstance().shutdown();
     }
 
@@ -51,5 +55,9 @@ public class BusController {
 
     public ClusterEventManager getClusterEventManager() {
         return clusterEventManager;
+    }
+
+    public SubscriptionMatcher getSubscriptionMatcher() {
+        return subscriptionMatcher;
     }
 }

@@ -5,7 +5,7 @@ package org.jmqtt.bus.enums;
  */
 public enum ClusterEventCodeEnum {
 
-    CLEAR_SESSION("CLEAR_SESSION"),
+    MQTT_CLEAR_SESSION("MQTT_CLEAR_SESSION"),
 
     DISPATCHER_CLIENT_MESSAGE("DISPATCHER_CLIENT_MESSAGE"),
     ;

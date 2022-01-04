@@ -8,8 +8,6 @@ import org.jmqtt.mqtt.protocol.RequestProcessor;
 import org.jmqtt.mqtt.protocol.impl.*;
 import org.jmqtt.mqtt.retain.RetainMessageHandler;
 import org.jmqtt.mqtt.retain.impl.RetainMessageHandlerImpl;
-import org.jmqtt.mqtt.subscription.DefaultSubscriptionTreeMatcher;
-import org.jmqtt.mqtt.subscription.SubscriptionMatcher;
 import org.jmqtt.support.config.BrokerConfig;
 import org.jmqtt.support.helper.Pair;
 import org.jmqtt.support.helper.RejectHandler;
@@ -41,7 +39,6 @@ public class MQTTConnectionFactory {
     private Map<Integer, Pair<RequestProcessor, ExecutorService>> processorTable;
 
     private RetainMessageHandler retainMessageHandler;
-    private SubscriptionMatcher subscriptionMatcher;
 
     /** bus dependency */
     private BusController busController;
@@ -53,7 +50,6 @@ public class MQTTConnectionFactory {
         this.brokerConfig = brokerConfig;
         this.busController = busController;
         this.retainMessageHandler = new RetainMessageHandlerImpl();
-        this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
 
         this.connectQueue = new LinkedBlockingQueue<>(100000);
         this.pubQueue = new LinkedBlockingQueue<>(100000);
@@ -120,7 +116,7 @@ public class MQTTConnectionFactory {
     }
 
     public MQTTConnection create(Channel channel){
-        MQTTConnection mqttConnection = new MQTTConnection(channel,processorTable,brokerConfig,busController,subscriptionMatcher,retainMessageHandler);
+        MQTTConnection mqttConnection = new MQTTConnection(channel,processorTable,brokerConfig,busController,retainMessageHandler);
         return mqttConnection;
     }
 

@@ -13,6 +13,14 @@ public class DeviceSubscription {
 
     private Map<String,Object> properties;
 
+
+    public <T> T getProperty(String key){
+        if (properties == null) {
+            return null;
+        }
+        return (T) properties.get(key);
+    }
+
     public String getClientId() {
         return clientId;
     }

@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * transfer message from Message and MqttMessage
  */
-public class MessageUtil {
+public class MqttMessageUtil {
 
     public static byte[] readBytesFromByteBuf(ByteBuf byteBuf){
         byte[] bytes = new byte[byteBuf.readableBytes()];

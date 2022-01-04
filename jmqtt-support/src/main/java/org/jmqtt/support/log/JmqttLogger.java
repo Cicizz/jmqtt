@@ -9,6 +9,8 @@ public interface JmqttLogger {
 
     Logger mqttLog = LoggerFactory.getLogger("mqttLog");
 
+    Logger busLog = LoggerFactory.getLogger("busLog");
+
     Logger messageTraceLog = LoggerFactory.getLogger("messageTraceLog");
 
     Logger remotingLog = LoggerFactory.getLogger("remotingLog");

@@ -25,7 +25,7 @@ public class DisconnectProcessor implements RequestProcessor {
             LogUtil.error(log,"[DISCONNECT] -> {} hasn't connect before",clientId );
             return;
         }
-        mqttConnection.disconnect();
+        mqttConnection.processDisconnect();
         ctx.close();
     }
 

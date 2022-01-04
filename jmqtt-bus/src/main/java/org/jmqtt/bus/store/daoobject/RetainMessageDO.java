@@ -1,6 +1,7 @@
 package org.jmqtt.bus.store.daoobject;
 
 import java.io.Serializable;
+import java.util.Date;
 
 public class RetainMessageDO implements Serializable {
 
@@ -10,7 +11,13 @@ public class RetainMessageDO implements Serializable {
 
     private String topic;
 
-    private Long messageId;
+    private byte[] content;
+
+    private String fromClientId;
+
+    private Date storedTime;
+
+    private String properties;
 
     public Long getId() {
         return id;
@@ -28,11 +35,35 @@ public class RetainMessageDO implements Serializable {
         this.topic = topic;
     }
 
-    public Long getMessageId() {
-        return messageId;
+    public byte[] getContent() {
+        return content;
     }
 
-    public void setMessageId(Long messageId) {
-        this.messageId = messageId;
+    public void setContent(byte[] content) {
+        this.content = content;
+    }
+
+    public String getFromClientId() {
+        return fromClientId;
+    }
+
+    public void setFromClientId(String fromClientId) {
+        this.fromClientId = fromClientId;
+    }
+
+    public Date getStoredTime() {
+        return storedTime;
+    }
+
+    public void setStoredTime(Date storedTime) {
+        this.storedTime = storedTime;
+    }
+
+    public String getProperties() {
+        return properties;
+    }
+
+    public void setProperties(String properties) {
+        this.properties = properties;
     }
 }

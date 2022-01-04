@@ -8,20 +8,17 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.*;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.jmqtt.bus.*;
-import org.jmqtt.bus.enums.ClusterEventCodeEnum;
-import org.jmqtt.bus.enums.DeviceOnlineStateEnum;
+import org.jmqtt.bus.enums.*;
 import org.jmqtt.bus.model.ClusterEvent;
 import org.jmqtt.bus.model.DeviceMessage;
 import org.jmqtt.bus.model.DeviceSession;
 import org.jmqtt.bus.model.DeviceSubscription;
-import org.jmqtt.mqtt.model.Subscription;
-import org.jmqtt.mqtt.model.Topic;
+import org.jmqtt.mqtt.model.MqttTopic;
 import org.jmqtt.mqtt.netty.MqttNettyUtils;
 import org.jmqtt.mqtt.protocol.RequestProcessor;
 import org.jmqtt.mqtt.retain.RetainMessageHandler;
 import org.jmqtt.mqtt.session.MqttSession;
-import org.jmqtt.mqtt.subscription.SubscriptionMatcher;
-import org.jmqtt.mqtt.utils.MessageUtil;
+import org.jmqtt.mqtt.utils.MqttMessageUtil;
 import org.jmqtt.mqtt.utils.MqttMsgHeader;
 import org.jmqtt.support.config.BrokerConfig;
 import org.jmqtt.support.helper.Pair;
@@ -49,27 +46,28 @@ public class MQTTConnection {
     private BrokerConfig                                          brokerConfig;
     private MqttSession                                           bindedSession;
     private Authenticator                                         authenticator;
-    private SubscriptionMatcher                                   subscriptionMatcher;
 
     private DeviceSessionManager      deviceSessionManager;
     private DeviceSubscriptionManager deviceSubscriptionManager;
     private DeviceMessageManager      deviceMessageManager;
     private RetainMessageHandler      retainMessageHandler;
     private ClusterEventManager clusterEventManager;
+    private String clientId;
 
     public MQTTConnection(Channel channel, Map<Integer, Pair<RequestProcessor, ExecutorService>> processorTable,
-                          BrokerConfig brokerConfig, BusController busController,SubscriptionMatcher subscriptionMatcher,RetainMessageHandler retainMessageHandler) {
+                          BrokerConfig brokerConfig, BusController busController,RetainMessageHandler retainMessageHandler) {
         this.channel = channel;
         this.processorTable = processorTable;
         this.brokerConfig = brokerConfig;
         this.authenticator = busController.getAuthenticator();
-        this.subscriptionMatcher = subscriptionMatcher;
         this.deviceSessionManager = busController.getDeviceSessionManager();
         this.deviceMessageManager = busController.getDeviceMessageManager();
         this.deviceSubscriptionManager = busController.getDeviceSubscriptionManager();
         this.retainMessageHandler = retainMessageHandler;
         this.clusterEventManager = busController.getClusterEventManager();
     }
+
+
 
     public void processProtocol(ChannelHandlerContext ctx, MqttMessage mqttMessage) {
         int protocolType = mqttMessage.fixedHeader().messageType().value();
@@ -83,7 +81,7 @@ public class MQTTConnection {
 
     public void processPubComp(MqttMessage mqttMessage) {
         String clientId = getClientId();
-        int packetId = MessageUtil.getMessageId(mqttMessage);
+        int packetId = MqttMessageUtil.getMessageId(mqttMessage);
         boolean flag = bindedSession.releaseQos2SecFlow(packetId);
         LogUtil.debug(log,"[PubComp] -> Receive PubCom and remove the flow message,clientId={},msgId={}",clientId,packetId);
         if(!flag){
@@ -93,19 +91,29 @@ public class MQTTConnection {
 
     public void processPubRec(MqttMessage mqttMessage){
         String clientId = getClientId();
-        int packetId = MessageUtil.getMessageId(mqttMessage);
-        bindedSession.releaseOutboundFlowMessage(packetId);
-        bindedSession.receivePubRec(packetId);
+        int packetId = MqttMessageUtil.getMessageId(mqttMessage);
+        DeviceMessage stayAckMsg = bindedSession.releaseOutboundFlowMessage(packetId);
+        if (stayAckMsg == null) {
+            LogUtil.warn(log,"[PUBREC] Stay release message is not exist,packetId:{},clientId:{}",packetId,getClientId());
+        } else {
+            this.deviceMessageManager.ackMessage(getClientId(),stayAckMsg.getId());
+        }
 
+        bindedSession.receivePubRec(packetId);
         LogUtil.debug(log,"[PubRec] -> Receive PubRec message,clientId={},msgId={}",clientId,packetId);
-        MqttMessage pubRelMessage = MessageUtil.getPubRelMessage(packetId);
+        MqttMessage pubRelMessage = MqttMessageUtil.getPubRelMessage(packetId);
         this.channel.writeAndFlush(pubRelMessage);
     }
 
     public void processPubAck(MqttMessage mqttMessage){
-        int packetId = MessageUtil.getMessageId(mqttMessage);
+        int packetId = MqttMessageUtil.getMessageId(mqttMessage);
         LogUtil.info(log, "[PubAck] -> Receive PubAck message,clientId={},msgId={}", getClientId(),packetId);
-        bindedSession.releaseOutboundFlowMessage(packetId);
+        DeviceMessage deviceMessage = bindedSession.releaseOutboundFlowMessage(packetId);
+        if (deviceMessage == null) {
+            LogUtil.warn(log,"[PUBACK] Stay release message is not exist,packetId:{},clientId:{}",packetId,getClientId());
+            return;
+        }
+        this.deviceMessageManager.ackMessage(getClientId(),deviceMessage.getId());
     }
 
     public void processUnSubscribe(MqttUnsubscribeMessage mqttUnsubscribeMessage){
@@ -113,38 +121,42 @@ public class MQTTConnection {
         MqttUnsubscribePayload unsubscribePayload = mqttUnsubscribeMessage.payload();
         List<String> topics = unsubscribePayload.topics();
         topics.forEach( topic -> {
-            subscriptionMatcher.unSubscribe(topic,getClientId());
-            deviceSubscriptionManager.deleteSubscription(clientId,topic);
+            this.bindedSession.removeSubscription(topic);
+            deviceSubscriptionManager.unSubscribe(clientId,topic);
         });
-        MqttUnsubAckMessage unsubAckMessage = MessageUtil.getUnSubAckMessage(MessageUtil.getMessageId(mqttUnsubscribeMessage));
+        MqttUnsubAckMessage unsubAckMessage = MqttMessageUtil.getUnSubAckMessage(MqttMessageUtil.getMessageId(mqttUnsubscribeMessage));
         this.channel.writeAndFlush(unsubAckMessage);
     }
 
     public void processSubscribe(MqttSubscribeMessage subscribeMessage) {
 
         int packetId = subscribeMessage.variableHeader().messageId();
-        List<Topic> validTopicList = validTopics(subscribeMessage.payload().topicSubscriptions());
+        List<MqttTopic> validTopicList = validTopics(subscribeMessage.payload().topicSubscriptions());
         if (validTopicList == null || validTopicList.size() == 0) {
             LogUtil.warn(log, "[Subscribe] -> Valid all subscribe topic failure,clientId:{},packetId:{}", getClientId(),packetId);
             return;
         }
 
         // subscribe
-        for (Topic topic : validTopicList) {
-            Subscription subscription = new Subscription(getClientId(), topic.getTopicName(), topic.getQos());
-            boolean subRs = this.subscriptionMatcher.subscribe(subscription);
-            if (!subRs) {
-                LogUtil.error(log, "[SUBSCRIBE] subscribe tree handle error.");
+        List<Integer> ackQos = new ArrayList<>(validTopicList.size());
+        for (MqttTopic topic : validTopicList) {
+            DeviceSubscription deviceSubscription = new DeviceSubscription();
+            deviceSubscription.setTopic(topic.getTopicName());
+            deviceSubscription.setClientId(getClientId());
+            deviceSubscription.setSubscribeTime(new Date());
+            Map<String,Object> properties = new HashMap<>();
+            properties.put(MqttMsgHeader.QOS,topic.getQos());
+            deviceSubscription.setProperties(properties);
+            this.bindedSession.addSubscription(deviceSubscription);
+            boolean succ = this.deviceSubscriptionManager.subscribe(deviceSubscription);
+            if (succ) {
+                ackQos.add(topic.getQos());
+            } else {
+                LogUtil.error(log,"[SUBSCRIBE] subscribe error.");
             }
-            DeviceSubscription deviceSubscription = MqttMsgHeader.convert(subscription);
-            this.deviceSubscriptionManager.storeSubscription(deviceSubscription);
         }
 
-        List<Integer> ackQos = new ArrayList<>(validTopicList.size());
-        for (Topic topic : validTopicList) {
-            ackQos.add(topic.getQos());
-        }
-        MqttMessage subAckMessage = MessageUtil.getSubAckMessage(packetId, ackQos);
+        MqttMessage subAckMessage = MqttMessageUtil.getSubAckMessage(packetId, ackQos);
         this.channel.writeAndFlush(subAckMessage).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
@@ -153,9 +165,15 @@ public class MQTTConnection {
                     List<DeviceMessage> retainMessages = retainMessageHandler.getAllRetatinMessage();
                     if (retainMessages != null) {
                         retainMessages.forEach(message -> {
+                            message.setSource(MessageSourceEnum.DEVICE);
                             // match
-                            for (Topic topic : validTopicList) {
-                                if (subscriptionMatcher.isMatch(message.getTopic(), topic.getTopicName())) {
+                            for (MqttTopic topic : validTopicList) {
+                                if (deviceSubscriptionManager.isMatch(message.getTopic(), topic.getTopicName())) {
+                                    // 1. store stay message
+                                    Long msgId = deviceMessageManager.storeMessage(message);
+                                    deviceMessageManager.addClientInBoxMsg(getClientId(),msgId, MessageAckEnum.UN_ACK);
+
+                                    // 2. ack message
                                     bindedSession.sendMessage(message);
                                 }
                             }
@@ -176,15 +194,15 @@ public class MQTTConnection {
     /**
      * 返回校验合法的topic
      */
-    private List<Topic> validTopics(List<MqttTopicSubscription> topics) {
-        List<Topic> topicList = new ArrayList<>();
+    private List<MqttTopic> validTopics(List<MqttTopicSubscription> topics) {
+        List<MqttTopic> topicList = new ArrayList<>();
         for (MqttTopicSubscription subscription : topics) {
             if (!authenticator.subscribeVerify(getClientId(), subscription.topicName())) {
                 LogUtil.warn(log, "[SubPermission] this clientId:{} have no permission to subscribe this topic:{}", getClientId(),
                         subscription.topicName());
                 continue;
             }
-            Topic topic = new Topic(subscription.topicName(), subscription.qualityOfService().value());
+            MqttTopic topic = new MqttTopic(subscription.topicName(), subscription.qualityOfService().value());
             topicList.add(topic);
         }
         return topicList;
@@ -213,7 +231,7 @@ public class MQTTConnection {
         LogUtil.debug(log, "[PubMessage] -> Process qos2 message,clientId={}", getClientId());
         DeviceMessage deviceMessage = MqttMsgHeader.buildDeviceMessage(mqttPublishMessage);
         bindedSession.receivedPublishQos2(originMessageId, deviceMessage);
-        MqttMessage pubRecMessage = MessageUtil.getPubRecMessage(originMessageId);
+        MqttMessage pubRecMessage = MqttMessageUtil.getPubRecMessage(originMessageId);
         this.channel.writeAndFlush(pubRecMessage);
     }
 
@@ -221,12 +239,12 @@ public class MQTTConnection {
         int originMessageId = mqttPublishMessage.variableHeader().packetId();
         dispatcherMessage(mqttPublishMessage);
         LogUtil.info(log, "[PubMessage] -> Process qos1 message,clientId={}", getClientId());
-        MqttPubAckMessage pubAckMessage = MessageUtil.getPubAckMessage(originMessageId);
+        MqttPubAckMessage pubAckMessage = MqttMessageUtil.getPubAckMessage(originMessageId);
         this.channel.writeAndFlush(pubAckMessage);
     }
 
     public void processPubRelMessage(MqttMessage mqttMessage) {
-        int packetId = MessageUtil.getMessageId(mqttMessage);
+        int packetId = MqttMessageUtil.getMessageId(mqttMessage);
         DeviceMessage deviceMessage = bindedSession.receivedPubRelQos2(packetId);
         if (deviceMessage == null) {
             LogUtil.error(log, "[PUBREL] receivedPubRelQos2 cached message is not exist,message lost !!!!!,packetId:{},clientId:{}",
@@ -234,7 +252,7 @@ public class MQTTConnection {
         } else {
             dispatcherMessage(deviceMessage);
         }
-        MqttMessage pubComMessage = MessageUtil.getPubComMessage(packetId);
+        MqttMessage pubComMessage = MqttMessageUtil.getPubComMessage(packetId);
         this.channel.writeAndFlush(pubComMessage);
     }
 
@@ -257,10 +275,12 @@ public class MQTTConnection {
     private void dispatcherMessage(MqttPublishMessage mqttPublishMessage) {
         boolean retain = mqttPublishMessage.fixedHeader().isRetain();
         int qos = mqttPublishMessage.fixedHeader().qosLevel().value();
-        byte[] payload = mqttPublishMessage.payload().array();
+        byte[] payload = MqttMessageUtil.readBytesFromByteBuf(mqttPublishMessage.payload());
         String topic = mqttPublishMessage.variableHeader().topicName();
 
         DeviceMessage deviceMessage = MqttMsgHeader.buildDeviceMessage(retain, qos, topic, payload);
+        deviceMessage.setSource(MessageSourceEnum.DEVICE);
+        deviceMessage.setFromClientId(clientId);
         dispatcherMessage(deviceMessage);
     }
 
@@ -270,7 +290,7 @@ public class MQTTConnection {
             return;
         }
         if (bindedSession.hasWill()) {
-            // send will message 2 cluster
+            dispatcherMessage(bindedSession.getWill());
         }
         if (bindedSession.isCleanSession()) {
             clearSession();
@@ -283,17 +303,20 @@ public class MQTTConnection {
 
         int mqttVersion = mqttConnectMessage.variableHeader().version();
         String clientId = mqttConnectMessage.payload().clientIdentifier();
+        this.clientId = clientId;
         boolean cleanSession = mqttConnectMessage.variableHeader().isCleanSession();
 
-        boolean notifyClearOtherSession = true;
         this.bindedSession = new MqttSession();
         this.bindedSession.setClientId(clientId);
         this.bindedSession.setCleanSession(cleanSession);
         this.bindedSession.setMqttVersion(mqttVersion);
         this.bindedSession.setClientIp(RemotingHelper.getRemoteAddr(this.channel));
         this.bindedSession.setServerIp(RemotingHelper.getLocalAddr());
+        this.bindedSession.setMqttConnection(this);
 
         boolean sessionPresent = false;
+        boolean notifyClearOtherSession = true;
+
 
         // 1. 从集群/本服务器中查询是否存在该clientId的设备消息
         DeviceSession deviceSession = deviceSessionManager.getSession(clientId);
@@ -301,8 +324,10 @@ public class MQTTConnection {
         if (deviceSession != null && deviceSession.getOnline() == DeviceOnlineStateEnum.ONLINE) {
             MQTTConnection previousClient = ConnectManager.getInstance().getClient(clientId);
             if (previousClient != null) {
+                //clear old session in this node
                 previousClient.abortConnection(MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED);
                 ConnectManager.getInstance().removeClient(clientId);
+
                 notifyClearOtherSession = false;
             }
         }
@@ -312,21 +337,21 @@ public class MQTTConnection {
         } else {
             if (cleanSession) {
                 sessionPresent = false;
-                notifyClearOtherSession = false;
                 clearSession();
             } else {
                 sessionPresent = true;
-                reloadSession();
+                reloadSubscriptions();
             }
         }
 
         // 2. 清理连接到其它节点的连接
         if (notifyClearOtherSession) {
             ClusterEvent clusterEvent = new ClusterEvent();
-            clusterEvent.setClusterEventCode(ClusterEventCodeEnum.CLEAR_SESSION);
+            clusterEvent.setClusterEventCode(ClusterEventCodeEnum.MQTT_CLEAR_SESSION);
             clusterEvent.setContent(getClientId());
             clusterEvent.setGmtCreate(new Date());
             clusterEvent.setNodeIp(bindedSession.getServerIp());
+            clusterEventManager.sendEvent(clusterEvent);
         }
         // 3. 处理will 消息
         boolean willFlag = mqttConnectMessage.variableHeader().isWillFlag();
@@ -336,9 +361,26 @@ public class MQTTConnection {
             String willTopic = mqttConnectMessage.payload().willTopic();
             byte[] willPayload = mqttConnectMessage.payload().willMessageInBytes();
             DeviceMessage deviceMessage = MqttMsgHeader.buildDeviceMessage(willRetain, willQos, willTopic, willPayload);
+            deviceMessage.setSource(MessageSourceEnum.DEVICE);
+            deviceMessage.setFromClientId(clientId);
             bindedSession.setWill(deviceMessage);
         }
         return sessionPresent;
+    }
+
+    public void storeSession() {
+        ConnectManager.getInstance().putClient(getClientId(),this);
+        DeviceSession deviceSession = new DeviceSession();
+        deviceSession.setTransportProtocol(TransportProtocolEnum.MQTT);
+        deviceSession.setServerIp(bindedSession.getServerIp());
+        deviceSession.setClientIp(bindedSession.getClientIp());
+        deviceSession.setOnlineTime(new Date());
+        deviceSession.setClientId(getClientId());
+        deviceSession.setOnline(DeviceOnlineStateEnum.ONLINE);
+        Map<String,Object> properties = new HashMap<>();
+        properties.put(MqttMsgHeader.CLEAN_SESSION,bindedSession.isCleanSession());
+        deviceSession.setProperties(properties);
+        deviceSessionManager.storeSession(deviceSession);
     }
 
     public void reSendMessage2Client() {
@@ -390,43 +432,25 @@ public class MQTTConnection {
         this.channel.close().addListener(CLOSE_ON_FAILURE);
     }
 
-    public void disconnect() {
-
-        // 1. 判断是否清理会话
-        if (bindedSession.isCleanSession()) {
-            Set<Subscription> subscriptions = bindedSession.getSubscriptions();
-            if (subscriptions != null) {
-                for (Subscription subscription : subscriptions) {
-                    this.subscriptionMatcher.unSubscribe(subscription.getTopic(), bindedSession.getClientId());
-                }
-            }
-            clearSession();
-        }
-
-        // 3. 清理will消息
+    public void processDisconnect() {
+        // 1. 清理will消息
         bindedSession.clearWill();
-
-        // 4. 下线
+        // 2. 下线
         offline();
     }
 
-    // TODO can be async
     private void clearSession() {
         deviceSubscriptionManager.deleteAllSubscription(getClientId());
-        deviceMessageManager.clearOfflineMessage(getClientId());
+        deviceMessageManager.clearUnAckMessage(getClientId());
     }
 
-    private void reloadSession() {
+    private void reloadSubscriptions() {
         Set<DeviceSubscription> deviceSubscriptions = deviceSubscriptionManager.getAllSubscription(getClientId());
         if (deviceSubscriptions != null) {
             deviceSubscriptions.forEach(item -> {
-                Subscription subscription = MqttMsgHeader.convert(item);
-                bindedSession.subscribe(subscription);
-                subscriptionMatcher.subscribe(subscription);
+                deviceSubscriptionManager.onlySubscribe2Tree(item);
             });
         }
-
-        // TODO resendOfflineMessage
     }
 
     private void offline() {
@@ -435,6 +459,46 @@ public class MQTTConnection {
     }
 
     public String getClientId() {
-        return MqttNettyUtils.clientID(channel);
+        return this.clientId;
+    }
+
+    public Channel getChannel() {
+        return channel;
+    }
+
+    public Map<Integer, Pair<RequestProcessor, ExecutorService>> getProcessorTable() {
+        return processorTable;
+    }
+
+    public BrokerConfig getBrokerConfig() {
+        return brokerConfig;
+    }
+
+    public MqttSession getBindedSession() {
+        return bindedSession;
+    }
+
+    public Authenticator getAuthenticator() {
+        return authenticator;
+    }
+
+    public DeviceSessionManager getDeviceSessionManager() {
+        return deviceSessionManager;
+    }
+
+    public DeviceSubscriptionManager getDeviceSubscriptionManager() {
+        return deviceSubscriptionManager;
+    }
+
+    public DeviceMessageManager getDeviceMessageManager() {
+        return deviceMessageManager;
+    }
+
+    public RetainMessageHandler getRetainMessageHandler() {
+        return retainMessageHandler;
+    }
+
+    public ClusterEventManager getClusterEventManager() {
+        return clusterEventManager;
     }
 }

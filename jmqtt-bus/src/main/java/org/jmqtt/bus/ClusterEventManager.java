@@ -1,5 +1,6 @@
 package org.jmqtt.bus;
 
+import org.jmqtt.bus.event.GatewayListener;
 import org.jmqtt.bus.model.ClusterEvent;
 
 /**
@@ -9,4 +10,9 @@ public interface ClusterEventManager {
 
     void sendEvent(ClusterEvent clusterEvent);
 
+    void registerEventListener(GatewayListener listener);
+
+    void start();
+
+    void shutdown();
 }
