@@ -2,7 +2,7 @@ package org.jmqtt.bus;
 
 import org.jmqtt.bus.impl.*;
 import org.jmqtt.bus.store.DBUtils;
-import org.jmqtt.bus.subscription.DefaultSubscriptionTreeMatcher;
+import org.jmqtt.bus.subscription.CTrieSubscriptionMatcher;
 import org.jmqtt.bus.subscription.SubscriptionMatcher;
 import org.jmqtt.support.config.BrokerConfig;
 
@@ -21,7 +21,8 @@ public class BusController {
         this.authenticator = new DefaultAuthenticator();
         this.deviceMessageManager = new DeviceMessageManagerImpl();
         this.deviceSessionManager = new DeviceSessionManagerImpl();
-        this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
+        //this.subscriptionMatcher = new DefaultSubscriptionTreeMatcher();
+        this.subscriptionMatcher = new CTrieSubscriptionMatcher();
         this.deviceSubscriptionManager = new DeviceSubscriptionManagerImpl(subscriptionMatcher);
         this.clusterEventManager = new ClusterEventManagerImpl(subscriptionMatcher);
     }

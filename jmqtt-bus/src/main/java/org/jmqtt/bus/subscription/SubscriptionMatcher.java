@@ -32,4 +32,8 @@ public interface SubscriptionMatcher {
      */
     boolean isMatch(String pubTopic,String subTopic);
 
+    int size();
+
+    String dumpTree();
+
 }
