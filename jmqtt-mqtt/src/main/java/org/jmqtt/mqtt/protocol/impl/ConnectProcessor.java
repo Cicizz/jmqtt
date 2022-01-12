@@ -35,6 +35,7 @@ public class ConnectProcessor implements RequestProcessor {
         MQTTConnection mqttConnection = MqttNettyUtils.mqttConnection(ctx.channel());
         boolean sessionPresent = false;
         try {
+
             if (!versionValid(mqttVersion)) {
                 returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_UNACCEPTABLE_PROTOCOL_VERSION;
             } else if (!mqttConnection.clientIdVerify(clientId)) {
@@ -50,7 +51,6 @@ public class ConnectProcessor implements RequestProcessor {
                     LogUtil.warn(log,"[CONNECT] -> set heartbeat failure,clientId:{},heartbeatSec:{}", clientId, heartbeatSec);
                     throw new Exception("set heartbeat failure");
                 }
-
                 // 2. 处理连接
                 sessionPresent = mqttConnection.createOrReopenSession(connectMessage);
 
@@ -82,7 +82,7 @@ public class ConnectProcessor implements RequestProcessor {
                     }
                 }
             });
-
+            //LogUtil.warn(log,"Connect Cost:{}",(System.currentTimeMillis() - start));
         } catch (Exception ex) {
             LogUtil.warn(log,"[CONNECT] -> Service Unavailable: cause={}", ex);
             returnCode = MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE;

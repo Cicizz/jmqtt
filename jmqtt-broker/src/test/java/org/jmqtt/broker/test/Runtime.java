@@ -1,7 +1,7 @@
 package org.jmqtt.broker.test;
 
 import com.sun.management.OperatingSystemMXBean;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.lang.management.ManagementFactory;
 
