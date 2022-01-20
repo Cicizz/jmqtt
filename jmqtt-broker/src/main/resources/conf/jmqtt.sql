@@ -4,6 +4,7 @@ DROP INDEX `idx_client_id` ON `jmqtt_message`;
 DROP INDEX `idx_client_id_ack` ON `jmqtt_client_inbox`;
 DROP INDEX `uk_topic` ON `jmqtt_retain_message`;
 
+
 DROP TABLE `jmqtt_session`;
 DROP TABLE `jmqtt_subscription`;
 DROP TABLE `jmqtt_message`;
@@ -28,7 +29,7 @@ COMMENT = '客户端会话状态';
 CREATE TABLE `jmqtt_subscription` (
 `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
 `client_id` varchar(64) NOT NULL COMMENT '客户端id',
-`topic` varchar(255) NOT NULL COMMENT '订阅的topic',
+`topic` varchar(64) NOT NULL COMMENT '订阅的topic',
 `subscribe_time` timestamp NOT NULL COMMENT '订阅时间',
 `properties` text NULL COMMENT '订阅的额外属性',
 PRIMARY KEY (`id`) ,
@@ -60,7 +61,7 @@ INDEX `idx_client_id_ack` (`client_id` ASC, `ack` ASC)
 COMMENT = '设备消息收件箱表';
 CREATE TABLE `jmqtt_retain_message` (
 `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
-`topic` varchar(255) NOT NULL COMMENT '所属topic',
+`topic` varchar(64) NOT NULL COMMENT '所属topic',
 `content` mediumblob NOT NULL COMMENT '消息体内容',
 `from_client_id` varchar(64) NOT NULL COMMENT 'retain消息来源设备id',
 `stored_time` timestamp NOT NULL COMMENT '存储事件',
