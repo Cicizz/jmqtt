@@ -11,10 +11,21 @@ public class Subscription {
     private String             topic;
     private Map<String,Object> properties;
 
+    public Subscription(String clientId,String topic){
+        this.clientId = clientId;
+        this.topic = topic;
+    }
+
     public Subscription(String clientId,String topic,Map<String,Object> properties){
         this.clientId = clientId;
         this.topic = topic;
         this.properties = properties;
+    }
+
+    public Subscription(Subscription origin){
+        this.clientId = origin.getClientId();
+        this.topic = origin.getTopic();
+        this.properties = origin.getProperties();
     }
 
     public <T> T getProperty(String key){

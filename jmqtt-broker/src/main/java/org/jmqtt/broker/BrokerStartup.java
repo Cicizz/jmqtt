@@ -49,13 +49,13 @@ public class BrokerStartup {
         if(StringUtils.isEmpty(jmqttHome)){
             throw new Exception("please set JMQTT_HOME.");
         }
-        String jmqttConfigPath = jmqttHome + File.separator + "conf" + File.separator + "jmqtt.properties";
+        String jmqttConfigPath = jmqttHome + File.separator + "jmqtt.properties";
         initConfig(jmqttConfigPath,brokerConfig,nettyConfig);
 
         // 日志配置加载
         try {
             LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
-            File file = new File(jmqttHome + File.separator + "conf" + File.separator + "log4j2.xml");
+            File file = new File(jmqttHome + File.separator + "log4j2.xml");
             context.setConfigLocation(file.toURI());
             Configuration configuration = context.getConfiguration();
             Map<String, LoggerConfig> loggerConfigMap = configuration.getLoggers();
@@ -70,7 +70,6 @@ public class BrokerStartup {
         } catch (Exception ex) {
             System.err.print("Log4j2 load error,ex:" + ex);
         }
-
 
         // 启动服务，线程等
         BrokerController brokerController = new BrokerController(brokerConfig,nettyConfig);

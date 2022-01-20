@@ -91,6 +91,16 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
         return innerIsMatch(pubTopic, subTopic);
     }
 
+    @Override
+    public int size() {
+        return 0;
+    }
+
+    @Override
+    public String dumpTree() {
+        return null;
+    }
+
     private boolean innerIsMatch(String pubTopic, String subTopic) {
         if (pubTopic.equals(subTopic)) {
             return true;
@@ -211,4 +221,6 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
             return null;
         }
     }
+
+
 }

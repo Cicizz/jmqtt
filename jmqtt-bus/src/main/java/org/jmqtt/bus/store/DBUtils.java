@@ -64,7 +64,7 @@ public class DBUtils {
                     // 其他配置可自行补充
                     dds.setKeepAlive(true);
                     dds.setMinEvictableIdleTimeMillis(180000);
-                    dds.setMaxWait(60000);
+                    dds.setMaxWait(10*1000);
                     dds.setInitialSize(5);
                     dds.setMinIdle(5);
                     try {
