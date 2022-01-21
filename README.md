@@ -28,6 +28,9 @@ WSS port: 8884
 ## QQ technology exchange group
 ![jmqtt技术交流群](jmqtt_qq.png)
 
+## test report
+jmqtt-doc/docs/TEST_REPORT.md
+
 ## 基于蚂蚁技术底座的IoT消息服务
 1. 提供iot端完整消息服务，接入设备管理&监控等
 2. 结合蚂蚁智能能力(对话机器人，智能助理，实时音视频)等，提供端智能终端解决方案，提供IM+IoT消息解决方案
