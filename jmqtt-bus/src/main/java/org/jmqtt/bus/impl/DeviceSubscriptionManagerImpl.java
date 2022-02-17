@@ -8,6 +8,7 @@ import org.jmqtt.bus.store.DBCallback;
 import org.jmqtt.bus.store.DBUtils;
 import org.jmqtt.bus.store.daoobject.SubscriptionDO;
 import org.jmqtt.bus.subscription.SubscriptionMatcher;
+import org.jmqtt.bus.subscription.Topic;
 import org.jmqtt.bus.subscription.model.Subscription;
 import org.jmqtt.support.log.JmqttLogger;
 import org.jmqtt.support.log.LogUtil;
@@ -95,7 +96,8 @@ public class DeviceSubscriptionManagerImpl implements DeviceSubscriptionManager 
 
     @Override
     public boolean isMatch(String pubTopic, String subTopic) {
-        return subscriptionMatcher.isMatch(pubTopic,subTopic);
+        Topic topic = new Topic(pubTopic);
+        return topic.match(new Topic(subTopic));
     }
 
     @Override

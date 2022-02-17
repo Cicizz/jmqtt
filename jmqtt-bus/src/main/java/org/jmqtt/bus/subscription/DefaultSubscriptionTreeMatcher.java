@@ -83,13 +83,6 @@ public class DefaultSubscriptionTreeMatcher implements SubscriptionMatcher {
         return subscriptions;
     }
 
-    @Override
-    public boolean isMatch(String pubTopic, String subTopic) {
-        if (pubTopic.equals(subTopic)) {
-            return true;
-        }
-        return innerIsMatch(pubTopic, subTopic);
-    }
 
     @Override
     public int size() {

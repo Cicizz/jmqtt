@@ -36,12 +36,6 @@ public class CTrieSubscriptionMatcher implements SubscriptionMatcher {
         return true;
     }
 
-
-    @Override
-    public boolean isMatch(String pubTopic, String subTopic) {
-        return false;
-    }
-
     @Override
     public int size() {
         return ctrie.size();
