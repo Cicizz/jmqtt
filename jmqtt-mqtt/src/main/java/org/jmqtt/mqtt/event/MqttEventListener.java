@@ -68,11 +68,6 @@ public class MqttEventListener implements GatewayListener {
         }
         MQTTConnection mqttConnection = ConnectManager.getInstance().getClient(subscription.getClientId());
 
-        // offline can be optimize ,can carry to bus
-        if (mqttConnection == null) {
-            return;
-        }
-
         Integer subQos = subscription.getProperty(MqttMsgHeader.QOS);
         Integer msgQos = deviceMessage.getProperty(MqttMsgHeader.QOS);
         if (subQos == null) {
@@ -89,6 +84,12 @@ public class MqttEventListener implements GatewayListener {
         } else {
             this.deviceMessageManager.addClientInBoxMsg(subscription.getClientId(),deviceMessage.getId(),MessageAckEnum.UN_ACK);
         }
+
+        // offline can be optimize ,can carry to bus
+        if (mqttConnection == null) {
+            return;
+        }
+
         mqttConnection.getBindedSession().sendMessage(deviceMessage);
     }
 
