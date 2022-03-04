@@ -26,7 +26,7 @@ SSL port: 1884
 WSS port: 8884
 
 ## QQ technology exchange group
-![jmqtt技术交流群](jmqtt_qq.png)
+![jmqtt技术交流群](jmqtt_qq2.png)
 
 ## test report
 jmqtt-doc/docs/TEST_REPORT.md
