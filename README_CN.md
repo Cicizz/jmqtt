@@ -21,7 +21,7 @@
 ## 技术交流群
 欢迎小伙伴们给个star并使用。
 
-![jmqtt技术交流群](jmqtt_qq.png)
+![jmqtt技术交流群](jmqtt_qq2.png)
 
 ## 测试报告
 https://www.yuque.com/tristan-ku8np/zze/xghq80
