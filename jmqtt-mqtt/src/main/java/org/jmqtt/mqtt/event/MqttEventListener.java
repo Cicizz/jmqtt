@@ -87,9 +87,9 @@ public class MqttEventListener implements GatewayListener {
 
         // offline can be optimize ,can carry to bus
         if (mqttConnection == null) {
-            LogUtil.warn(log,"[EVENT] connection is not exist.");
             return;
         }
+
         mqttConnection.getBindedSession().sendMessage(deviceMessage);
     }
 
