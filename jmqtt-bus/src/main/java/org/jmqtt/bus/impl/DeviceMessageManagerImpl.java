@@ -99,7 +99,7 @@ public class DeviceMessageManagerImpl implements DeviceMessageManager {
         }
         List<Long> ids = new ArrayList<>();
         inboxMessageDOS.forEach(itemDO -> {
-            ids.add(itemDO.getId());
+            ids.add(itemDO.getMessageId());
         });
         return queryByIds(ids);
     }
