@@ -47,7 +47,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <netty.version>4.1.54.Final</netty.version>
-        <fastjson.version>1.2.75</fastjson.version>
+        <fastjson.version>1.2.83</fastjson.version>
         <slf4j.version>1.7.30</slf4j.version>
         <commons-cli.version>1.4</commons-cli.version>
         <commons-lang3.version>3.7</commons-lang3.version>
