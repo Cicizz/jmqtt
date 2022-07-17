@@ -10,7 +10,7 @@
 * 支持tcp, websocket,ssl,wss
 
 ## 官方文档
-[官方文档](http://www.mangdagou.com/)
+[官方文档](https://arrogant95.github.io/jmqtt-docs/)
 
 ## 快速开始
 1. 下载 [release](https://github.com/Cicizz/jmqtt/releases)(3.x以上版本) 或`clone`本项目
